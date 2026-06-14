@@ -1,0 +1,19 @@
+.github/PULL_REQUEST_TEMPLATE.md
+  s_76b0aa0d8b98e0::t_0882dc63495357 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "91a32122d065640c14445c2863b7e70373cb0fd9",
+  "prompts": {},
+  "sessions": {
+    "s_76b0aa0d8b98e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5e5b62d-77bf-46e2-8385-9f471442cb14",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
