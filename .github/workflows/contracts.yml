@@ -1,0 +1,23 @@
+name: contracts
+
+# Runs the contract-integrity check on every pull request (and on pushes to main so the
+# default branch stays green). See scripts/check-contracts.rb / AGENTS.md.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-contracts:
+    name: contract-integrity check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Run contract-integrity check
+        run: ruby scripts/check-contracts.rb

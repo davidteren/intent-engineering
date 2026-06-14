@@ -20,6 +20,7 @@ initial release commit; entries below are grouped, not per-commit).
   cross-references (thresholds ↔ docs, pattern policy ↔ catalog), and resource-doc structure
   & citations. Wired into AGENTS.md as the pre-commit step.
 - `LICENSE` (MIT) and an expanded root `README.md` (source-principles table + full overview).
+- CI: `.github/workflows/contracts.yml` runs the contract check on every PR and on pushes to `main`.
 - `CHANGELOG.md` (this file); `STATUS.md` reframed as a current-state snapshot (was a log).
 
 ### Changed

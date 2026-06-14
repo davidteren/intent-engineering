@@ -255,7 +255,8 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   Sources section with ≥2 links; no orphan docs missing from `principle-index.md`/
   `lens-catalog.md`), and that the five agents are git-tracked (the gitignore trap). Exits
   non-zero on any breakage. Add new invariants there as the plugin grows — it is the
-  plugin's one automated check.
+  plugin's one automated check. It also runs in **CI on every PR**
+  (`.github/workflows/contracts.yml`), so a contract break fails before merge.
 - **Dogfood as you go.** Run the lenses' logic against your change (or `/ie-audit` once
   installed), fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
 - Clean git history is preferred; the owner may ask to squash to a single commit.
