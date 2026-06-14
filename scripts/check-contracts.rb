@@ -7,6 +7,12 @@
 # consistent — the things a single edit can silently break. Deterministic and
 # structural (no flaky heuristics). Exits non-zero on any failure.
 #
+# Requires only Ruby (>= 2.0) — uses json/yaml/shellwords from the standard library, no
+# gems or bundler. Ruby ships on macOS and is one `apt-get install ruby` / `brew install
+# ruby` elsewhere; CI pins 3.3. (Ruby is the most portable choice here: it parses both
+# JSON and YAML from stdlib, whereas Bash would need jq + the ambiguous `yq`, and Python
+# would need a non-stdlib PyYAML.)
+#
 # Run from anywhere:  ruby scripts/check-contracts.rb
 # Checks:
 #   1. All shipped JSON parses; all shipped YAML parses.
@@ -209,8 +215,13 @@ section "5. Pattern catalog schema"
 
 Dir[File.join(PLUGIN, "resources/patterns/*.yaml")].each do |abs|
   rel = abs.sub(PLUGIN + "/", "")
-  doc = YAML.safe_load(File.read(abs))
-  patterns = doc["patterns"] || []
+  doc = begin
+    YAML.safe_load(File.read(abs))
+  rescue StandardError => e
+    bad "#{rel}: YAML parse error (#{e.message.split("\n").first})"
+    next
+  end
+  patterns = (doc || {})["patterns"] || []
   if patterns.empty?
     bad "#{rel}: no patterns"
     next
@@ -226,7 +237,7 @@ Dir[File.join(PLUGIN, "resources/patterns/*.yaml")].each do |abs|
     end
     ids << p["id"] if p.is_a?(Hash)
   end
-  dupes = ids.tally.select { |_, n| n > 1 }.keys
+  dupes = ids.group_by { |x| x }.select { |_, v| v.size > 1 }.keys
   unless dupes.empty?
     bad "#{rel}: duplicate pattern ids #{dupes.inspect}"
     clean = false
@@ -279,9 +290,9 @@ end
 # ---------------------------------------------------------------------------
 section "8. Cross-references (thresholds <-> docs, pattern policy <-> catalog)"
 
-rails_catalog = YAML.safe_load(read("resources/patterns/rails.yaml")) || {}
+rails_catalog = (YAML.safe_load(read("resources/patterns/rails.yaml")) rescue nil) || {}
 catalog_ids = (rails_catalog["patterns"] || []).map { |p| p["id"] }.compact
-thresholds = YAML.safe_load(read("config/defaults/thresholds.yaml")) || {}
+thresholds = (YAML.safe_load(read("config/defaults/thresholds.yaml")) rescue nil) || {}
 arch_doc = read("resources/frameworks/rails-architecture.md")
 
 # Flatten thresholds to dotted ids: <stack>.<unit>.<metric>
@@ -319,7 +330,7 @@ else
 end
 
 # (c) every pattern id named in policy (config defaults) and README examples exists in the catalog
-policy = YAML.safe_load(read("config/defaults/patterns.yaml")) || {}
+policy = (YAML.safe_load(read("config/defaults/patterns.yaml")) rescue nil) || {}
 policy_ids = (Array(policy["allowed"]) + Array(policy["blocked"])).select { |x| x.is_a?(String) }
 # README bracketed examples: `allowed: [interactor, form_object, ...]`, `blocked: [service_object]`
 read("resources/patterns/README.md").scan(/(?:allowed|blocked):\s*\[([^\]]*)\]/) do |m|

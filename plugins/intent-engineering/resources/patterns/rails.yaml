@@ -17,7 +17,7 @@ patterns:
       `context` object, not a bare PORO.
     recognition:
       gems: [interactor, interactor-rails]
-      includes: [Interactor, Interactor::Organizer]
+      includes: [Interactor, "Interactor::Organizer"]
       paths: ["app/interactors/**", "app/organizers/**"]
       name_suffix: []
       methods: [call, context]
@@ -63,10 +63,10 @@ patterns:
       service_object — form objects own validation + attributes and bind to a view.
     recognition:
       gems: []
-      includes: [ActiveModel::Model, ActiveModel::Attributes, ActiveModel::Validations]
+      includes: ["ActiveModel::Model", "ActiveModel::Attributes", "ActiveModel::Validations"]
       paths: ["app/forms/**"]
       name_suffix: [Form]
-      methods: [save, valid?, attributes]
+      methods: [save, "valid?", attributes]
     good_use:
       - "includes ActiveModel::Model (and Attributes) for validations + form binding"
       - "owns its own validations; controllers stay thin"
@@ -112,7 +112,7 @@ patterns:
       includes: [ApplicationPolicy]
       paths: ["app/policies/**"]
       name_suffix: [Policy]
-      methods: [index?, show?, create?, update?, destroy?]
+      methods: ["index?", "show?", "create?", "update?", "destroy?"]
     good_use:
       - "subclasses ApplicationPolicy; one predicate per action (show?, update?)"
       - "predicates return booleans only; no side effects"
@@ -132,7 +132,7 @@ patterns:
       delegates to one object; a presenter aggregates view data for a screen.
     recognition:
       gems: [draper]
-      includes: [Draper::Decorator]
+      includes: ["Draper::Decorator"]
       paths: ["app/decorators/**"]
       name_suffix: [Decorator]
       methods: [decorate, object, model]
@@ -180,7 +180,7 @@ patterns:
       includes: [Comparable]
       paths: ["app/values/**", "app/value_objects/**", "app/models/**"]
       name_suffix: [Value]
-      methods: ["==", eql?, hash]
+      methods: ["==", "eql?", hash]
     good_use:
       - "immutable after construction (frozen / no setters)"
       - "implements ==, eql?, and hash consistently for value equality"
@@ -199,7 +199,7 @@ patterns:
       ActiveModel::Serializer classes, app/serializers POROs, and jbuilder views.
     recognition:
       gems: [active_model_serializers, jbuilder, jsonapi-serializer, blueprinter]
-      includes: [ActiveModel::Serializer]
+      includes: ["ActiveModel::Serializer"]
       paths: ["app/serializers/**", "app/views/**/*.json.jbuilder"]
       name_suffix: [Serializer, Blueprint]
       methods: [attributes, serializable_hash]
@@ -244,7 +244,7 @@ patterns:
       a dumping ground.
     recognition:
       gems: []
-      includes: [ActiveSupport::Concern]
+      includes: ["ActiveSupport::Concern"]
       paths: ["app/models/concerns/**", "app/controllers/concerns/**"]
       name_suffix: [able]
       methods: [included, class_methods]
