@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_76b0aa0d8b98e0::t_e340999643bab3 23
+.github/workflows/contracts.yml
+  s_76b0aa0d8b98e0::t_85354b3abc7800 1-23
+AGENTS.md
+  s_76b0aa0d8b98e0::t_54c099591f0430 258-259
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "ebbde4d47b955967cbf1f7ed6917a104230c0083",
+  "prompts": {},
+  "sessions": {
+    "s_76b0aa0d8b98e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5e5b62d-77bf-46e2-8385-9f471442cb14",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
