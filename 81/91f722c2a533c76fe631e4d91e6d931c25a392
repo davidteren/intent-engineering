@@ -1,0 +1,22 @@
+STATUS.md
+  s_76b0aa0d8b98e0::t_b1ad0a3c734596 49-50,52-54
+  s_76b0aa0d8b98e0::t_6d0e04a2517f13 25-40
+  s_76b0aa0d8b98e0::t_06643b652c87ab 66
+  s_76b0aa0d8b98e0::t_28960df614a969 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8191f722c2a533c76fe631e4d91e6d931c25a392",
+  "prompts": {},
+  "sessions": {
+    "s_76b0aa0d8b98e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5e5b62d-77bf-46e2-8385-9f471442cb14",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
