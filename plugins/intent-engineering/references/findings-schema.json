@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "intent-engineering finding schema",
+  "description": "Contract returned by every ie-* lens sub-agent. Compact return carries merge-tier fields; full detail (why_it_matters, evidence) is written to the run-artifact JSON file.",
+  "type": "object",
+  "required": ["lens", "findings", "observations"],
+  "properties": {
+    "lens": {
+      "type": "string",
+      "enum": ["predictability", "convention", "simplicity", "experience", "architecture"]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "principle",
+          "severity",
+          "confidence",
+          "file",
+          "line",
+          "fix_class",
+          "suggested_fix"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "One terse clause naming the surprise/violation. The scannable index, ~12 words."
+          },
+          "principle": {
+            "type": "string",
+            "description": "The specific principle violated.",
+            "enum": [
+              "least-astonishment",
+              "dwim",
+              "wysiwyg",
+              "convention-over-configuration",
+              "framework-idiom",
+              "occams-razor",
+              "kiss",
+              "yagni",
+              "human-interface-guidelines",
+              "look-and-feel",
+              "ux-design",
+              "accessibility",
+              "information-architecture",
+              "naming",
+              "error-handling",
+              "api-design",
+              "defaults-and-configuration",
+              "architecture"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["P0", "P1", "P2", "P3"],
+            "description": "P0 critical surprise (data loss, security, broken contract). P1 high-impact, hit in normal use. P2 moderate. P3 minor."
+          },
+          "confidence": {
+            "type": "integer",
+            "enum": [0, 25, 50, 75, 100],
+            "description": "Anchored. 100 verifiable from code/doc alone; 75 traceable and a real user/dev hits it; 50 depends on unseen context (advisory); <=25 speculative (suppress)."
+          },
+          "file": { "type": "string" },
+          "line": { "type": "integer", "minimum": 0, "description": "1-based line. For a finding that spans a whole class/file (e.g. fat-model, callback-hell), use the declaration line (e.g. the `class` line) and set end_line." },
+          "end_line": { "type": "integer", "minimum": 0, "description": "Optional. Last line of a multi-line/file-spanning finding; omit for single-line findings." },
+          "fix_class": {
+            "type": "string",
+            "enum": ["gated_auto", "manual", "advisory"],
+            "description": "gated_auto: concrete reversible edit, caller may apply after judgment. manual: needs design input. advisory: report-only (learning, tradeoff note)."
+          },
+          "suggested_fix": {
+            "type": "string",
+            "description": "Concrete action. Not 'consider' / 'might want to' — a specific change."
+          },
+          "why_it_matters": {
+            "type": "string",
+            "description": "Detail tier (artifact file). The expectation that was set vs the actual behavior — name the surprise."
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Detail tier (artifact file). Quote/cite the code or doc line that grounds the finding."
+          },
+          "tension": {
+            "type": "string",
+            "description": "Optional. If this finding pits one principle against another (e.g. DWIM vs least-astonishment, YAGNI vs convention), name the tension instead of dogmatically picking a side."
+          },
+          "smell": {
+            "type": "string",
+            "description": "Architecture lens only. The structural smell id, e.g. fat-model, god-object, fat-controller, misused-service, callback-hell, query-in-view, law-of-demeter. See resources/frameworks/<stack>-architecture.md."
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Architecture lens only. The design-pattern id involved (from resources/patterns/<stack>.yaml), or the literal 'unidentified' when a structural unit matches no known pattern. Used for classify / blocked / unknown findings."
+          }
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "description": "Soft notes that are real signal but not actionable findings (residual risks, things to watch). One string each.",
+      "items": { "type": "string" }
+    },
+    "scores": {
+      "type": "object",
+      "description": "Audit/plan mode only. 0-10 per dimension this lens owns. Omit in review mode. Key names MUST be the canonical snake_case dimension ids in references/scoring-rubric.md for this lens — this schema enforces the value range and a snake_case key shape, but scoring-rubric.md is the authority for the exact key names the orchestrator assembles the posture table from.",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]+$" },
+      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 10 }
+    }
+  }
+}

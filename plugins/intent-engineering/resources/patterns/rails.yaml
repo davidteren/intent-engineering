@@ -1,0 +1,329 @@
+# Intent Engineering — Rails design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in a Rails codebase. Pattern `id`s here are the stable keys
+# referenced by `.intense/patterns.yaml` allowed / blocked / approved lists.
+# See README.md (this directory) for the schema and how the lens uses it.
+version: 1
+stack: rails
+
+patterns:
+  - id: interactor
+    name: Interactor
+    intent: >
+      Encapsulate a single business action as a command object with a shared
+      mutable context; organizers chain several. Easily confused with
+      service_object — the distinguishing signal is the `interactor` gem and the
+      `context` object, not a bare PORO.
+    recognition:
+      gems: [interactor, interactor-rails]
+      includes: [Interactor, Interactor::Organizer]
+      paths: ["app/interactors/**", "app/organizers/**"]
+      name_suffix: []
+      methods: [call, context]
+    good_use:
+      - "single public entry point (call); collaborators invoked via context"
+      - "one business action per interactor; organizers compose them via organize"
+      - "failure signalled with context.fail!, not raised exceptions for flow control"
+      - "context keys documented / asserted at the boundary"
+    misuse:
+      - "multiple public methods (should be one call)"
+      - "no clear single responsibility / God interactor doing many actions"
+      - "an organizer that also contains business logic instead of only composing"
+      - "reaching into ActiveRecord callbacks for behaviour the interactor owns"
+
+  - id: service_object
+    name: Service Object
+    intent: >
+      Plain Ruby object in app/services that performs one application operation,
+      invoked through a single entry method. Confused with interactor (no gem /
+      no context) and with query_object (services act/mutate; queries only read).
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/services/**"]
+      name_suffix: [Service]
+      methods: [call, perform]
+    good_use:
+      - "single public entry point (call or perform); everything else private"
+      - "one operation per class; named after the action (e.g. ChargeCard)"
+      - "dependencies injected via initializer, not reached for globally"
+      - "returns a result object or value, not the service instance"
+    misuse:
+      - "multiple unrelated public methods -> grab-bag/utility class"
+      - "class named like a noun-manager (FooManager, FooHelper) doing everything"
+      - "static-only class methods hiding shared mutable state"
+      - "fat service that should be split or is really a query/form/policy"
+
+  - id: form_object
+    name: Form Object
+    intent: >
+      ActiveModel-backed object that aggregates validation and persistence for a
+      form spanning multiple models or virtual fields. Confused with
+      service_object — form objects own validation + attributes and bind to a view.
+    recognition:
+      gems: []
+      includes: [ActiveModel::Model, ActiveModel::Attributes, ActiveModel::Validations]
+      paths: ["app/forms/**"]
+      name_suffix: [Form]
+      methods: [save, valid?, attributes]
+    good_use:
+      - "includes ActiveModel::Model (and Attributes) for validations + form binding"
+      - "owns its own validations; controllers stay thin"
+      - "coordinates persistence across >1 model behind one save"
+      - "exposes attributes the view binds to (form_with model: form)"
+    misuse:
+      - "no validations -> it is really a service object, mislabelled"
+      - "persists via callbacks/side effects hidden from save"
+      - "duplicates model validations instead of composing them"
+      - "single-model passthrough that adds nothing over the model itself"
+
+  - id: query_object
+    name: Query Object
+    intent: >
+      Encapsulate a complex read / scope composition behind one object so models
+      stay free of sprawling scopes. Read-only — distinct from service_object,
+      which mutates state.
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/queries/**"]
+      name_suffix: [Query]
+      methods: [call, resolve, relation]
+    good_use:
+      - "returns an ActiveRecord::Relation or enumerable; no mutation"
+      - "single query concern per class; chainable / composable"
+      - "accepts a base relation so it can be scoped and reused"
+      - "keeps complex SQL/scope logic out of models and controllers"
+    misuse:
+      - "performs writes or side effects (should be a service/interactor)"
+      - "returns loaded arrays prematurely, breaking further composition"
+      - "one giant query object covering unrelated reports"
+      - "duplicates an existing model scope with no added composition"
+
+  - id: policy
+    name: Policy (Authorization)
+    intent: >
+      Pundit-style authorization object answering "may this user do X to this
+      record?" with one predicate per controller action, plus an inner Scope for
+      collection filtering.
+    recognition:
+      gems: [pundit]
+      includes: [ApplicationPolicy]
+      paths: ["app/policies/**"]
+      name_suffix: [Policy]
+      methods: [index?, show?, create?, update?, destroy?]
+    good_use:
+      - "subclasses ApplicationPolicy; one predicate per action (show?, update?)"
+      - "predicates return booleans only; no side effects"
+      - "collection access via inner Scope#resolve"
+      - "authorization centralized here, not scattered in controllers/views"
+    misuse:
+      - "predicates that mutate records or perform queries with side effects"
+      - "business logic beyond authorization living in the policy"
+      - "missing Scope while still filtering collections ad hoc in controllers"
+      - "duplicated authorization logic also inlined in controllers"
+
+  - id: decorator
+    name: Decorator
+    intent: >
+      Wrap a model to add presentation-oriented behaviour while delegating the
+      rest, typically via Draper. Distinct from presenter — a decorator wraps and
+      delegates to one object; a presenter aggregates view data for a screen.
+    recognition:
+      gems: [draper]
+      includes: [Draper::Decorator]
+      paths: ["app/decorators/**"]
+      name_suffix: [Decorator]
+      methods: [decorate, object, model]
+    good_use:
+      - "subclasses Draper::Decorator (or wraps + delegates_all)"
+      - "adds only view/presentation methods; delegates domain methods to object"
+      - "no persistence or business logic"
+      - "one decorator per decorated model"
+    misuse:
+      - "contains business logic or persistence (belongs in model/service)"
+      - "reaches into the view context for data instead of receiving it"
+      - "God decorator with unrelated formatting for many contexts"
+      - "queries the database from within presentation methods"
+
+  - id: presenter
+    name: Presenter
+    intent: >
+      PORO that aggregates and prepares data for a specific view/screen, often
+      composing several models. Distinct from decorator — a presenter is built
+      around a view, not a single wrapped record.
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/presenters/**"]
+      name_suffix: [Presenter]
+      methods: []
+    good_use:
+      - "one presenter per view/screen; aggregates the data that view needs"
+      - "presentation logic only; no persistence or domain mutation"
+      - "receives its inputs explicitly (models, params) via initializer"
+      - "keeps view templates logic-light"
+    misuse:
+      - "performs queries or writes instead of receiving prepared data"
+      - "duplicates model/decorator methods rather than composing them"
+      - "single God presenter shared across unrelated views"
+      - "embeds authorization or business rules"
+
+  - id: value_object
+    name: Value Object
+    intent: >
+      Immutable object defined by its attributes (not identity), with value
+      equality. Two instances with the same attributes are interchangeable.
+    recognition:
+      gems: []
+      includes: [Comparable]
+      paths: ["app/values/**", "app/value_objects/**", "app/models/**"]
+      name_suffix: [Value]
+      methods: ["==", eql?, hash]
+    good_use:
+      - "immutable after construction (frozen / no setters)"
+      - "implements ==, eql?, and hash consistently for value equality"
+      - "includes Comparable with <=> when ordering is meaningful"
+      - "no persistence identity; small and self-contained (Money, GeoPoint)"
+    misuse:
+      - "defines == without eql?/hash (broken hashing/Set/dedup behaviour)"
+      - "mutable state / setters defeating value semantics"
+      - "carries a database id or behaves like an entity"
+      - "heavyweight responsibilities that belong in an entity or service"
+
+  - id: serializer
+    name: Serializer
+    intent: >
+      Declares how a model is rendered to a wire format (usually JSON). Covers
+      ActiveModel::Serializer classes, app/serializers POROs, and jbuilder views.
+    recognition:
+      gems: [active_model_serializers, jbuilder, jsonapi-serializer, blueprinter]
+      includes: [ActiveModel::Serializer]
+      paths: ["app/serializers/**", "app/views/**/*.json.jbuilder"]
+      name_suffix: [Serializer, Blueprint]
+      methods: [attributes, serializable_hash]
+    good_use:
+      - "declares attributes/associations to expose; no domain logic"
+      - "one serializer per resource/representation"
+      - "presentation/shape concerns only; computation delegated to model/decorator"
+      - "explicit attribute allow-list rather than dumping the whole record"
+    misuse:
+      - "business logic or persistence inside serialization"
+      - "N+1 queries triggered per attribute without preloading"
+      - "leaks sensitive attributes by serializing the whole record"
+      - "conditional shapes branching on roles better handled by separate serializers"
+
+  - id: job
+    name: Job (Background)
+    intent: >
+      ActiveJob unit of deferred work enqueued for asynchronous execution. The
+      job should orchestrate, not contain, the business logic it triggers.
+    recognition:
+      gems: [activejob, sidekiq, resque, delayed_job]
+      includes: [ApplicationJob, "ActiveJob::Base", "Sidekiq::Job", "Sidekiq::Worker"]
+      paths: ["app/jobs/**", "app/workers/**"]
+      name_suffix: [Job, Worker]
+      methods: [perform]
+    good_use:
+      - "single perform entry point; thin orchestration delegating to a service/interactor"
+      - "arguments are small, serializable primitives or GlobalID references"
+      - "idempotent / safe to retry; failures surfaced for the queue to retry"
+      - "queue and retry policy declared explicitly"
+    misuse:
+      - "heavy business logic inlined in perform instead of delegated"
+      - "passing whole ActiveRecord objects or non-serializable args"
+      - "non-idempotent work that double-applies on retry"
+      - "swallowing errors so the queue never retries or alerts"
+
+  - id: concern
+    name: Concern
+    intent: >
+      ActiveSupport::Concern module mixing shared behaviour into models or
+      controllers. A structuring tool, not a domain pattern — easy to overuse as
+      a dumping ground.
+    recognition:
+      gems: []
+      includes: [ActiveSupport::Concern]
+      paths: ["app/models/concerns/**", "app/controllers/concerns/**"]
+      name_suffix: [able]
+      methods: [included, class_methods]
+    good_use:
+      - "extends ActiveSupport::Concern; cohesive, single-topic mixin"
+      - "shared behaviour genuinely reused by >1 host class"
+      - "uses included/class_methods blocks idiomatically"
+      - "named for a capability (Archivable, Trackable)"
+    misuse:
+      - "grab-bag of unrelated methods extracted only to shrink a fat model"
+      - "concern depending on host internals it does not declare/assert"
+      - "used once, adding indirection without reuse"
+      - "circular or order-dependent concern coupling between mixins"
+
+  - id: repository
+    name: Repository
+    intent: >
+      Object mediating all persistence for an aggregate, decoupling domain from
+      ActiveRecord. Uncommon and non-idiomatic in Rails (the Active Record
+      pattern already binds model to persistence); flag when seen so its intent
+      is confirmed rather than assumed accidental.
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/repositories/**"]
+      name_suffix: [Repository, Repo]
+      methods: [find, all, save, delete, "find_by"]
+    good_use:
+      - "single source of persistence for one aggregate/entity"
+      - "domain code depends on the repository interface, not ActiveRecord directly"
+      - "query and persistence methods return domain objects, not raw relations"
+      - "deliberate choice (DDD/hexagonal), documented as such"
+    misuse:
+      - "thin wrapper duplicating ActiveRecord with no decoupling benefit"
+      - "leaks ActiveRecord::Relation, defeating the abstraction"
+      - "mixes business logic into persistence mediation"
+      - "introduced inconsistently alongside direct model access elsewhere"
+
+  - id: adapter
+    name: Adapter
+    intent: >
+      Translate an external/third-party interface into one the application
+      expects, isolating vendor specifics behind a stable port.
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/adapters/**", "lib/**/adapters/**"]
+      name_suffix: [Adapter, Client, Gateway]
+      methods: []
+    good_use:
+      - "presents a stable internal interface over an external API/SDK"
+      - "one adapter per external system; vendor types do not leak past it"
+      - "swappable (e.g. real vs fake) behind a common interface for tests"
+      - "translation only; no domain business rules"
+    misuse:
+      - "leaks the external library's objects/exceptions to callers"
+      - "accumulates business logic beyond translation"
+      - "one adapter spanning several unrelated external systems"
+      - "duplicated per call site instead of centralized"
+
+  - id: builder
+    name: Builder
+    intent: >
+      Construct a complex object step by step, separating construction from the
+      built object's representation. Distinct from form_object (no validation/view
+      binding) and factory helpers.
+    recognition:
+      gems: []
+      includes: []
+      paths: ["app/builders/**"]
+      name_suffix: [Builder]
+      methods: [build, add, with]
+    good_use:
+      - "incremental construction via fluent/with/add steps, then build"
+      - "separates assembly logic from the resulting object"
+      - "single product type per builder; reusable construction recipe"
+      - "no persistence or business side effects during construction"
+    misuse:
+      - "trivial construction better served by a constructor or factory"
+      - "builder that also persists or performs the action (should delegate)"
+      - "mutable shared builder reused across threads/requests"
+      - "God builder assembling many unrelated product types"

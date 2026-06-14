@@ -1,0 +1,39 @@
+# Intent Engineering — ways of working (GLOBAL DEFAULTS)
+#
+# This file ships with the plugin. To customize for a project, run `/ie-init` (or copy
+# this file) to `.intense/ways-of-working.yaml` at your repo root. Project values
+# SUPERSEDE these defaults. See references/config-resolution.md for merge rules.
+version: 1
+
+# --- Lens toggles -----------------------------------------------------------------
+# on   = always run.  off = never run.  auto = run only when relevant (see notes).
+lenses:
+  predictability: on
+  convention: on
+  simplicity: on
+  experience: auto      # auto = on only when a user-facing surface is detected
+  architecture: auto    # auto = on only when a supported framework (e.g. Rails) is detected
+
+# --- Severity overrides -----------------------------------------------------------
+# Raise or lower the severity a lens assigns to a given principle/smell. Optional.
+# Key = principle or smell id (see findings-schema.json principle enum / rails-architecture.md).
+severity_overrides: {}
+  # silent-failure: P1
+  # fat-model: P1
+
+# --- Local conventions ------------------------------------------------------------
+# Highest-authority conventions for THIS repo, honored by the convention lens
+# alongside CLAUDE.md / AGENTS.md. Lists REPLACE the global list unless extends: true.
+conventions:
+  extends: false
+  notes: []
+  # - "Use interactors, not service objects, for multi-step domain operations."
+  # - "All money is a Money value object, never a raw integer/float."
+
+# --- Confidence gate --------------------------------------------------------------
+# Findings below this anchor are suppressed (P0 survives at 50+). Lower to surface more.
+confidence_gate: 75
+
+# --- Report output ----------------------------------------------------------------
+# Default run-artifact dir (relative to repo root). Override per run with `out:<path>`.
+report_dir: wip/intent-engineering

@@ -1,0 +1,18 @@
+# Working scratch + run artifacts/reports — not committed.
+# Default report dir is wip/intent-engineering/<run-id>/; scratch (task brief,
+# future-ideas, fixtures) also lives under wip/. (.wip/ = legacy report dir.)
+wip/
+.wip/
+
+# Some environments globally ignore `agents/` (several AI coding tools add this to a
+# global gitignore). This plugin SHIPS its lens agents in plugins/intent-engineering/agents/,
+# so re-include them — otherwise a clone on such a machine has zero agents and the plugin
+# is broken. Defensive; keep this negation on any clone/fork.
+!plugins/intent-engineering/agents/
+!plugins/intent-engineering/agents/**
+
+# OS / editor
+.DS_Store
+# IDE — also covered by a common global gitignore, but list it here so the repo is
+# self-protecting for contributors without that global config (same lesson as agents/).
+.idea/

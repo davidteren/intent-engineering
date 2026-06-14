@@ -1,0 +1,41 @@
+# Intent Engineering — pattern policy (GLOBAL DEFAULTS)
+#
+# Project override: `.intense/patterns.yaml`. Pattern names must match the catalog at
+# resources/patterns/<stack>.yaml. See references/config-resolution.md for merge rules.
+#
+# MERGE: when a project `.intense/patterns.yaml` sets one of the lists below, that list
+# REPLACES the global list wholesale — the `allowed`/`blocked`/`approved` lists are
+# replace-only (there is no `extends` knob for them). List every entry you want, not just
+# the additions.
+version: 1
+
+# --- Allowed --------------------------------------------------------------------
+# Patterns the team uses on purpose. Recognized instances are classified and checked
+# for *good use* (per the catalog rubric) — never flagged merely for existing.
+# Empty list = no explicit allow-list; the lens still recognizes + classifies, and
+# only raises misuse or (per below) unknown patterns.
+allowed: []
+  # - interactor
+  # - form_object
+  # - query_object
+  # - policy
+
+# --- Blocked --------------------------------------------------------------------
+# Patterns blocked for NEW use. A blocked pattern appearing in CHANGED code -> P1.
+# Pre-existing uses are reported advisory (P3) unless also covered by `approved`.
+blocked: []
+  # - service_object   # e.g. "we standardized on interactors"
+
+# --- Approved (grandfathered) ---------------------------------------------------
+# Pre-approved specific instances/paths. Findings there are suppressed and noted in
+# Coverage. Use to grandfather legacy code without muting the whole rule.
+approved: []
+  # - path: app/services/legacy/**
+  #   reason: "grandfathered; migration tracked in JIRA-123"
+
+# --- Unknown patterns -----------------------------------------------------------
+# A structural unit (class/module in a pattern-bearing location) that matches NO
+# known catalog pattern AND no allowed entry.
+unknown_pattern:
+  raise: true     # raise an "unidentified pattern" finding for a human to classify
+  severity: P3    # advisory by default

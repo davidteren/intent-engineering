@@ -1,0 +1,32 @@
+# Intent Engineering — architecture thresholds (GLOBAL DEFAULTS)
+#
+# Used by ie-architecture-reviewer to flag structural smells. These are deliberately
+# generous starting points — tune per codebase in `.intense/thresholds.yaml`. A
+# threshold is a SIGNAL, not a verdict: the lens still judges responsibilities, not
+# just counts. See resources/frameworks/rails-architecture.md for what each smell means.
+version: 1
+
+rails:
+  model:
+    max_loc: 200              # fat-model signal
+    max_public_methods: 20
+    max_associations: 15
+    max_callbacks: 5          # callback-hell signal
+  controller:
+    max_loc: 150              # fat-controller signal
+    max_action_loc: 20        # business logic leaking into actions
+    max_actions: 12           # well beyond RESTful 7
+  service_object:
+    max_public_methods: 1     # a service should expose ONE call (`call`/`perform`)
+    max_loc: 120              # a service this big is a God object in disguise
+  god_object:
+    max_collaborators: 15     # distinct classes referenced/instantiated
+    max_loc: 300
+  helper:
+    max_loc: 100              # fat-helper signal
+  general:
+    max_method_loc: 25
+    max_method_abc: 25        # ABC/flog score, only if flog is available
+
+# Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
+# rule pack lands. Unknown stacks fall back to `general` only.

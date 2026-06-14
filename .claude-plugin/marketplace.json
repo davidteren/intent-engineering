@@ -1,0 +1,30 @@
+{
+  "name": "intent-engineering-marketplace",
+  "owner": {
+    "name": "David Teren"
+  },
+  "metadata": {
+    "description": "Plugin marketplace for the intent-engineering Claude Code plugin",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "intent-engineering",
+      "description": "Enforce intent engineering: software that behaves the way a reasonable developer or user expects. Five lenses (predictability, convention, simplicity, experience, architecture) for planning, plan validation, code review, and codebase audit, with project-level .intense config and a Rails design-pattern catalog.",
+      "author": {
+        "name": "David Teren"
+      },
+      "tags": [
+        "code-review",
+        "audit",
+        "planning",
+        "least-astonishment",
+        "convention-over-configuration",
+        "simplicity",
+        "ux",
+        "quality"
+      ],
+      "source": "./plugins/intent-engineering"
+    }
+  ]
+}
