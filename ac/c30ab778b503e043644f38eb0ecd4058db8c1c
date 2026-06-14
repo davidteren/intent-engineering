@@ -1,0 +1,33 @@
+plugins/intent-engineering/resources/patterns/rails.yaml
+  s_76b0aa0d8b98e0::t_849db91e3137db 66
+  s_76b0aa0d8b98e0::t_3f8fa3cbf25a76 115
+  s_76b0aa0d8b98e0::t_679787c6f6382a 135
+  s_76b0aa0d8b98e0::t_1879236a158833 247
+  s_76b0aa0d8b98e0::t_0d2c145c36b416 69
+  s_76b0aa0d8b98e0::t_a229d7d90b3414 183
+  s_76b0aa0d8b98e0::t_fc0c0c5b51769a 202
+  s_76b0aa0d8b98e0::t_6bfa6ca3ea1c9b 20
+scripts/check-contracts.rb
+  s_76b0aa0d8b98e0::t_05ceee55387799 218-224
+  s_76b0aa0d8b98e0::t_53c2f18cbd9e20 293
+  s_76b0aa0d8b98e0::t_12d12859ad41d1 10-15
+  s_76b0aa0d8b98e0::t_f9a3a466da1706 295
+  s_76b0aa0d8b98e0::t_4779699ca69108 240
+  s_76b0aa0d8b98e0::t_8d0424b2540857 333
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "acc30ab778b503e043644f38eb0ecd4058db8c1c",
+  "prompts": {},
+  "sessions": {
+    "s_76b0aa0d8b98e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5e5b62d-77bf-46e2-8385-9f471442cb14",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
