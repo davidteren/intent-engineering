@@ -1,0 +1,19 @@
+README.md
+  s_76b0aa0d8b98e0::t_ff8ca7a7490f59 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "210624b28be885219662eda86447e5ce852f0001",
+  "prompts": {},
+  "sessions": {
+    "s_76b0aa0d8b98e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5e5b62d-77bf-46e2-8385-9f471442cb14",
+        "model": "unknown"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
