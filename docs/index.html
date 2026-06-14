@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>intent-engineering — software that behaves the way you expect</title>
+<meta name="description" content="A Claude Code plugin that enforces intent engineering: five review lenses (predictability, convention, simplicity, experience, architecture) for planning, plan validation, code review, and codebase audit." />
+<meta property="og:title" content="intent-engineering" />
+<meta property="og:description" content="A Claude Code plugin that catches surprising code before it ships — five review lenses across planning, review, and audit." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d12'/%3E%3Ccircle cx='16' cy='16' r='8.5' fill='none' stroke='%235b8cff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23ffb454'/%3E%3C/svg%3E" />
+<style>
+  :root{
+    --bg:#0b0d12; --bg-2:#0f1219; --panel:#12161f; --panel-2:#161b26;
+    --line:#222838; --line-2:#2c3344;
+    --ink:#e8eaf0; --mut:#9aa3b6; --dim:#6b7488;
+    --accent:#5b8cff; --accent-2:#ffb454;
+    --blue:#5b8cff; --green:#46c08a; --amber:#ffce5b; --purple:#b48cff; --orange:#ff9a52;
+    --radius:14px; --maxw:1080px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 78% -10%, rgba(91,140,255,.10), transparent 60%),
+      radial-gradient(50rem 35rem at 8% 4%, rgba(255,180,84,.06), transparent 55%);
+    background-attachment:fixed;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+
+  /* nav */
+  header.nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+    background:rgba(11,13,18,.72);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;gap:18px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.01em}
+  .brand .glyph{width:22px;height:22px;flex:0 0 auto}
+  .nav nav{margin-left:auto;display:flex;gap:22px;align-items:center}
+  .nav nav a{color:var(--mut);font-size:14.5px}
+  .nav nav a:hover{color:var(--ink);text-decoration:none}
+  .ghbtn{border:1px solid var(--line-2);padding:7px 13px;border-radius:9px;color:var(--ink)!important;font-size:14px}
+  .ghbtn:hover{border-color:var(--accent);text-decoration:none!important}
+  @media(max-width:720px){.nav nav a.hide-sm{display:none}}
+
+  /* hero */
+  .hero{padding:96px 0 64px;border-bottom:1px solid var(--line)}
+  .hero h1{font-size:clamp(40px,7vw,72px);line-height:1.02;letter-spacing:-.03em;margin:18px 0 0;font-weight:720}
+  .hero h1 .grad{background:linear-gradient(100deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:clamp(17px,2.3vw,21px);color:var(--mut);max-width:48ch;margin:22px 0 0}
+  .hero .lede b{color:var(--ink);font-weight:600}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:12px 20px;border-radius:11px;font-weight:600;font-size:15px}
+  .btn.primary{background:linear-gradient(100deg,var(--accent),#7aa0ff);color:#0a0c12}
+  .btn.primary:hover{text-decoration:none;filter:brightness(1.07)}
+  .btn.ghost{border:1px solid var(--line-2);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--accent);text-decoration:none}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+  .badges img{height:20px}
+
+  /* install card */
+  .install{margin-top:40px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;max-width:640px}
+  .install .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--dim);font-size:12.5px;font-family:var(--mono)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .install pre{margin:0;padding:18px;overflow:auto;font-family:var(--mono);font-size:14px;line-height:1.85}
+  .install .c{color:var(--green)} .install .p{color:var(--dim)}
+
+  section{padding:74px 0;border-bottom:1px solid var(--line)}
+  .sec-head{max-width:60ch}
+  .sec-head h2{font-size:clamp(26px,4vw,36px);letter-spacing:-.02em;margin:10px 0 0;font-weight:680}
+  .sec-head p{color:var(--mut);margin:14px 0 0;font-size:16.5px}
+
+  /* lenses */
+  .lens-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:40px}
+  .lens{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:transform .15s ease,border-color .15s ease,background .15s ease}
+  .lens:hover{transform:translateY(-3px);border-color:var(--line-2);background:var(--panel-2)}
+  .lens .top{display:flex;align-items:center;gap:11px}
+  .lens .pip{width:11px;height:11px;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.03)}
+  .lens h3{margin:0;font-size:17px;letter-spacing:-.01em}
+  .lens .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .lens p{color:var(--mut);font-size:14.5px;margin:13px 0 0}
+  .lens .pr{margin-top:14px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+
+  /* contexts */
+  .ctx{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:38px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card code{font-family:var(--mono);color:var(--accent);font-size:14px;font-weight:600}
+  .card h4{margin:12px 0 0;font-size:15.5px}
+  .card p{color:var(--mut);font-size:14px;margin:7px 0 0}
+
+  /* how it works */
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:38px;counter-reset:step}
+  .step{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 18px}
+  .step::before{counter-increment:step;content:"0" counter(step);font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700}
+  .step h4{margin:8px 0 0;font-size:15px}
+  .step p{color:var(--mut);font-size:13.5px;margin:6px 0 0}
+
+  /* feature split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:38px}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .feat h3{margin:0;font-size:18px;letter-spacing:-.01em}
+  .feat ul{margin:14px 0 0;padding-left:18px;color:var(--mut);font-size:14.5px}
+  .feat li{margin:7px 0}
+  .feat code{font-family:var(--mono);font-size:13px;color:var(--accent-2);background:rgba(255,180,84,.08);padding:1px 6px;border-radius:5px}
+
+  /* finding sample */
+  .sample{margin-top:24px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;font-family:var(--mono);font-size:13px;overflow:hidden}
+  .sample .row{display:flex;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:baseline;flex-wrap:wrap}
+  .sample .row:last-child{border-bottom:0}
+  .sev{color:#0a0c12;background:var(--amber);border-radius:5px;padding:1px 7px;font-weight:700;font-size:11px}
+  .sev.p1{background:var(--orange)}
+  .sample .file{color:var(--accent)} .sample .msg{color:var(--ink)} .sample .meta{color:var(--dim);margin-left:auto}
+
+  footer{padding:56px 0 80px}
+  .foot{display:flex;flex-wrap:wrap;gap:18px;align-items:center;color:var(--dim);font-size:14px}
+  .foot a{color:var(--mut)} .foot .sp{margin-left:auto}
+  .note{color:var(--dim);font-size:13px;margin-top:10px}
+
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.lens,.btn{transition:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <span class="brand">
+      <svg class="glyph" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#5b8cff" stroke-width="2"/><circle cx="16" cy="16" r="2.6" fill="#ffb454"/></svg>
+      intent-engineering
+    </span>
+    <nav>
+      <a class="hide-sm" href="#lenses">Lenses</a>
+      <a class="hide-sm" href="#contexts">Skills</a>
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="ghbtn" href="https://github.com/davidteren/intent-engineering">GitHub →</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="eyebrow">A Claude Code plugin · MIT</div>
+    <h1>Code that behaves the way<br><span class="grad">people already expect.</span></h1>
+    <p class="lede"><b>intent engineering</b> — catch surprising code before it ships. Five review lenses run as parallel agents across planning, plan validation, code review, and codebase audit, returning scored findings that each name the broken expectation and propose a concrete fix.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/davidteren/intent-engineering">Get it on GitHub</a>
+      <a class="btn ghost" href="https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0">Release v0.2.0 →</a>
+    </div>
+    <div class="badges">
+      <a href="https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml"><img alt="contracts CI" src="https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg"></a>
+      <img alt="MIT" src="https://img.shields.io/badge/license-MIT-blue.svg">
+      <img alt="lenses" src="https://img.shields.io/badge/lenses-5-5b8cff">
+      <img alt="contract checks" src="https://img.shields.io/badge/contract%20checks-67-46c08a">
+    </div>
+
+    <div class="install">
+      <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span style="margin-left:6px">install</span></div>
+<pre><span class="p"># in any repo, inside Claude Code</span>
+/plugin marketplace add <span class="c">https://github.com/davidteren/intent-engineering</span>
+/plugin install <span class="c">intent-engineering</span></pre>
+    </div>
+  </div>
+</section>
+
+<section id="lenses">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The five lenses</div>
+      <h2>One reviewer per kind of surprise.</h2>
+      <p>Each lens is grounded in a researched design principle and reads its own detection heuristics. Two are always on; three switch on by context. Every finding carries a confidence anchor and a concrete fix — never just “this is surprising.”</p>
+    </div>
+    <div class="lens-grid">
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--blue)"></span><h3>Predictability</h3><span class="tag">always-on</span></div><p>Name/behavior mismatches, hidden side effects, surprising returns, silent failures, preview ≠ result.</p><div class="pr">least-astonishment · DWIM · WYSIWYG</div></div>
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--green)"></span><h3>Convention</h3><span class="tag">code</span></div><p>Reinvented conventions, config where convention exists, one-offs that fight the repo or framework. Reads your CLAUDE.md / AGENTS.md first.</p><div class="pr">convention-over-configuration · framework idiom</div></div>
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--amber)"></span><h3>Simplicity</h3><span class="tag">always-on</span></div><p>Needless abstraction, speculative generality, knobs nobody sets — and the flip side: don’t oversimplify away real requirements.</p><div class="pr">Occam · KISS · YAGNI</div></div>
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--purple)"></span><h3>Experience</h3><span class="tag">UI</span></div><p>Missing interaction states, broken keyboard/focus, accessibility gaps, weak information architecture, AI-slop design.</p><div class="pr">HIG · look &amp; feel · UX</div></div>
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--orange)"></span><h3>Architecture</h3><span class="tag">Rails</span></div><p>Fat models/controllers, God objects, misused services, callback hell. Classifies design patterns against a catalog and enforces your policy.</p><div class="pr">structural quality · design patterns</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="contexts">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Five skills, four contexts</div>
+      <h2>Run the lenses where the work is.</h2>
+      <p>The same lenses adapt to the moment — from the first plan to the final audit.</p>
+    </div>
+    <div class="ctx">
+      <div class="card reveal"><code>/ie-init</code><h4>Set up once</h4><p>Scaffold <code>.intense/</code> config — lens toggles, pattern policy, thresholds — and commit it.</p></div>
+      <div class="card reveal"><code>/ie-plan-assist</code><h4>While planning</h4><p>An advisory checklist of the principle decisions to get right now. Non-blocking.</p></div>
+      <div class="card reveal"><code>/ie-validate-plan</code><h4>Before coding</h4><p>Dimensional 0–10 ratings on a plan or spec + the design gaps to resolve first.</p></div>
+      <div class="card reveal"><code>/ie-review</code><h4>On a change</h4><p>Findings by severity on a PR, branch, or local diff; applies safe verified fixes — never pushes.</p></div>
+      <div class="card reveal"><code>/ie-audit</code><h4>On a codebase</h4><p>A posture report — per-dimension scores and the top gaps to fix first.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">How it works</div>
+      <h2>Fan out, gate, report.</h2>
+    </div>
+    <div class="flow">
+      <div class="step reveal"><h4>Select</h4><p>Resolve <code class="mono" style="color:var(--accent-2)">.intense</code> config; pick the lenses that fit the context.</p></div>
+      <div class="step reveal"><h4>Fan out</h4><p>Each lens runs as a parallel sub-agent against its own heuristics.</p></div>
+      <div class="step reveal"><h4>Gate</h4><p>Merge, dedup, and confidence-gate; cross-lens agreement promotes a finding.</p></div>
+      <div class="step reveal"><h4>Report</h4><p>A ranked report with the broken expectation and a concrete fix for each.</p></div>
+    </div>
+    <div class="sample reveal" aria-label="example findings">
+      <div class="row"><span class="sev p1">P1</span><span class="file">order.rb:42</span><span class="msg">fetch_total also writes a cache row</span><span class="meta">least-astonishment · 100</span></div>
+      <div class="row"><span class="sev">P2</span><span class="file">report_service.rb:8</span><span class="msg">service exposes 6 public methods — split per operation</span><span class="meta">architecture · 75</span></div>
+      <div class="row"><span class="sev">P2</span><span class="file">signup_form.rb:21</span><span class="msg">silent rescue swallows validation errors</span><span class="meta">error-handling · 75</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="grounded">
+  <div class="wrap">
+    <div class="split">
+      <div class="feat reveal">
+        <h3>Grounded, not vibes</h3>
+        <ul>
+          <li>A researched knowledge base bundled in the plugin: principles, per-framework conventions, and cross-cutting topics — each with a violation-smell checklist and cited sources.</li>
+          <li>Confidence anchors (0/25/50/75/100); findings gate at 75, critical surprises survive lower.</li>
+          <li>When two principles conflict, the lens names the <b>tension</b> and presents the trade-off — it doesn’t dictate.</li>
+        </ul>
+      </div>
+      <div class="feat reveal">
+        <h3>Tunable &amp; trustworthy</h3>
+        <ul>
+          <li><code>.intense/</code> config: toggle lenses, override severities, declare conventions, set architecture thresholds and pattern policy — project overrides defaults.</li>
+          <li>Read-only by default; only <code>/ie-review</code> applies fixes locally, and it never pushes.</li>
+          <li>A 67-check contract test runs in CI on every PR, so the plugin keeps its own promises.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <span class="brand"><svg class="glyph" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#5b8cff" stroke-width="2"/><circle cx="16" cy="16" r="2.6" fill="#ffb454"/></svg> intent-engineering</span>
+      <span class="sp"></span>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+      <a href="https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0">v0.2.0</a>
+      <a href="https://github.com/davidteren/intent-engineering/blob/main/README.md">Docs</a>
+      <a href="https://github.com/davidteren/intent-engineering/blob/main/LICENSE">MIT</a>
+    </div>
+    <p class="note">Built with Claude Code. The Principle of Least Astonishment, applied to itself.</p>
+  </div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
