@@ -1,5 +1,8 @@
 # intent-engineering
 
+[![contracts](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg)](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A Claude Code plugin that enforces **intent engineering**: software that behaves the way
 a reasonable developer or user already expects. It applies a set of well-established
 design principles — plus framework architecture analysis — as review **lenses** that fan
