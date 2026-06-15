@@ -36,6 +36,7 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | TypeScript | `resources/frameworks/typescript.md` |
 | Python | `resources/frameworks/python.md` |
 | Laravel (PHP) | `resources/frameworks/laravel.md` |
+| Express / Node | `resources/frameworks/express.md` |
 | Swift / iOS | `resources/frameworks/swift-ios.md` |
 
 ## Architecture (the 5th lens)
@@ -48,6 +49,8 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | Python design-pattern catalog | `resources/patterns/python.yaml` | architecture |
 | Laravel architecture smells | `resources/frameworks/laravel-architecture.md` | architecture |
 | Laravel design-pattern catalog | `resources/patterns/laravel.yaml` | architecture |
+| Express / Node architecture smells | `resources/frameworks/express-architecture.md` | architecture |
+| Express / Node design-pattern catalog | `resources/patterns/express.yaml` | architecture |
 
 ## Config
 
