@@ -5,6 +5,26 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
+## [Unreleased]
+
+### Added
+- **Laravel (PHP) architecture stack** — the first stack added *through the registry* (data
+  only, no skill edits), proving the extension point:
+  - `resources/frameworks/laravel-architecture.md` — 8 structural smells (`fat-controller`,
+    `fat-model`, `god-class`, `misused-service`, `query-in-view` (N+1), `logic-in-routes`,
+    `fat-job`, `law-of-demeter`) + general metrics; optional phpstan/larastan/phpmd/phpinsights
+    enrichment.
+  - `resources/patterns/laravel.yaml` — 14-pattern catalog (eloquent_model, controller,
+    form_request, action, service, api_resource, job, event_listener, policy, middleware,
+    repository, service_provider, data_object).
+  - `resources/frameworks/laravel.md` — Laravel/PHP convention doc (naming table, Eloquent/
+    FormRequest/eager-loading idioms, `env()`-vs-`config()` and model-event traps).
+  - `config/defaults/thresholds.yaml` — a `laravel.*` threshold namespace.
+  - Registered in `stack-catalog.md` (Arch pack ✅) + `principle-index.md`; detected from
+    `composer.json`/`artisan`/`app/`+`routes/`. Research-backed (alexeymezenin best-practices,
+    Laravel docs, lorisleiva/laravel-actions, PSR-12). 75 → 83 contract checks, green.
+  - **Dogfood pending** — no Laravel repo available locally; to be run on a real app.
+
 ## [0.3.0] — 2026-06-15
 
 Second feature release: the architecture lens gains a **Python (FastAPI-first)** stack and
