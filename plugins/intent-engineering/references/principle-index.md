@@ -43,6 +43,8 @@ read the source docs for detection heuristics; this index is the quick lookup.
 |-------|-----------|------|
 | Rails architecture smells | `resources/frameworks/rails-architecture.md` | architecture |
 | Rails design-pattern catalog | `resources/patterns/rails.yaml` (+ `resources/patterns/README.md`) | architecture |
+| Python architecture smells (FastAPI-first) | `resources/frameworks/python-architecture.md` | architecture |
+| Python design-pattern catalog | `resources/patterns/python.yaml` | architecture |
 
 ## Config
 

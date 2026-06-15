@@ -290,46 +290,66 @@ end
 # ---------------------------------------------------------------------------
 section "8. Cross-references (thresholds <-> docs, pattern policy <-> catalog)"
 
-rails_catalog = (YAML.safe_load(read("resources/patterns/rails.yaml")) rescue nil) || {}
-catalog_ids = (rails_catalog["patterns"] || []).map { |p| p["id"] }.compact
-thresholds = (YAML.safe_load(read("config/defaults/thresholds.yaml")) rescue nil) || {}
-arch_doc = read("resources/frameworks/rails-architecture.md")
+# Pattern-catalog ids: the union across every shipped per-stack catalog. Policy and README
+# examples may reference any of them.
+catalog_ids = Dir[File.join(PLUGIN, "resources/patterns/*.yaml")].flat_map do |abs|
+  doc = (YAML.safe_load(File.read(abs)) rescue nil) || {}
+  (doc["patterns"] || []).map { |p| p["id"] }
+end.compact
 
-# Flatten thresholds to dotted ids: <stack>.<unit>.<metric>
-defined_metrics = []
+thresholds = (YAML.safe_load(read("config/defaults/thresholds.yaml")) rescue nil) || {}
+
+# Flatten thresholds to dotted ids: <stack>.<unit>.<metric>, grouped by stack.
+metrics_by_stack = Hash.new { |h, k| h[k] = [] }
 thresholds.each do |stack, units|
   next unless units.is_a?(Hash)
 
   units.each do |unit, metrics|
     next unless metrics.is_a?(Hash)
 
-    metrics.each_key { |m| defined_metrics << "#{stack}.#{unit}.#{m}" }
+    metrics.each_key { |m| metrics_by_stack[stack] << "#{stack}.#{unit}.#{m}" }
   end
 end
 
-# (a) every metric id cited in rails-architecture.md is a real defined threshold
-cited_metrics = arch_doc.scan(/`(rails\.[a-z_]+\.[a-z_]+)`/).flatten.uniq
-undefined = cited_metrics.reject { |k| defined_metrics.include?(k) }
-if undefined.empty?
-  ok "all #{cited_metrics.size} metric ids cited in rails-architecture.md are defined in thresholds.yaml"
-else
-  undefined.each { |k| bad "rails-architecture.md cites an undefined threshold: #{k}" }
+# Per stack: the architecture doc must exist for a stack with thresholds, every metric it
+# cites must be defined, and every defined metric should be referenced somewhere. This
+# generalizes over rails, python, and any future stack — add the threshold namespace +
+# `<stack>-architecture.md` and the check covers it automatically.
+agent_text = read("agents/ie-architecture-reviewer.md")
+config_res = read("references/config-resolution.md")
+
+metrics_by_stack.each do |stack, defined_metrics|
+  arch_rel = "resources/frameworks/#{stack}-architecture.md"
+  unless File.exist?(File.join(PLUGIN, arch_rel))
+    bad "thresholds define `#{stack}.*` but #{arch_rel} is missing (architecture stack pack incomplete)"
+    next
+  end
+  arch_doc = read(arch_rel)
+
+  # (a) every metric id cited in <stack>-architecture.md is a real defined threshold
+  cited_metrics = arch_doc.scan(/`(#{Regexp.escape(stack)}\.[a-z_]+\.[a-z_]+)`/).flatten.uniq
+  undefined = cited_metrics.reject { |k| defined_metrics.include?(k) }
+  if undefined.empty?
+    ok "all #{cited_metrics.size} metric ids cited in #{stack}-architecture.md are defined in thresholds.yaml"
+  else
+    undefined.each { |k| bad "#{stack}-architecture.md cites an undefined threshold: #{k}" }
+  end
+
+  # (b) every defined threshold is referenced (exact id or a `<stack>.<unit>.*` wildcard) by
+  #     the doc, the lens, or config-resolution. Soft warning — an unused metric may be intentional.
+  ref_text = arch_doc + agent_text + config_res
+  orphans = defined_metrics.reject do |k|
+    _, unit, = k.split(".")
+    ref_text.include?(k) || ref_text.include?("#{stack}.#{unit}.*")
+  end
+  if orphans.empty?
+    ok "every defined #{stack} threshold metric is referenced by the docs/lens"
+  else
+    orphans.each { |k| note "threshold defined but never referenced by id: #{k}" }
+  end
 end
 
-# (b) every defined threshold is referenced (exact id or a `<stack>.<unit>.*` wildcard) by
-#     the doc, the lens, or config-resolution. Soft warning — an unused metric may be intentional.
-ref_text = arch_doc + read("agents/ie-architecture-reviewer.md") + read("references/config-resolution.md")
-orphans = defined_metrics.reject do |k|
-  stack, unit, = k.split(".")
-  ref_text.include?(k) || ref_text.include?("#{stack}.#{unit}.*")
-end
-if orphans.empty?
-  ok "every defined threshold metric is referenced by the docs/lens"
-else
-  orphans.each { |k| note "threshold defined but never referenced by id: #{k}" }
-end
-
-# (c) every pattern id named in policy (config defaults) and README examples exists in the catalog
+# (c) every pattern id named in policy (config defaults) and README examples exists in some catalog
 policy = (YAML.safe_load(read("config/defaults/patterns.yaml")) rescue nil) || {}
 policy_ids = (Array(policy["allowed"]) + Array(policy["blocked"])).select { |x| x.is_a?(String) }
 # README bracketed examples: `allowed: [interactor, form_object, ...]`, `blocked: [service_object]`
@@ -391,6 +411,57 @@ if orphans.empty?
 else
   orphans.each { |abs| bad "orphan resource doc (not in principle-index/lens-catalog): #{abs.sub(PLUGIN + '/', '')}" }
 end
+
+# ---------------------------------------------------------------------------
+section "10. Stack catalog (registry) consistency"
+
+# The registry (references/stack-catalog.md) is the source of truth for which stacks the
+# plugin knows and which packs each carries. Keep it honest: every architecture-supported
+# (✅) row must have its two files + a threshold namespace, and nothing may exist out of band.
+catalog_md = read("references/stack-catalog.md")
+# Table rows: "| `<id>` | … | ✅|⬜ | … |". Capture the backticked id and whether the row is ✅.
+registry = {}
+catalog_md.each_line do |line|
+  m = line.match(/^\|\s*`([a-z0-9-]+)`\s*\|/)
+  next unless m
+
+  registry[m[1]] = line.include?("✅")
+end
+
+if registry.empty?
+  bad "stack-catalog.md: no stack rows parsed (table format changed?)"
+else
+  ok "stack-catalog.md lists #{registry.size} stacks (#{registry.values.count(true)} architecture-supported)"
+end
+
+failures_before = $failures
+
+# (a) every ✅ stack has both resource files + a threshold namespace
+threshold_stacks = thresholds.keys.reject { |k| k == "version" }
+registry.select { |_, arch| arch }.each_key do |stack|
+  arch_doc = "resources/frameworks/#{stack}-architecture.md"
+  cat = "resources/patterns/#{stack}.yaml"
+  bad "stack-catalog: `#{stack}` is ✅ but #{arch_doc} is missing" unless File.exist?(File.join(PLUGIN, arch_doc))
+  bad "stack-catalog: `#{stack}` is ✅ but #{cat} is missing" unless File.exist?(File.join(PLUGIN, cat))
+  bad "stack-catalog: `#{stack}` is ✅ but no `#{stack}.*` namespace in thresholds.yaml" unless threshold_stacks.include?(stack)
+end
+
+# (b) every threshold namespace and every pattern catalog is a registered ✅ stack (no orphans)
+threshold_stacks.each do |stack|
+  if !registry.key?(stack)
+    bad "thresholds.yaml defines `#{stack}.*` but it is not a row in stack-catalog.md"
+  elsif !registry[stack]
+    bad "thresholds.yaml defines `#{stack}.*` but stack-catalog marks `#{stack}` as not architecture-supported (⬜)"
+  end
+end
+Dir[File.join(PLUGIN, "resources/patterns/*.yaml")].each do |abs|
+  doc = (YAML.safe_load(File.read(abs)) rescue nil) || {}
+  stack = doc["stack"]
+  next unless stack
+
+  bad "patterns/#{File.basename(abs)} declares stack `#{stack}` but it is not ✅ in stack-catalog.md" unless registry[stack]
+end
+ok "every threshold namespace and pattern catalog maps to an architecture-supported stack row" if $failures == failures_before
 
 # ---------------------------------------------------------------------------
 puts "\n#{'-' * 60}"

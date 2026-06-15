@@ -13,7 +13,7 @@ framework-specific and code/audit-only.
 | `ie-convention-reviewer` | convention-over-configuration, framework idiom | `principles/convention-over-configuration.md`, the matching `frameworks/<stack>.md`, `agnostic/naming.md`, `defaults-and-configuration.md` | Reinvented conventions, config where convention exists, one-off patterns fighting the repo/framework, non-idiomatic structure/naming. **Reads repo `CLAUDE.md`/`AGENTS.md` FIRST — local conventions override community defaults.** |
 | `ie-simplicity-reviewer` | Occam, KISS, YAGNI | `principles/occams-razor.md`, `principles/software-philosophies.md`, `agnostic/defaults-and-configuration.md` | Needless abstraction, premature generality, speculative config, layers that don't earn their keep, simpler equivalent exists. Guards the flip side: don't oversimplify away real requirements. |
 | `ie-experience-reviewer` | HIG, look-and-feel, UX | `principles/human-interface-guidelines.md`, `look-and-feel.md`, `ux-design.md`, `agnostic/accessibility.md`, `information-architecture.md` | Missing interaction states, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design |
-| `ie-architecture-reviewer` | structural quality (Occam/SRP applied), design patterns | `frameworks/<stack>-architecture.md`, `patterns/<stack>.yaml`, resolved `.intense/` config | Fat models/controllers, God objects, misused service objects, callback hell, Law of Demeter; classifies pattern instances, raises unidentified patterns, enforces allow/block/approved policy. **Framework-specific (Rails today), code/audit only.** Heuristic-first; optional reek/flog/brakeman enrichment. |
+| `ie-architecture-reviewer` | structural quality (Occam/SRP applied), design patterns | `frameworks/<stack>-architecture.md`, `patterns/<stack>.yaml`, resolved `.intense/` config | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter; classifies pattern instances, raises unidentified patterns, enforces allow/block/approved policy. **Framework-specific (Rails + Python today), code/audit only.** Heuristic-first; optional reek/flog/brakeman (Ruby) or ruff/radon (Python) enrichment. |
 
 ## Lens selection (per context)
 
@@ -28,10 +28,13 @@ code already exists to be consistent with (almost always — default on for code
 frontend files, user flows, screens/views, CLI UX, or a plan that describes any of
 these. Skip for pure backend/library/infra changes with no user-facing surface.
 
-**`ie-architecture-reviewer`** runs when a supported framework is detected (Rails today;
-the lens has a `frameworks/<stack>-architecture.md` rule pack + a `resources/patterns/<stack>.yaml`
-catalog). Code/audit contexts only — it inspects structure, not prose. Skip when no
-supported framework is present.
+**`ie-architecture-reviewer`** runs when a supported framework is detected. The supported
+stacks, their detection signals, and the rule-pack files each loads are listed in
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` (the registry) — a stack is
+architecture-supported only when its **Arch pack** is ✅ there (Rails and Python today;
+both have a `frameworks/<stack>-architecture.md` + `resources/patterns/<stack>.yaml` +
+`<stack>.*` thresholds). Code/audit contexts only — it inspects structure, not prose. Skip
+when no architecture-supported stack is present.
 
 **Config overrides selection.** The `.intense/ways-of-working.yaml` `lenses:` block
 (merged over the plugin default per `config-resolution.md`) is authoritative: `on`

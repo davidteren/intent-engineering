@@ -5,6 +5,47 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
+## [Unreleased]
+
+### Added
+- **Python architecture stack** for the 5th (architecture) lens — it now supports Rails
+  **and** Python (FastAPI-first, but the smells apply to any layered Python service):
+  - `resources/frameworks/python-architecture.md` — 8 structural smells (`fat-router`,
+    `god-module`, `god-object`, `misused-service`, `business-logic-in-schema`,
+    `fat-dependency`, `layer-leak`, `law-of-demeter`) + general metrics, with optional
+    `ruff`/`radon`/`vulture`/`import-linter` enrichment.
+  - `resources/patterns/python.yaml` — 13-pattern catalog (router, dependency,
+    pydantic_schema, settings, service, repository, background_task, app_factory,
+    exception_handler, middleware, adapter_client, document_renderer, dataclass_value).
+  - `config/defaults/thresholds.yaml` — a `python.*` threshold namespace.
+- Stack detection for Python (`pyproject.toml`/`setup.py`/`setup.cfg` + `.py` sources)
+  wired into `/ie-review`, `/ie-audit`, `/ie-init`, the architecture agent, and the lens
+  catalog.
+- **Stack registry** (`references/stack-catalog.md`) — one source of truth for every known
+  stack: detection signals, the packs it loads (convention doc, architecture doc, pattern
+  catalog, threshold namespace), and whether the architecture lens supports it. The lens,
+  the skills, and `ie-init` read the registry instead of hardcoding detection, so adding a
+  stack is data + one catalog row rather than edits across five files. This is the
+  extension point for the queued stacks (PHP/Laravel, Elixir/Phoenix, Express/Node, React).
+- **Stack-aware `/ie-init`** — scaffolds only the *detected* stack's `thresholds.yaml`
+  namespace (not the whole multi-stack file) and seeds `patterns.yaml` policy from that
+  stack's catalog, driven by the registry. Convention-only / unknown stacks get the
+  stack-agnostic `ways-of-working.yaml` with a note.
+
+### Changed
+- `scripts/check-contracts.rb` section 8 (cross-references) generalized from Rails-only to
+  **every stack** with a `<stack>.*` threshold namespace: each must have a
+  `<stack>-architecture.md`, all metrics it cites must be defined, and pattern-policy ids
+  resolve against the union of all catalogs. New section 10 enforces stack-registry
+  consistency (✅ rows ↔ files ↔ threshold namespaces). 67 → 75 checks, green.
+
+### Notes
+- Dogfooded the Python pack read-only against a real-world FastAPI service. Verdict
+  healthy with near-zero false positives; the run caught two pack bugs (a bare-`Request`/
+  `Response` grep that collided with Pydantic model names; a missing renderer pattern for
+  openpyxl/pandas-heavy modules) and a placement smell — all fixed in the docs/catalog
+  before release.
+
 ## [0.2.0] — 2026-06-14
 
 First public release. The feature-complete build landed 2026-06-03; it was published on

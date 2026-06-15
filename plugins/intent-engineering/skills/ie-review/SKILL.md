@@ -76,9 +76,11 @@ lenses and synthesis. Note the config source in Coverage. Then read
   the stack(s) from file extensions/paths to pick the `frameworks/<stack>.md` doc(s).
 - **`ie-experience-reviewer`:** only when the diff touches a user-facing surface (UI
   components, frontend files, templates/views, CLI UX). Skip for pure backend/lib/infra.
-- **`ie-architecture-reviewer`:** when a supported framework is detected (Rails: a
-  `Gemfile`/`config/application.rb` + the diff touches `app/models`, `app/controllers`,
-  `app/services`, `app/interactors`, or similar structural code). Skip when no supported
+- **`ie-architecture-reviewer`:** when a supported framework is detected and the diff
+  touches structural code. **Rails:** a `Gemfile`/`config/application.rb` + changes to
+  `app/models`, `app/controllers`, `app/services`, `app/interactors`, or similar.
+  **Python:** a `pyproject.toml`/`setup.py`/`setup.cfg` + changes to `.py` sources
+  (routers, services, models/schemas, dependencies, app factory). Skip when no supported
   framework, or the diff is config/docs/test-only with no structural change. Pass it the
   resolved `thresholds` + pattern policy.
 
