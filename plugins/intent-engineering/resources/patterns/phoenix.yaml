@@ -1,0 +1,270 @@
+# Intent Engineering — Phoenix / Elixir design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in a Phoenix/Elixir codebase. Pattern `id`s here are the
+# stable keys referenced by `.intense/patterns.yaml` allowed / blocked / approved
+# lists. See README.md (this directory) for the schema.
+#
+# Recognition is ANY-OF: a unit matches if any strong signal hits. A `use`
+# directive / behaviour / path is the strongest signal; a name or path alone is
+# weaker — say which signal matched in the finding `evidence`.
+version: 1
+stack: phoenix
+
+patterns:
+  - id: context
+    name: Context
+    intent: >
+      A plain module that is the public API for a bounded part of the domain. It
+      centralizes data access (Ecto/Repo) and validation for related schemas, so
+      logic isn't scattered across controllers and LiveViews. The seam between the
+      web layer and the application.
+    recognition:
+      uses: []
+      behaviours: []
+      calls: ["Repo.", "Ecto.Query", "from("]
+      paths: ["lib/*/", "lib/**"]
+      excludes_paths: ["lib/*_web/**"]
+      name_suffix: []
+      functions: [list_, get_, create_, update_, delete_, change_]
+    good_use:
+      - "the public API for a domain area; groups RELATED functionality and schemas"
+      - "owns data access (Repo/Ecto) and validation; the web layer calls it, not Repo"
+      - "returns {:ok, struct} | {:error, changeset} tuples for write operations"
+      - "cross-context access goes through another context's public functions, not its schemas"
+    misuse:
+      - "god context spanning unrelated domains/schemas (god-context)"
+      - "anemic context that only forwards to Repo with no validation/orchestration"
+      - "web/HTTP concerns (conn, params shaping, rendering) leaking into the context"
+      - "business logic duplicated in controllers/LiveViews instead of centralized here"
+
+  - id: phoenix_controller
+    name: Phoenix Controller
+    intent: >
+      A thin web-layer module mapping a request to a response: read params, call one
+      context function, render. HTTP concerns only; the domain lives in contexts.
+    recognition:
+      uses: [":controller", "MyAppWeb, :controller"]
+      behaviours: []
+      calls: ["conn", "render(", "Phoenix.Controller"]
+      paths: ["lib/*_web/controllers/**"]
+      name_suffix: [Controller]
+      functions: [index, show, new, create, edit, update, delete]
+    good_use:
+      - "thin actions: read params -> call ONE context function -> render/redirect"
+      - "pattern-match the context result ({:ok, _} | {:error, changeset})"
+      - "uses fallback controllers / action_fallback for error rendering"
+      - "no Repo/Ecto access or business logic in the action"
+    misuse:
+      - "business logic or multi-step orchestration in the action (fat-controller)"
+      - "Repo.* / Ecto.Query / Schema.changeset called directly (context-bypass)"
+      - "non-RESTful action sprawl signalling a missing context/resource"
+      - "data shaping that belongs in a context or view"
+
+  - id: ecto_schema
+    name: Ecto Schema
+    intent: >
+      A module mapping a database table (or embedded data) to a struct, with field
+      types and associations. Models data; paired with a changeset for validation.
+    recognition:
+      uses: ["Ecto.Schema"]
+      behaviours: []
+      calls: ["schema ", "embedded_schema", "field ", "belongs_to", "has_many"]
+      paths: ["lib/**"]
+      name_suffix: []
+      functions: [changeset]
+    good_use:
+      - "defines schema fields, types, and associations for one entity"
+      - "a changeset/2 that casts and validates; cohesive entity-local helpers"
+      - "associations and constraints declared; no querying inside the schema"
+      - "one entity per schema; nested under its context directory"
+    misuse:
+      - "business logic or I/O (Repo/HTTP/mail) in the schema/changeset (business-logic-in-changeset)"
+      - "fat changeset doing cross-record lookups or side effects"
+      - "queries embedded in the schema that belong in the context"
+      - "god schema accreting unrelated fields/concerns"
+
+  - id: ecto_changeset
+    name: Ecto Changeset
+    intent: >
+      A function (usually changeset/2) that casts external input and validates it
+      before persistence. Cast + validate only — no business rules, no I/O.
+    recognition:
+      uses: []
+      behaviours: []
+      calls: ["cast(", "validate_required", "validate_", "unique_constraint", "Ecto.Changeset"]
+      paths: ["lib/**"]
+      name_suffix: []
+      functions: [changeset]
+    good_use:
+      - "cast + validate_required/validate_format/constraints; pure"
+      - "pure cross-field validations (validate_change) with no I/O"
+      - "returns an %Ecto.Changeset{}; the context decides what to do with it"
+      - "small and focused; one changeset per operation when they diverge"
+    misuse:
+      - "I/O inside the changeset (Repo lookups, HTTP, mail)"
+      - "business rules / decisions that belong in the context"
+      - "side effects on cast (runs in tests, seeds, every form render)"
+      - "an enormous changeset pipeline doing many unrelated things"
+
+  - id: live_view
+    name: LiveView / LiveComponent
+    intent: >
+      A stateful web-layer module rendering server-driven UI and handling events. It
+      owns socket/assigns state and UI events; the domain stays in contexts.
+    recognition:
+      uses: [":live_view", ":live_component", "Phoenix.LiveView", "Phoenix.LiveComponent"]
+      behaviours: []
+      calls: ["assign(", "~H", "handle_event", "handle_info", "mount"]
+      paths: ["lib/*_web/live/**", "lib/*_web/**"]
+      name_suffix: [Live]
+      functions: [mount, handle_event, handle_info, render, update]
+    good_use:
+      - "mount/handle_event read input, call ONE context function, assign results"
+      - "manages only socket/assigns/UI state; delegates the domain to contexts"
+      - "presentation extracted into function components"
+      - "subscribes to PubSub and reacts via handle_info; no domain logic inline"
+    misuse:
+      - "business logic or multi-step orchestration in handle_event (fat-liveview)"
+      - "Repo.* / Ecto.Query / changeset called directly in the LiveView (context-bypass)"
+      - "god LiveView handling many unrelated screens/concerns"
+      - "heavy domain state stuffed into socket assigns"
+
+  - id: function_component
+    name: Function Component
+    intent: >
+      A Phoenix.Component function rendering a piece of HEEx markup from assigns.
+      Presentation only — distinct from a LiveView (no state/events).
+    recognition:
+      uses: ["Phoenix.Component", ":html"]
+      behaviours: []
+      calls: ["~H", "attr ", "slot ", "embed_templates"]
+      paths: ["lib/*_web/components/**", "lib/*_web/**"]
+      name_suffix: [Components, HTML]
+      functions: []
+    good_use:
+      - "renders markup from declared attrs/slots; presentation only"
+      - "declares attr/slot with types for a clear component contract"
+      - "no data access or business logic; receives prepared assigns"
+      - "small, reusable, composable building blocks"
+    misuse:
+      - "Repo/Ecto access or business logic inside a component (context-bypass)"
+      - "fetching its own data instead of receiving prepared assigns"
+      - "god component with unrelated rendering concerns"
+      - "complex logic in HEEx that belongs in the calling LiveView/context"
+
+  - id: genserver
+    name: GenServer
+    intent: >
+      A process modelling runtime concerns — state, concurrency, serialized access
+      to a resource. Use it for runtime properties, NOT to organize code. Interaction
+      goes through one wrapper module API.
+    recognition:
+      uses: ["GenServer"]
+      behaviours: ["GenServer"]
+      calls: ["handle_call", "handle_cast", "handle_info", "GenServer.start_link"]
+      paths: ["lib/**"]
+      name_suffix: [Server, Worker]
+      functions: [init, handle_call, handle_cast, handle_info, start_link]
+    good_use:
+      - "models a genuine runtime concern (state, concurrency, resource serialization)"
+      - "started under a supervision tree (listed as a child)"
+      - "all interaction encapsulated behind this module's public API"
+      - "small, serializable messages; clear init/terminate lifecycle"
+    misuse:
+      - "wrapping pure logic that needs no process (code-organization-by-process)"
+      - "started outside a supervision tree (unsupervised-process)"
+      - "GenServer.call/cast scattered across many modules (scattered-process-interface)"
+      - "sending whole structs (e.g. conn) as messages (sending-unnecessary-data)"
+
+  - id: supervisor
+    name: Supervisor / Application
+    intent: >
+      Defines the supervision tree — which processes start, in what order, and how
+      failures are handled. The runtime composition root.
+    recognition:
+      uses: ["Supervisor", "Application"]
+      behaviours: ["Application", "Supervisor"]
+      calls: ["Supervisor.start_link", "child_spec", "Supervisor.init"]
+      paths: ["lib/*/application.ex", "lib/**"]
+      name_suffix: [Supervisor, Application]
+      functions: [start, init]
+    good_use:
+      - "lists children and a supervision strategy; the runtime composition root"
+      - "every long-running process in the system starts here (or a sub-supervisor)"
+      - "strategy chosen deliberately (one_for_one / rest_for_one / one_for_all)"
+      - "no business logic; wiring only"
+    misuse:
+      - "business logic in the application/supervisor module"
+      - "processes started elsewhere bypassing the tree (unsupervised-process)"
+      - "heavy work in start/2 blocking application boot"
+      - "a flat tree where sub-supervisors would isolate failures better"
+
+  - id: plug
+    name: Plug
+    intent: >
+      A composable transformation of a conn — the unit of the request pipeline. Used
+      for cross-cutting concerns (auth, fetching current user, headers). Thin.
+    recognition:
+      uses: []
+      behaviours: ["Plug"]
+      calls: ["def call(conn", "def init(", "plug ", "Plug.Conn"]
+      paths: ["lib/*_web/**", "lib/**"]
+      name_suffix: [Plug]
+      functions: [init, call]
+    good_use:
+      - "one cross-cutting concern transforming the conn; returns the conn"
+      - "auth, current-user fetch, locale, headers, request-id"
+      - "halts the pipeline explicitly when rejecting (halt/1)"
+      - "no business logic; composes in a pipeline via pipe_through"
+    misuse:
+      - "business logic or domain queries in a plug"
+      - "a plug that forgets to return the conn / never halts when it should"
+      - "shared mutable state across requests"
+      - "one plug doing several unrelated cross-cutting jobs"
+
+  - id: router
+    name: Router
+    intent: >
+      Maps URLs to controllers/LiveViews through pipelines (pipe_through). Declarative
+      routing and pipeline wiring — no logic.
+    recognition:
+      uses: [":router"]
+      behaviours: []
+      calls: ["scope ", "pipe_through", "pipeline ", "get ", "post ", "live "]
+      paths: ["lib/*_web/router.ex"]
+      name_suffix: [Router]
+      functions: []
+    good_use:
+      - "declarative scopes/pipelines mapping routes to controllers/LiveViews"
+      - "pipelines compose plugs for auth/format/CSRF per scope"
+      - "RESTful resources where appropriate"
+      - "no business logic; routing and pipeline wiring only"
+    misuse:
+      - "logic in the router beyond routing/pipeline wiring"
+      - "inline anonymous handlers instead of controller/LiveView references"
+      - "duplicated pipeline setup that should be shared"
+      - "auth decisions inlined instead of a plug in a pipeline"
+
+  - id: oban_worker
+    name: Background Worker (Oban / Task)
+    intent: >
+      Deferred/async work off the request path — an Oban worker or a supervised Task.
+      Orchestrates; should delegate the domain to a context.
+    recognition:
+      uses: ["Oban.Worker"]
+      behaviours: ["Oban.Worker"]
+      calls: ["perform(", "Oban.insert", "Task.Supervisor", "Task.async"]
+      paths: ["lib/**/workers/**", "lib/**/jobs/**", "lib/**"]
+      name_suffix: [Worker, Job]
+      functions: [perform]
+    good_use:
+      - "thin perform/1 delegating to a context; one operation per worker"
+      - "small serializable args (ids) in the job; idempotent / safe to retry"
+      - "queue, max_attempts, and uniqueness declared explicitly"
+      - "supervised execution (Oban, Task.Supervisor), not bare spawn"
+    misuse:
+      - "heavy business logic inlined in perform instead of delegated"
+      - "non-idempotent work that double-applies on retry"
+      - "bare spawn/Task.start outside supervision (unsupervised-process)"
+      - "passing whole structs/large payloads as job args"
