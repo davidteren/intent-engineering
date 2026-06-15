@@ -1,0 +1,68 @@
+AGENTS.md
+  s_de3e8900bd34bc::t_98562ac1ec6546 93
+  s_de3e8900bd34bc::t_fce9a5138d04cd 252-255
+  s_de3e8900bd34bc::t_fff273f8dd9df6 211-212
+  s_de3e8900bd34bc::t_bbde7fbfe96fa3 206-207
+README.md
+  s_de3e8900bd34bc::t_c09d6bcf589544 87-88
+  s_de3e8900bd34bc::t_eab9c6e66e3359 94-97
+  s_de3e8900bd34bc::t_f54353389572f1 56
+plugins/intent-engineering/references/lens-catalog.md
+  s_de3e8900bd34bc::t_0ccec4a3afbf2d 33-34
+  s_de3e8900bd34bc::t_1c2930c29c107a 31-32,35
+  s_de3e8900bd34bc::t_f14d60420d27a1 16
+plugins/intent-engineering/skills/ie-review/SKILL.md
+  s_de3e8900bd34bc::t_8b048103c2cb29 79-83
+plugins/intent-engineering/skills/ie-init/SKILL.md
+  s_de3e8900bd34bc::t_4997a186141007 29-37
+PLAN.md
+  s_de3e8900bd34bc::t_5e48b28d283458 194-198
+plugins/intent-engineering/resources/frameworks/python-architecture.md
+  s_de3e8900bd34bc::t_db4311934e20bd 185-196
+  s_de3e8900bd34bc::t_14757a87f65a00 81-85
+  s_de3e8900bd34bc::t_268721db77b51c 117-124
+  s_de3e8900bd34bc::t_b6ad1d20d3017e 1-80,86-116,125-184,197-236,241-273
+  s_de3e8900bd34bc::t_c168d5c675b716 237-240
+plugins/intent-engineering/agents/ie-architecture-reviewer.md
+  s_de3e8900bd34bc::t_a5f8280dd18dbf 3
+  s_de3e8900bd34bc::t_6637417487735f 67-71
+  s_de3e8900bd34bc::t_dc9f9bace58e22 49-52
+  s_de3e8900bd34bc::t_c17a5f73c41c20 14-15,19,26-29
+plugins/intent-engineering/README.md
+  s_de3e8900bd34bc::t_085ea41e9e8bc4 63-64
+  s_de3e8900bd34bc::t_418a52804272dd 39-42,44-45
+plugins/intent-engineering/resources/patterns/python.yaml
+  s_de3e8900bd34bc::t_d8f2be494f71f6 1-280,308-330
+  s_de3e8900bd34bc::t_e3489eaa759b60 281-307
+plugins/intent-engineering/references/principle-index.md
+  s_de3e8900bd34bc::t_7b0f0fa38b3a33 46-47
+CHANGELOG.md
+  s_de3e8900bd34bc::t_a20541a2c76d6f 8-37
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_2c52fcbcc72ba3 32-56
+  s_de3e8900bd34bc::t_e327dcd64d581d 6-7
+plugins/intent-engineering/skills/ie-audit/SKILL.md
+  s_de3e8900bd34bc::t_710575bd78b544 46-50
+scripts/check-contracts.rb
+  s_de3e8900bd34bc::t_c4f0359aeea2b1 293-299,302-303,310,314-327,329-349,352
+STATUS.md
+  s_de3e8900bd34bc::t_c6d43c04245f26 7
+  s_de3e8900bd34bc::t_3457e27fd41e85 14,17,21-25
+  s_de3e8900bd34bc::t_971e0c042a7fe0 48-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "7beb88a66387a22cea2cce378fa342d1a5b4302a",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
