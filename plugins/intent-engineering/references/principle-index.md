@@ -37,6 +37,7 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | Python | `resources/frameworks/python.md` |
 | Laravel (PHP) | `resources/frameworks/laravel.md` |
 | Express / Node | `resources/frameworks/express.md` |
+| Phoenix (Elixir) | `resources/frameworks/phoenix.md` |
 | Swift / iOS | `resources/frameworks/swift-ios.md` |
 
 ## Architecture (the 5th lens)
@@ -51,6 +52,8 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | Laravel design-pattern catalog | `resources/patterns/laravel.yaml` | architecture |
 | Express / Node architecture smells | `resources/frameworks/express-architecture.md` | architecture |
 | Express / Node design-pattern catalog | `resources/patterns/express.yaml` | architecture |
+| Phoenix / Elixir architecture smells | `resources/frameworks/phoenix-architecture.md` | architecture |
+| Phoenix / Elixir design-pattern catalog | `resources/patterns/phoenix.yaml` | architecture |
 
 ## Config
 

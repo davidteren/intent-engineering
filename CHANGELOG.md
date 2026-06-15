@@ -8,6 +8,22 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Added
+- **Phoenix / Elixir architecture stack** — third registry-only stack addition:
+  - `resources/frameworks/phoenix-architecture.md` — 8 structural smells (`fat-controller`,
+    `context-bypass`, `god-context`, `fat-liveview`, `business-logic-in-changeset`,
+    `god-module`, `process-misuse`, `law-of-demeter`) + general metrics; optional credo/boundary
+    enrichment.
+  - `resources/patterns/phoenix.yaml` — 11-pattern catalog (context, phoenix_controller,
+    ecto_schema, ecto_changeset, live_view, function_component, genserver, supervisor, plug,
+    router, oban_worker).
+  - `resources/frameworks/phoenix.md` — Elixir/Phoenix convention doc (contexts as the seam,
+    Ecto cast/validate scope, OTP-models-runtime-not-code-organization, `{:ok,_}|{:error,_}`,
+    least-astonishment traps).
+  - `config/defaults/thresholds.yaml` — a `phoenix.*` threshold namespace; registered in
+    `stack-catalog.md` (Arch pack ✅) + `principle-index.md`. Detected from `mix.exs`
+    (`:phoenix`) + `lib/<app>_web/`. Research-backed (Phoenix Contexts guide, Elixir
+    process/design anti-patterns, Ecto docs). Covers structural/layering + OTP *placement*;
+    deep supervision-tree correctness is out of scope by design. Dogfood on a real repo pending.
 - **Express / Node architecture stack** — second registry-only stack addition:
   - `resources/frameworks/express-architecture.md` — 8 structural smells (`fat-route-handler`,
     `god-module`, `god-object`, `misused-service`, `layer-leak`, `fat-middleware`,
@@ -69,6 +85,9 @@ a **stack registry** that makes every future language/framework a data-only addi
   stack-agnostic `ways-of-working.yaml` with a note.
 
 ### Changed
+- `ie-architecture-reviewer` frontmatter description + intro made **stack-neutral** (point at
+  the registry instead of enumerating stacks), so the agent prompt no longer needs a per-stack
+  edit and can't drift stale as stacks are added.
 - `scripts/check-contracts.rb` section 8 (cross-references) generalized from Rails-only to
   **every stack** with a `<stack>.*` threshold namespace: each must have a
   `<stack>-architecture.md`, all metrics it cites must be defined, and pattern-policy ids

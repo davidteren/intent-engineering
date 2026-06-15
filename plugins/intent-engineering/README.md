@@ -37,13 +37,14 @@ plan validation, code review, and codebase audit:
   interaction states, broken keyboard/focus, accessibility gaps, weak information
   architecture, AI-slop design. Runs only on user-facing surfaces.
 - **Architecture** (`ie-architecture-reviewer`) — framework structure (Rails + Python +
-  Laravel + Express today). Fat models/routers/controllers/handlers, God objects/modules,
-  misused service objects, callback hell, business logic in schemas, queries in views / N+1,
-  layer leaks, async/error-handling gaps, Law of Demeter. Classifies design-pattern instances
-  against a per-stack catalog, raises unidentified patterns, and enforces your `.intense/`
-  allow/block/approved policy. Heuristic-first; optionally enriched by `reek`/`flog`/`brakeman`
-  (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), or `eslint`/`madge` (Express)
-  if installed. Code/audit only, when a supported framework is detected.
+  Laravel + Express + Phoenix today). Fat models/routers/controllers/handlers, God
+  objects/modules/contexts, misused service objects, callback hell, business logic in
+  schemas/changesets, queries in views / N+1, layer leaks, async/process misuse, Law of
+  Demeter. Classifies design-pattern instances against a per-stack catalog, raises
+  unidentified patterns, and enforces your `.intense/` allow/block/approved policy.
+  Heuristic-first; optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon`
+  (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express), or `credo`/`boundary`
+  (Phoenix) if installed. Code/audit only, when a supported framework is detected.
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries
 a confidence anchor, and proposes a concrete fix. When two principles conflict (e.g.
@@ -58,10 +59,10 @@ plugin):
 - `resources/principles/` — one doc per principle (definition, origin, violation
   smells, examples, how-to-apply, cited sources).
 - `resources/frameworks/` — per-stack conventions (Rails, Ruby, React, TypeScript,
-  Python, Laravel, Express, Swift/iOS).
+  Python, Laravel, Express, Phoenix, Swift/iOS).
 - `resources/agnostic/` — cross-cutting topics (naming, defaults & configuration, error
   handling, API design, accessibility, information architecture).
-- `resources/frameworks/{rails,python,laravel,express}-architecture.md` + `resources/patterns/{rails,python,laravel,express}.yaml`
+- `resources/frameworks/{rails,python,laravel,express,phoenix}-architecture.md` + `resources/patterns/{rails,python,laravel,express,phoenix}.yaml`
   — the architecture lens's per-stack smell heuristics and design-pattern catalogs.
 
 The "Violation smells" section of each doc is the lens's detection checklist.

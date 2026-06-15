@@ -100,5 +100,27 @@ express:
     max_function_params: 6    # long parameter list -> options object / DTO
     max_nesting_depth: 4      # callback hell / pyramid of doom
 
+phoenix:
+  controller:
+    max_loc: 150              # fat-controller signal (whole controller)
+    max_action_loc: 25        # business logic leaking into an action
+    max_actions: 12           # beyond a cohesive resource's actions
+  context:
+    max_loc: 300              # god-context signal
+    max_public_functions: 25  # a context grouping too much
+  live_view:
+    max_loc: 200              # fat-liveview signal (whole module)
+    max_handler_loc: 25       # logic leaking into handle_event/handle_info
+  schema:
+    max_loc: 150              # fat Ecto schema signal
+    max_changeset_loc: 30     # business-logic-in-changeset signal
+  module:
+    max_loc: 400              # god-module signal (whole module)
+    max_public_functions: 20  # dumping-ground module
+  general:
+    max_function_loc: 40      # long-function signal
+    max_function_params: 5    # long parameter list -> struct / keyword opts
+    max_nesting_depth: 3      # nested case/cond/with -> with chains, multi-clause
+
 # Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
 # rule pack lands. Unknown stacks fall back to `general` only.
