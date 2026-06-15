@@ -1,0 +1,57 @@
+plugins/intent-engineering/resources/frameworks/phoenix.md
+  s_de3e8900bd34bc::t_779bb0381eb0a9 1-95
+plugins/intent-engineering/references/principle-index.md
+  s_de3e8900bd34bc::t_db8d02f9f353c6 55-56
+  s_de3e8900bd34bc::t_454cfa1b8445a5 40
+AGENTS.md
+  s_de3e8900bd34bc::t_0af63fa78bfaf5 218
+  s_de3e8900bd34bc::t_3bde8f20d0f63c 211-213
+README.md
+  s_de3e8900bd34bc::t_6320aa089edb59 56
+  s_de3e8900bd34bc::t_2ac0755a2456a7 87-89
+  s_de3e8900bd34bc::t_cf334e2d9afb4a 96-99
+docs/index.html
+  s_de3e8900bd34bc::t_3a3cbd12f98529 185
+plugins/intent-engineering/resources/frameworks/phoenix-architecture.md
+  s_de3e8900bd34bc::t_a449dd8d5c1c91 1-215
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_1ff61fc4f7ea18 103-124
+plugins/intent-engineering/README.md
+  s_de3e8900bd34bc::t_c369680de88208 62
+  s_de3e8900bd34bc::t_994ab0535658df 40-47
+  s_de3e8900bd34bc::t_aa3e0997b2e3ab 65
+CHANGELOG.md
+  s_de3e8900bd34bc::t_0b01cdf13806f7 11-26
+  s_de3e8900bd34bc::t_613b8d66446535 88-90
+plugins/intent-engineering/references/stack-catalog.md
+  s_de3e8900bd34bc::t_397ffe348845e0 39-41
+  s_de3e8900bd34bc::t_aa15d051851ef1 32
+STATUS.md
+  s_de3e8900bd34bc::t_73f04ab8ca7fc8 14,17,21-25
+  s_de3e8900bd34bc::t_694322425df30a 74-75
+  s_de3e8900bd34bc::t_4c7965da7486d4 86-88
+plugins/intent-engineering/resources/patterns/phoenix.yaml
+  s_de3e8900bd34bc::t_7ccbd18c78f23a 1-270
+plugins/intent-engineering/agents/ie-architecture-reviewer.md
+  s_de3e8900bd34bc::t_2d23d3d3e216d2 3
+  s_de3e8900bd34bc::t_92ef60dbaa0e6b 14-16,20-23
+plugins/intent-engineering/references/lens-catalog.md
+  s_de3e8900bd34bc::t_6c9c03df60d561 16
+  s_de3e8900bd34bc::t_2295b11be44d0e 34-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "49cf627647b81fbfa525ca4209b408f5c0788a11",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
