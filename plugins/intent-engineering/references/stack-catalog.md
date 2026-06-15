@@ -28,15 +28,16 @@ and the whole pipeline picks it up. This is the registry that keeps stack knowle
 | `rails` | `Gemfile` with `rails`; `config/application.rb`; `app/models` + `app/controllers` | `frameworks/rails.md` | ✅ | `frameworks/rails-architecture.md` | `patterns/rails.yaml` | `rails.*` |
 | `python` | `pyproject.toml` / `setup.py` / `setup.cfg`; `.py` sources (FastAPI-first, any layered service) | `frameworks/python.md` | ✅ | `frameworks/python-architecture.md` | `patterns/python.yaml` | `python.*` |
 | `laravel` | `composer.json` with `laravel/framework`; an `artisan` file; `app/` + `routes/` + `bootstrap/app.php` | `frameworks/laravel.md` | ✅ | `frameworks/laravel-architecture.md` | `patterns/laravel.yaml` | `laravel.*` |
+| `express` | `package.json` with `express`; `app.js`/`server.js` + `routes/` (any layered Node HTTP service) | `frameworks/express.md` | ✅ | `frameworks/express-architecture.md` | `patterns/express.yaml` | `express.*` |
 | `ruby` | `.rb` sources without Rails (gems, plain Ruby); `*.gemspec` | `frameworks/ruby.md` | ⬜ | — | — | — |
 | `typescript` | `tsconfig.json`; `.ts`/`.tsx` sources | `frameworks/typescript.md` | ⬜ | — | — | — |
 | `react` | `react` in `package.json`; `.jsx`/`.tsx` components | `frameworks/react.md` | ⬜ | — | — | — |
 | `swift-ios` | `.swift` sources; `Package.swift`; `.xcodeproj`/`.xcworkspace` | `frameworks/swift-ios.md` | ⬜ | — | — | — |
 
 **Arch pack `⬜`** = convention coverage only; the architecture lens skips the stack until
-both architecture files + a threshold namespace land. The next candidates as real dogfood
-targets appear are Elixir/Phoenix and Express/Node (research first, then author the packs,
-then flip the row to ✅).
+both architecture files + a threshold namespace land. The next candidate as a real dogfood
+target appears is Elixir/Phoenix (research first, then author the packs, then flip the row
+to ✅).
 
 ## Adding a stack
 

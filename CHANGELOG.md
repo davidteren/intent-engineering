@@ -8,6 +8,19 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Added
+- **Express / Node architecture stack** — second registry-only stack addition:
+  - `resources/frameworks/express-architecture.md` — 8 structural smells (`fat-route-handler`,
+    `god-module`, `god-object`, `misused-service`, `layer-leak`, `fat-middleware`,
+    `async-error-gap`, `law-of-demeter`) + general metrics; optional eslint/madge enrichment.
+  - `resources/patterns/express.yaml` — 12-pattern catalog (router, controller, middleware,
+    service, repository, model, error_handler, validator, config, app_factory,
+    background_worker, event_subscriber).
+  - `resources/frameworks/express.md` — Node/Express convention doc (3-layer architecture,
+    async error handling, config-from-env, app/server separation, least-astonishment traps).
+  - `config/defaults/thresholds.yaml` — an `express.*` threshold namespace; registered in
+    `stack-catalog.md` (Arch pack ✅) + `principle-index.md`. Detected from `package.json`
+    (`express`) + `app.js`/`routes/`. Research-backed (bulletproof-nodejs 3-layer,
+    goldbergyoni nodebestpractices, Express docs, 12-factor). Dogfood on a real repo pending.
 - **Laravel (PHP) architecture stack** — the first stack added *through the registry* (data
   only, no skill edits), proving the extension point:
   - `resources/frameworks/laravel-architecture.md` — 8 structural smells (`fat-controller`,

@@ -1,0 +1,288 @@
+# Intent Engineering — Express / Node design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in an Express/Node service codebase. Pattern `id`s here are
+# the stable keys referenced by `.intense/patterns.yaml` allowed / blocked /
+# approved lists. See README.md (this directory) for the schema.
+#
+# Recognition is ANY-OF: a unit matches if any strong signal hits. An import /
+# call signature / path is the strongest signal; a name suffix alone is weaker —
+# say which signal matched in the finding `evidence`.
+version: 1
+stack: express
+
+patterns:
+  - id: router
+    name: Router (Express)
+    intent: >
+      An express.Router() (or app) module mapping routes to handlers. The handler
+      is the transport edge: parse the request, call one service, send the
+      response, forward errors via next(err). Distinct from a controller only by
+      location — the responsibility (thin transport) is the same.
+    recognition:
+      imports: ["express.Router", "require('express')", "from 'express'"]
+      calls: ["router.get", "router.post", "router.put", "router.patch", "router.delete", "app.get", "app.post"]
+      paths: ["**/routes/**", "**/router/**", "**/api/**"]
+      name_suffix: [Routes, Router, routes]
+      functions: []
+    good_use:
+      - "thin handler: parse req -> call one service -> send res -> next(err) on failure"
+      - "one router per resource; mounted with app.use('/resource', router)"
+      - "validation via a validation middleware/schema, not inline"
+      - "no business logic, DB queries, or external calls in the handler"
+    misuse:
+      - "business logic, queries, or external calls inside the route handler (fat-route-handler)"
+      - "handler reaches past the service straight into the ORM/DB (layer-leak)"
+      - "one giant router/file covering many unrelated resources (god-module)"
+      - "inline fat closures in the route file instead of a controller/service"
+
+  - id: controller
+    name: Controller
+    intent: >
+      A function/class that handles a route's (req, res, next): parse input, call a
+      service, shape the HTTP response. Owns HTTP concerns only; business logic
+      lives in the service.
+    recognition:
+      imports: []
+      calls: []
+      paths: ["**/controllers/**"]
+      name_suffix: [Controller, controller]
+      functions: []
+    good_use:
+      - "parse/validate request -> call one service -> send response"
+      - "forwards errors with next(err); no try/catch swallowing"
+      - "no business logic or DB access; HTTP shaping only"
+      - "thin: one cohesive action per handler"
+    misuse:
+      - "business logic / multi-step orchestration in the controller (fat-route-handler)"
+      - "direct ORM/DB/SQL access skipping the service layer (layer-leak)"
+      - "no error forwarding; errors swallowed or uncaught (async-error-gap)"
+      - "god controller handling many unrelated resources"
+
+  - id: middleware
+    name: Middleware
+    intent: >
+      A (req, res, next) function wrapping requests for a cross-cutting concern —
+      auth, validation, logging, rate-limiting, body parsing. Thin and calls next;
+      not a place for business logic.
+    recognition:
+      imports: []
+      calls: ["app.use", "router.use", "next("]
+      paths: ["**/middleware/**", "**/middlewares/**"]
+      name_suffix: [Middleware, middleware]
+      functions: []
+    good_use:
+      - "one cross-cutting concern per middleware; always calls next() or next(err)"
+      - "request/response envelope concerns (auth, parsing, logging, rate-limit) only"
+      - "registration order intentional; documented when it matters"
+      - "validation middleware rejects bad input before the handler runs"
+    misuse:
+      - "business logic or domain queries in middleware (fat-middleware)"
+      - "a path that never calls next(), hanging the request"
+      - "mutable shared state across requests on the middleware closure"
+      - "one middleware doing several unrelated cross-cutting jobs"
+
+  - id: service
+    name: Service (application layer)
+    intent: >
+      The layer that owns business logic, invoked by controllers/workers/cron. It
+      is HTTP-agnostic: takes plain inputs, returns domain values, throws domain
+      errors — never touches req/res. The home of the 3-layer architecture's middle.
+    recognition:
+      imports: []
+      calls: []
+      paths: ["**/services/**", "**/service/**", "**/domain/**", "**/use-cases/**"]
+      name_suffix: [Service, service, UseCase]
+      functions: []
+    good_use:
+      - "owns business logic; one cohesive operation per public method"
+      - "HTTP-agnostic: no req/res/next, no express import, no status codes"
+      - "dependencies injected (constructor / factory), not reached globally"
+      - "uses a data-access/repository layer for persistence; emits events for side effects"
+    misuse:
+      - "references req/res or returns HTTP status/headers (layer-leak, upward)"
+      - "grab-bag of unrelated public methods (misused-service)"
+      - "god service doing an entire endpoint end to end"
+      - "anemic pass-through forwarding to one model call with no behaviour"
+
+  - id: repository
+    name: Repository / Data-access
+    intent: >
+      Isolates persistence behind a named interface, decoupling services from the
+      ORM/driver. Returns domain objects, not live query builders. The data layer
+      of the 3-layer architecture.
+    recognition:
+      imports: ["sequelize", "mongoose", "@prisma/client", "knex", "typeorm"]
+      calls: []
+      paths: ["**/repositories/**", "**/repository/**", "**/dao/**", "**/data-access/**"]
+      name_suffix: [Repository, Repo, Dao, Store]
+      functions: []
+    good_use:
+      - "single source of persistence for one aggregate/entity"
+      - "services depend on the repository interface, not the ORM directly"
+      - "returns domain objects/plain data, not a live query builder/Mongoose query"
+      - "swappable with a fake for tests"
+    misuse:
+      - "thin wrapper duplicating the ORM with no decoupling benefit"
+      - "leaks a query builder / Mongoose Query, defeating the abstraction"
+      - "business logic mixed into persistence mediation"
+      - "queries scattered across services/controllers instead of centralized"
+
+  - id: model
+    name: Model (ORM)
+    intent: >
+      An ORM/ODM model or schema — Mongoose schema, Sequelize/TypeORM model, Prisma
+      model — defining persistence and entity shape. Distinct from a service
+      (operations) and a DTO (no persistence).
+    recognition:
+      imports: ["mongoose", "sequelize", "typeorm", "@prisma/client"]
+      calls: ["mongoose.Schema", "mongoose.model", "sequelize.define", "DataTypes"]
+      paths: ["**/models/**", "**/entities/**", "**/schema/**"]
+      name_suffix: [Model, Schema, Entity]
+      functions: []
+    good_use:
+      - "defines schema, types, indexes, and persistence for one entity"
+      - "cohesive entity-local hooks/virtuals; no cross-domain orchestration"
+      - "validation of shape at the persistence boundary"
+      - "one entity per model"
+    misuse:
+      - "business logic / external calls in model hooks (pre/post save) doing side effects"
+      - "god model accreting unrelated responsibilities"
+      - "model methods reaching into HTTP or other entities' internals"
+      - "queries embedded in the model that belong in a repository"
+
+  - id: error_handler
+    name: Error-handling Middleware
+    intent: >
+      A centralized (err, req, res, next) middleware that maps thrown/forwarded
+      errors to HTTP responses, distinguishing operational from programmer errors.
+      Registered last. The one place errors become responses.
+    recognition:
+      imports: []
+      calls: ["next(err", "app.use"]
+      paths: ["**/middleware/**", "**/errors/**", "**/error/**"]
+      name_suffix: [ErrorHandler, errorHandler]
+      functions: []
+    good_use:
+      - "one centralized (err, req, res, next) handler registered after routes"
+      - "maps errors to a consistent response envelope; sets status from the error"
+      - "distinguishes operational (expected) from programmer (bug) errors"
+      - "logs server-side detail while returning a safe client message"
+    misuse:
+      - "ad-hoc per-route error shaping duplicated instead of one handler"
+      - "swallowing errors (empty catch / .catch(()=>{})) so failures vanish"
+      - "leaking stack traces / internal detail to the client"
+      - "business logic or branching on domain state inside the error handler"
+
+  - id: validator
+    name: Validator / DTO
+    intent: >
+      A request-validation schema (Joi/Zod/express-validator) or typed DTO that
+      checks and shapes input at the boundary. Validation only — no business rules.
+    recognition:
+      imports: ["joi", "zod", "express-validator", "class-validator"]
+      calls: ["Joi.object", "z.object", "body(", "check("]
+      paths: ["**/validators/**", "**/validation/**", "**/schemas/**", "**/dto/**"]
+      name_suffix: [Schema, Validator, Dto, DTO]
+      functions: []
+    good_use:
+      - "validates request shape/types at the boundary (often as middleware)"
+      - "one schema per operation; rejects bad input before the handler"
+      - "coerces/normalizes input; no I/O or business rules"
+      - "shared, reusable schemas rather than inline ad-hoc checks"
+    misuse:
+      - "business logic or DB lookups inside validation"
+      - "validation scattered inline across handlers instead of a schema"
+      - "duplicating service-layer rules in the validator"
+      - "one god schema reused across unrelated endpoints"
+
+  - id: config
+    name: Config Module
+    intent: >
+      A single typed configuration object built from environment variables
+      (dotenv / 12-factor), so the rest of the code never reads process.env
+      directly. The one source of runtime config.
+    recognition:
+      imports: ["dotenv", "convict", "env-var"]
+      calls: ["dotenv.config", "process.env"]
+      paths: ["**/config/**", "**/config.js", "**/config.ts"]
+      name_suffix: [Config, config]
+      functions: []
+    good_use:
+      - "one config object reads process.env once and exposes typed values"
+      - "secrets from the environment (12-factor); never committed"
+      - "validates required env at startup; fails fast if missing"
+      - "the rest of the code imports config, not process.env"
+    misuse:
+      - "process.env reads scattered throughout the codebase"
+      - "secrets/keys hardcoded or defaulted to real values"
+      - "multiple competing config sources that can diverge"
+      - "mutable global config mutated at runtime"
+
+  - id: app_factory
+    name: App Factory / Loader
+    intent: >
+      A createApp()/loader that wires the Express app — middleware, routers, error
+      handler, DB connections — and is separate from the server bootstrap
+      (app.listen). A composition root: high fan-out expected, business logic not.
+    recognition:
+      imports: ["express"]
+      calls: ["express()", "app.use", "app.listen"]
+      paths: ["**/app.js", "**/app.ts", "**/server.js", "**/loaders/**", "**/bootstrap/**"]
+      name_suffix: [createApp, loader]
+      functions: [createApp, buildApp, bootstrap]
+    good_use:
+      - "wires middleware/routers/error-handler/connections and returns the app"
+      - "separates the Express 'app' from the 'server' (app.listen) for testability"
+      - "startup split into small loaders, each loadable independently"
+      - "high fan-out here is wiring, not a god object — judge as a composition root"
+    misuse:
+      - "business logic or request handling in the factory/loader"
+      - "one monolithic startup file mixing app definition with app.listen and logic"
+      - "heavy work (network, migrations) inline at import time"
+      - "the app mutated globally elsewhere after construction"
+
+  - id: background_worker
+    name: Background Worker / Job
+    intent: >
+      Deferred work off the request path — BullMQ/Bull/Agenda/bee-queue processors,
+      or a cron job. Orchestrates; should not contain the business logic it triggers.
+    recognition:
+      imports: ["bullmq", "bull", "agenda", "bee-queue", "node-cron"]
+      calls: ["new Queue", "queue.process", "Worker(", "agenda.define", "cron.schedule"]
+      paths: ["**/jobs/**", "**/workers/**", "**/queues/**", "**/tasks/**"]
+      name_suffix: [Job, Worker, Queue, Task]
+      functions: []
+    good_use:
+      - "thin processor delegating to a service; one operation per job"
+      - "small serializable payloads (ids), not whole objects"
+      - "idempotent / safe to retry; failures surfaced for the queue to retry"
+      - "concurrency, attempts, and backoff declared explicitly"
+    misuse:
+      - "heavy business logic inlined in the processor instead of delegated"
+      - "non-idempotent work that double-applies on retry"
+      - "relying on setTimeout/setInterval for durable scheduling"
+      - "swallowing errors so the queue never retries or alerts"
+
+  - id: event_subscriber
+    name: Event Subscriber (Pub/Sub)
+    intent: >
+      Decouples a trigger from its side effects via events (EventEmitter / a bus).
+      The service emits an event; subscribers react. Keeps the service from growing
+      a 1000-line imperative side-effect chain.
+    recognition:
+      imports: ["events", "eventemitter2"]
+      calls: ["eventEmitter.on", "emitter.emit", ".on(", ".emit("]
+      paths: ["**/subscribers/**", "**/listeners/**", "**/events/**"]
+      name_suffix: [Subscriber, Listener]
+      functions: []
+    good_use:
+      - "service emits a domain event; subscribers each handle one side effect"
+      - "subscribers are independent and order-agnostic"
+      - "async subscriber errors handled, not left as unhandled rejections"
+      - "keeps the originating operation single-responsibility"
+    misuse:
+      - "hidden business pipelines smuggled into subscribers (action-at-a-distance)"
+      - "order-dependent subscribers that break when reordered"
+      - "unhandled rejections in async subscribers"
+      - "events used where a direct, traceable call would be clearer"

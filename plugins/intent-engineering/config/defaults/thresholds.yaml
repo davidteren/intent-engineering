@@ -76,5 +76,29 @@ laravel:
     max_method_loc: 30        # long-method signal
     max_method_params: 6      # long parameter list -> introduce a DTO / data object
 
+express:
+  route:
+    max_loc: 150              # fat router file
+    max_handler_loc: 25       # business logic leaking into a route handler
+    max_routes: 20            # one router owning too many routes
+  controller:
+    max_loc: 150              # fat controller module
+    max_handler_loc: 25       # logic leaking into a controller action
+  service:
+    max_public_methods: 10    # grab-bag service module
+    max_loc: 200              # a service this big is a God object in disguise
+  module:
+    max_loc: 400              # god-module signal (whole file)
+    max_exports: 15           # dumping-ground module (public exports)
+  middleware:
+    max_loc: 40               # a middleware should be small + cross-cutting
+  god_object:
+    max_collaborators: 15     # distinct modules/classes referenced (fan-out)
+    max_loc: 300
+  general:
+    max_function_loc: 50      # long-function signal
+    max_function_params: 6    # long parameter list -> options object / DTO
+    max_nesting_depth: 4      # callback hell / pyramid of doom
+
 # Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
 # rule pack lands. Unknown stacks fall back to `general` only.

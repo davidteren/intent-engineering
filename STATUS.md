@@ -11,17 +11,17 @@ phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 ## What exists today
 
 A Claude Code plugin enforcing *intent engineering*. 5 lenses, 5 skills, `.intense` config,
-Rails + Python + Laravel architecture audit + per-stack pattern catalogs.
+Rails + Python + Laravel + Express architecture audit + per-stack pattern catalogs.
 
 - **Lenses:** predictability, simplicity (always-on); convention, experience, architecture
-  (conditional — architecture supports Rails + Python + Laravel, code/audit).
+  (conditional — architecture supports Rails + Python + Laravel + Express, code/audit).
 - **Skills:** `/ie-init`, `/ie-plan-assist`, `/ie-validate-plan`, `/ie-review`, `/ie-audit`.
 - **Contract layer:** findings schema, subagent template, lens catalog, stack catalog
   (the stack registry), scoring rubric, report template, principle index, config resolution.
-- **Knowledge base:** 9 principle docs, 9 framework docs (incl. `rails-architecture`,
-  `python-architecture`, `laravel-architecture`), 6 agnostic docs, 3 pattern catalogs
-  (`rails.yaml` 14, `python.yaml` 13, `laravel.yaml` 14).
-- **Automated check:** `scripts/check-contracts.rb` — 83 checks across 10 sections, green
+- **Knowledge base:** 9 principle docs, 10 framework docs (incl. `rails-architecture`,
+  `python-architecture`, `laravel-architecture`, `express-architecture`), 6 agnostic docs,
+  4 pattern catalogs (`rails.yaml` 14, `python.yaml` 13, `laravel.yaml` 14, `express.yaml` 12).
+- **Automated check:** `scripts/check-contracts.rb` — 91 checks across 10 sections, green
   (section 8 cross-references generalized to every stack with a threshold namespace;
   section 10 enforces stack-registry consistency).
 - **Stack registry** (`references/stack-catalog.md`) — one source of truth for stack
@@ -69,8 +69,8 @@ Sources** (same bar as the rest of the KB), then dogfooded on a real repo.
 | `rails` | ✅ | ✅ | Done. Dogfood on a real Rails repo still pending. |
 | `python` | ✅ | ✅ | Done (FastAPI-first). Dogfooded on a real FastAPI service. |
 | `laravel` | ✅ | ✅ | **Done.** 8 smells (fat-controller, fat-model, god-class, misused-service, query-in-view/N+1, logic-in-routes, fat-job, law-of-demeter) + 14-pattern catalog, research-backed (alexeymezenin, Laravel docs, laravel-actions, PSR-12). **Dogfood on a real Laravel repo pending** (none available locally). |
-| **Express / Node** | ⬜ | ⬜ | **Next.** Author smells (fat-route-handler, fat-middleware, god-module, layer-leak, callback/promise tangles) + catalog (router, middleware, controller, service, repository, model). Research first. |
-| **Elixir / Phoenix** | ⬜ | ⬜ | Author contexts/controllers/schemas/LiveView smells + catalog. **Flag:** likely first candidate for a *dedicated per-stack agent* if OTP/supervision-tree reasoning is wanted (data packs may not carry it). Decide during research. |
+| `express` | ✅ | ✅ | **Done.** 8 smells (fat-route-handler, god-module, god-object, misused-service, layer-leak, fat-middleware, async-error-gap, law-of-demeter) + 12-pattern catalog, research-backed (bulletproof-nodejs 3-layer, goldbergyoni nodebestpractices, Express docs, 12-factor). **Dogfood on a real Express repo pending.** |
+| **Elixir / Phoenix** | ⬜ | ⬜ | **Next.** Author contexts/controllers/schemas/LiveView smells + catalog. **Flag:** likely first candidate for a *dedicated per-stack agent* if OTP/supervision-tree reasoning is wanted (data packs may not carry it). Decide during research. |
 | **React / Node (frontend)** | ✅ (`react.md`) | ⬜ | Mostly a **convention + experience** concern, less architecture. Decide during research whether an arch pack earns its keep or the existing convention doc + experience lens suffice. |
 | `ruby`, `typescript`, `swift-ios` | ✅ | ⬜ | Convention-only by design; no arch pack planned unless a real consumer appears. |
 
@@ -82,9 +82,9 @@ registry row, run `check-contracts.rb`, then dogfood on a real repo and fold fin
 - [ ] **Install & use it** — now installable from the published repo (above); run the
       `/ie-*` skills as installed skills (so far orchestrated by hand / via the audit run).
 - [ ] **Run on a real Rails repo**; fold learnings back into `resources/`.
-- [ ] **Dogfood the Laravel pack** on a real Laravel repo; fold findings back into the docs/catalog.
-- [ ] **Architecture stack packs** — Express/Node (next), Elixir/Phoenix, React (see
-      roadmap above). Research-first, drop into the registry.
+- [ ] **Dogfood the Laravel + Express packs** on real repos; fold findings back into the docs/catalogs.
+- [ ] **Architecture stack packs** — Elixir/Phoenix (next), React (see roadmap above).
+      Research-first, drop into the registry.
 - [ ] **Deferred niceties** → `wip/improvements.md` — the hardening backlog is closed
       (contract check covers it); remaining are optional: a committed test fixture + lens
       regression test, a single-sourced orchestration reference, and a git pre-commit hook.
