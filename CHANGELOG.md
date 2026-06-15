@@ -5,7 +5,10 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
-## [Unreleased]
+## [0.3.0] — 2026-06-15
+
+Second feature release: the architecture lens gains a **Python (FastAPI-first)** stack and
+a **stack registry** that makes every future language/framework a data-only addition.
 
 ### Added
 - **Python architecture stack** for the 5th (architecture) lens — it now supports Rails

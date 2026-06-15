@@ -4,7 +4,7 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (v0.2.0) · **Updated:** 2026-06-15
+**State:** ✅ feature-complete · 🚀 published & released (v0.3.0) · **Updated:** 2026-06-15
 
 ---
 
@@ -32,7 +32,7 @@ Rails + Python architecture audit + per-stack pattern catalogs.
 
 - **Repo (public, MIT):** https://github.com/davidteren/intent-engineering
 - **Landing site:** https://davidteren.github.io/intent-engineering/ (GitHub Pages, `docs/`)
-- **Release:** `v0.2.0` (Latest), tag on HEAD.
+- **Release:** `v0.3.0` (Latest) — Python architecture stack + stack registry; `v0.2.0` prior.
 - **CI:** `contracts` workflow runs `check-contracts.rb` on every PR + pushes to `main`;
   `contract-integrity check` is a required status check (branch protection on `main`).
 - Announced on X (2026-06-14).
