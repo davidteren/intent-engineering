@@ -16,13 +16,17 @@ Rails + Python architecture audit + per-stack pattern catalogs.
 - **Lenses:** predictability, simplicity (always-on); convention, experience, architecture
   (conditional — architecture supports Rails + Python, code/audit).
 - **Skills:** `/ie-init`, `/ie-plan-assist`, `/ie-validate-plan`, `/ie-review`, `/ie-audit`.
-- **Contract layer:** findings schema, subagent template, lens catalog, scoring rubric,
-  report template, principle index, config resolution.
+- **Contract layer:** findings schema, subagent template, lens catalog, stack catalog
+  (the stack registry), scoring rubric, report template, principle index, config resolution.
 - **Knowledge base:** 9 principle docs, 8 framework docs (incl. `rails-architecture`,
   `python-architecture`), 6 agnostic docs, 2 pattern catalogs (`rails.yaml` 14,
   `python.yaml` 13).
-- **Automated check:** `scripts/check-contracts.rb` — 73 checks across 9 sections, green
-  (section 8 cross-references generalized to every stack with a threshold namespace).
+- **Automated check:** `scripts/check-contracts.rb` — 75 checks across 10 sections, green
+  (section 8 cross-references generalized to every stack with a threshold namespace;
+  section 10 enforces stack-registry consistency).
+- **Stack registry** (`references/stack-catalog.md`) — one source of truth for stack
+  detection + which packs each loads; the architecture lens, the skills, and a stack-aware
+  `/ie-init` read it, so adding a stack is data + a catalog row, not skill edits.
 
 ## Published
 

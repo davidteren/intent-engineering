@@ -16,6 +16,8 @@ supported frameworks today; the approach generalizes via per-stack rule packs.
 
 ## Supported stacks
 
+The supported stacks are registered in
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` (the rows with **Arch pack** ✅).
 **`rails` and `python` ship today.** A stack is supported only if both
 `${CLAUDE_PLUGIN_ROOT}/resources/frameworks/<stack>-architecture.md` and
 `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` exist. If the detected stack has

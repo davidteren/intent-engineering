@@ -21,12 +21,23 @@ for the design see **PLAN.md**.
 - Stack detection for Python (`pyproject.toml`/`setup.py`/`setup.cfg` + `.py` sources)
   wired into `/ie-review`, `/ie-audit`, `/ie-init`, the architecture agent, and the lens
   catalog.
+- **Stack registry** (`references/stack-catalog.md`) — one source of truth for every known
+  stack: detection signals, the packs it loads (convention doc, architecture doc, pattern
+  catalog, threshold namespace), and whether the architecture lens supports it. The lens,
+  the skills, and `ie-init` read the registry instead of hardcoding detection, so adding a
+  stack is data + one catalog row rather than edits across five files. This is the
+  extension point for the queued stacks (PHP/Laravel, Elixir/Phoenix, Express/Node, React).
+- **Stack-aware `/ie-init`** — scaffolds only the *detected* stack's `thresholds.yaml`
+  namespace (not the whole multi-stack file) and seeds `patterns.yaml` policy from that
+  stack's catalog, driven by the registry. Convention-only / unknown stacks get the
+  stack-agnostic `ways-of-working.yaml` with a note.
 
 ### Changed
 - `scripts/check-contracts.rb` section 8 (cross-references) generalized from Rails-only to
   **every stack** with a `<stack>.*` threshold namespace: each must have a
   `<stack>-architecture.md`, all metrics it cites must be defined, and pattern-policy ids
-  resolve against the union of all catalogs. 67 → 73 checks, green.
+  resolve against the union of all catalogs. New section 10 enforces stack-registry
+  consistency (✅ rows ↔ files ↔ threshold namespaces). 67 → 75 checks, green.
 
 ### Notes
 - Dogfooded the Python pack read-only against a real-world FastAPI service. Verdict

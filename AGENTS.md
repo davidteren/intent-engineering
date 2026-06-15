@@ -73,8 +73,8 @@ intent-engineering/                       dev repo + marketplace
     agents/      ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
     skills/      ie-{init,plan-assist,validate-plan,review,audit}/SKILL.md
     references/  findings-schema.json, subagent-template.md, lens-catalog.md,
-                 report-template.md, scoring-rubric.md, principle-index.md,
-                 config-resolution.md            (the shared contract layer)
+                 stack-catalog.md, report-template.md, scoring-rubric.md,
+                 principle-index.md, config-resolution.md   (the shared contract layer)
     config/defaults/  ways-of-working.yaml, patterns.yaml, thresholds.yaml
     resources/   principles/  frameworks/  agnostic/  patterns/   (knowledge base)
 ```
@@ -159,6 +159,11 @@ rules into skills/agents — reference them.
   equal exactly the five `agents/ie-*-reviewer.md` basenames.
 - `subagent-template.md` — the dispatch prompt skeleton + the shared confidence rubric.
 - `lens-catalog.md` — the five lenses, their resource docs, and selection rules.
+- `stack-catalog.md` — the **stack registry**: every known stack, its detection signals,
+  the packs it loads (convention doc, architecture doc, pattern catalog, threshold
+  namespace), and whether the architecture lens supports it. Skills + the architecture lens
+  + `ie-init` read this instead of hardcoding detection, so adding a stack is data + a
+  catalog row, not skill edits.
 - `scoring-rubric.md` — audit/plan posture dimensions per lens (canonical snake_case keys).
 - `report-template.md` — synthesized output shape (markdown tables + `mode:agent` JSON).
 - `principle-index.md` — maps each principle/topic to its resource doc and owning lens.
@@ -225,11 +230,16 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   add it to the `findings-schema.json` `lens` enum, a `lens-catalog.md` row,
   `scoring-rubric.md` dimensions, and `README.md`. Wire its selection into the skills.
 - **New framework doc** → `resources/frameworks/<stack>.md` (with a smells section +
-  Sources) **and** wire it into `principle-index.md` and the `lens-catalog.md` resource
-  column. Seed a stack only when there is a real consumer (dogfood targets first).
-- **New architecture stack** → ships only when **both**
-  `resources/frameworks/<stack>-architecture.md` **and** `resources/patterns/<stack>.yaml`
-  exist; the architecture lens gates on that pair.
+  Sources) **and** wire it into `principle-index.md`, the `lens-catalog.md` resource
+  column, and a `stack-catalog.md` row (Arch pack ⬜). Seed a stack only when there is a
+  real consumer (dogfood targets first).
+- **New architecture stack** → ships only when **all** of
+  `resources/frameworks/<stack>-architecture.md`, `resources/patterns/<stack>.yaml`, and a
+  `<stack>.*` namespace in `config/defaults/thresholds.yaml` exist; then flip the stack's
+  `stack-catalog.md` row to **Arch pack ✅** and add a `principle-index.md` row. The
+  architecture lens + `ie-init` read the registry, so **no skill edits are needed** — the
+  registry is the only detection wiring. The contract check (section 10) enforces that a ✅
+  row, its files, and its threshold namespace all agree.
 - **New design pattern** → add to `resources/patterns/<stack>.yaml` with all required
   fields (`id`, `name`, `intent`, `recognition`, `good_use`, `misuse`). Ids are snake_case,
   stable, and may be referenced by `.intense/patterns.yaml`.
@@ -255,8 +265,10 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   catalog; unreferenced metrics warned), resource-doc
   structure (each principle/framework/agnostic doc has a detection "smells" section + a
   Sources section with ≥2 links; no orphan docs missing from `principle-index.md`/
-  `lens-catalog.md`), and that the five agents are git-tracked (the gitignore trap). Exits
-  non-zero on any breakage. Add new invariants there as the plugin grows — it is the
+  `lens-catalog.md`), that the five agents are git-tracked (the gitignore trap), and
+  **stack-registry consistency** (every `stack-catalog.md` Arch-pack-✅ row has its
+  architecture doc, pattern catalog, and threshold namespace; no threshold namespace or
+  pattern catalog exists without a registered ✅ row). Exits non-zero on any breakage. Add new invariants there as the plugin grows — it is the
   plugin's one automated check. It also runs in **CI on every PR**
   (`.github/workflows/contracts.yml`), so a contract break fails before merge.
 - **Dogfood as you go.** Run the lenses' logic against your change (or `/ie-audit` once

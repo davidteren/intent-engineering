@@ -413,6 +413,57 @@ else
 end
 
 # ---------------------------------------------------------------------------
+section "10. Stack catalog (registry) consistency"
+
+# The registry (references/stack-catalog.md) is the source of truth for which stacks the
+# plugin knows and which packs each carries. Keep it honest: every architecture-supported
+# (✅) row must have its two files + a threshold namespace, and nothing may exist out of band.
+catalog_md = read("references/stack-catalog.md")
+# Table rows: "| `<id>` | … | ✅|⬜ | … |". Capture the backticked id and whether the row is ✅.
+registry = {}
+catalog_md.each_line do |line|
+  m = line.match(/^\|\s*`([a-z0-9-]+)`\s*\|/)
+  next unless m
+
+  registry[m[1]] = line.include?("✅")
+end
+
+if registry.empty?
+  bad "stack-catalog.md: no stack rows parsed (table format changed?)"
+else
+  ok "stack-catalog.md lists #{registry.size} stacks (#{registry.values.count(true)} architecture-supported)"
+end
+
+failures_before = $failures
+
+# (a) every ✅ stack has both resource files + a threshold namespace
+threshold_stacks = thresholds.keys.reject { |k| k == "version" }
+registry.select { |_, arch| arch }.each_key do |stack|
+  arch_doc = "resources/frameworks/#{stack}-architecture.md"
+  cat = "resources/patterns/#{stack}.yaml"
+  bad "stack-catalog: `#{stack}` is ✅ but #{arch_doc} is missing" unless File.exist?(File.join(PLUGIN, arch_doc))
+  bad "stack-catalog: `#{stack}` is ✅ but #{cat} is missing" unless File.exist?(File.join(PLUGIN, cat))
+  bad "stack-catalog: `#{stack}` is ✅ but no `#{stack}.*` namespace in thresholds.yaml" unless threshold_stacks.include?(stack)
+end
+
+# (b) every threshold namespace and every pattern catalog is a registered ✅ stack (no orphans)
+threshold_stacks.each do |stack|
+  if !registry.key?(stack)
+    bad "thresholds.yaml defines `#{stack}.*` but it is not a row in stack-catalog.md"
+  elsif !registry[stack]
+    bad "thresholds.yaml defines `#{stack}.*` but stack-catalog marks `#{stack}` as not architecture-supported (⬜)"
+  end
+end
+Dir[File.join(PLUGIN, "resources/patterns/*.yaml")].each do |abs|
+  doc = (YAML.safe_load(File.read(abs)) rescue nil) || {}
+  stack = doc["stack"]
+  next unless stack
+
+  bad "patterns/#{File.basename(abs)} declares stack `#{stack}` but it is not ✅ in stack-catalog.md" unless registry[stack]
+end
+ok "every threshold namespace and pattern catalog maps to an architecture-supported stack row" if $failures == failures_before
+
+# ---------------------------------------------------------------------------
 puts "\n#{'-' * 60}"
 warn_note = $warnings.zero? ? "" : ", #{$warnings} warning(s)"
 if $failures.zero?

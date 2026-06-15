@@ -28,11 +28,13 @@ code already exists to be consistent with (almost always — default on for code
 frontend files, user flows, screens/views, CLI UX, or a plan that describes any of
 these. Skip for pure backend/library/infra changes with no user-facing surface.
 
-**`ie-architecture-reviewer`** runs when a supported framework is detected (Rails and
-Python today; the lens has a `frameworks/<stack>-architecture.md` rule pack + a
-`resources/patterns/<stack>.yaml` catalog — `rails` from a Gemfile / Rails app structure,
-`python` from a pyproject/setup manifest + `.py` sources). Code/audit contexts only — it
-inspects structure, not prose. Skip when no supported framework is present.
+**`ie-architecture-reviewer`** runs when a supported framework is detected. The supported
+stacks, their detection signals, and the rule-pack files each loads are listed in
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` (the registry) — a stack is
+architecture-supported only when its **Arch pack** is ✅ there (Rails and Python today;
+both have a `frameworks/<stack>-architecture.md` + `resources/patterns/<stack>.yaml` +
+`<stack>.*` thresholds). Code/audit contexts only — it inspects structure, not prose. Skip
+when no architecture-supported stack is present.
 
 **Config overrides selection.** The `.intense/ways-of-working.yaml` `lenses:` block
 (merged over the plugin default per `config-resolution.md`) is authoritative: `on`

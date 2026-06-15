@@ -24,17 +24,18 @@ fall back to a numbered list and wait for the user's reply — never silently pi
 ### 1. Resolve target + detect stack
 
 - Target dir is `.intense/` at the repo root (current working directory's repo).
-- Detect the stack to pre-select relevant templates and pre-fill comments:
-  - **Rails:** `Gemfile` with `rails`, or `config/application.rb`, or `app/models`.
-  - **Python:** `pyproject.toml`/`setup.py`/`setup.cfg` + `.py` sources (FastAPI-first;
-    the `python.*` thresholds and `patterns/python.yaml` pack apply to any layered Python
-    service).
-  - The shipped `thresholds.yaml` carries both `rails.*` and `python.*` namespaces and
-    `patterns.yaml` policy can reference either catalog — scaffold the full file; the team
-    prunes the namespace they don't use.
-  - (Other stacks: pattern/threshold packs aren't available yet; still offer
-    `ways-of-working.yaml`, which is stack-agnostic, and note packs for this stack aren't
-    available.)
+- **Read `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` — the registry is the source
+  of truth for detection and which pack a stack carries.** Match the repo against its
+  `Detection signals` column to identify the stack(s). Do not hardcode detection here; the
+  catalog owns it, so a newly-added stack works without editing this skill.
+- Note each detected stack's **Arch pack** status and **Threshold ns** from the catalog:
+  - **Arch pack ✅** (today: `rails`, `python`) — the stack has a `<stack>.*` threshold
+    namespace and a pattern catalog. Scaffold *that stack's* namespace (Step 3), not the
+    whole multi-stack file.
+  - **Arch pack ⬜** (convention-only: `ruby`, `typescript`, `react`, `swift-ios`) — no
+    threshold/pattern pack yet. Offer `ways-of-working.yaml` (stack-agnostic) and say the
+    architecture pack for this stack isn't available.
+  - **Unknown / no match** — offer `ways-of-working.yaml` only; note no pack was detected.
 
 ### 2. Choose what to scaffold
 
@@ -50,23 +51,48 @@ present the menu (multi-select):
 
 Recommend **All** for a first run.
 
-### 3. Copy templates (idempotent)
+### 3. Copy templates (idempotent, stack-aware)
 
-Source templates are `${CLAUDE_PLUGIN_ROOT}/config/defaults/<file>`. For each selected
-file:
+Source templates are `${CLAUDE_PLUGIN_ROOT}/config/defaults/<file>`. Write to
+`.intense/<file>`. **Never overwrite an existing `.intense/<file>`** without explicit
+confirmation — a surprising clobber of committed team config is the failure mode to avoid
+(least astonishment / no data loss). If a target exists, report it and ask whether to
+overwrite, diff, or skip; default to **skip**.
 
-```bash
-mkdir -p .intense
-SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/<file>"
-DST=".intense/<file>"
-if [ -e "$DST" ]; then echo "EXISTS: $DST"; else cp "$SRC" "$DST" && echo "CREATED: $DST"; fi
-```
+- **`ways-of-working.yaml`** — stack-agnostic: copy verbatim.
+  ```bash
+  mkdir -p .intense
+  SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/ways-of-working.yaml"; DST=".intense/ways-of-working.yaml"
+  if [ -e "$DST" ]; then echo "EXISTS: $DST"; else cp "$SRC" "$DST" && echo "CREATED: $DST"; fi
+  ```
 
-- **Never overwrite an existing `.intense/<file>`** without explicit confirmation — a
-  surprising clobber of committed team config is the failure mode to avoid (least
-  astonishment / no data loss). If a target exists, report it and ask whether to
-  overwrite, diff, or skip; default to **skip**.
-- The copied files keep their explanatory comments so the team can edit in place.
+- **`thresholds.yaml`** — **scaffold only the detected stack's namespace**, so the team
+  tunes their stack, not a multi-stack file. The shipped default carries every stack's
+  namespace (`rails.*`, `python.*`, …) for merge purposes; `.intense/thresholds.yaml` only
+  needs the one the repo uses (config-resolution deep-merges a partial file over defaults).
+  Emit the file header comment + the `<stack>:` block for the detected stack (`STACK`):
+  ```bash
+  SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/thresholds.yaml"; DST=".intense/thresholds.yaml"; STACK="python"  # detected
+  if [ -e "$DST" ]; then echo "EXISTS: $DST"; else
+    awk -v s="$STACK" '
+      /^[a-z]/ && $0 !~ "^"s":" {inblk=0}        # any other top-level key ends the block
+      /^#/ && !seenkey {print}                    # keep the leading header comments
+      $0 ~ "^"s":" {inblk=1; seenkey=1}
+      inblk {print}
+    ' "$SRC" > "$DST" && echo "CREATED: $DST ($STACK namespace only)"
+  fi
+  ```
+  For an **Arch pack ⬜** / unknown stack, skip `thresholds.yaml` and tell the user no
+  architecture pack exists for the stack yet.
+
+- **`patterns.yaml`** — copy the default policy, but it must reference **the detected
+  stack's** catalog ids (`patterns/<stack>.yaml`), not another stack's. If the detected
+  stack's catalog differs from the default file's seeded ids, replace the `allowed:` seed
+  with that stack's pattern ids (read them from
+  `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml`) and leave `blocked:`/`approved:`
+  empty for the team to fill. Note the stack in the file's top comment.
+
+The copied/emitted files keep their explanatory comments so the team can edit in place.
 
 ### 4. Report
 
