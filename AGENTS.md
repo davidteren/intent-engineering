@@ -208,13 +208,14 @@ pattern catalog:
 - `principles/` — one doc per design principle (definition, origin, core tenets,
   **violation smells**, good/bad examples, how-to-apply, **Sources**).
 - `frameworks/` — per-stack convention docs (rails, ruby, react, typescript, python,
-  swift-ios) plus `rails-architecture.md` and `python-architecture.md` for the architecture
-  lens. Variant headings: "Convention violation smells", "Least-astonishment traps".
+  laravel, swift-ios) plus `rails-architecture.md`, `python-architecture.md`, and
+  `laravel-architecture.md` for the architecture lens. Variant headings: "Convention
+  violation smells", "Least-astonishment traps".
 - `agnostic/` — cross-cutting topics (naming, error-handling, api-design,
   defaults-and-configuration, accessibility, information-architecture). Heading:
   "Detectable smells".
-- `patterns/` — YAML design-pattern catalogs (`rails.yaml` 14, `python.yaml` 13 patterns) +
-  format README.
+- `patterns/` — YAML design-pattern catalogs (`rails.yaml` 14, `python.yaml` 13,
+  `laravel.yaml` 14 patterns) + format README.
 
 **The "Violation smells" / "Detectable smells" section is load-bearing** — it *is* the
 lens's detection checklist. Every doc a lens reads must have one. Every doc ends with a

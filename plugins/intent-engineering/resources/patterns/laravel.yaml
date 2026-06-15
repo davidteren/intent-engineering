@@ -1,0 +1,310 @@
+# Intent Engineering — Laravel design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in a Laravel codebase. Pattern `id`s here are the stable keys
+# referenced by `.intense/patterns.yaml` allowed / blocked / approved lists.
+# See README.md (this directory) for the schema and how the lens uses it.
+#
+# Recognition is ANY-OF: a unit matches if any strong signal hits. A base class /
+# trait / package is the strongest signal; a path or name suffix alone is weaker —
+# say which signal matched in the finding `evidence`.
+version: 1
+stack: laravel
+
+patterns:
+  - id: eloquent_model
+    name: Eloquent Model
+    intent: >
+      An Active Record model: persistence plus cohesive, entity-local behaviour
+      (relationships, casts, accessors/mutators, query scopes). "Fat models" is
+      good advice for persistence and entity behaviour, not a license to dump every
+      concern here. Distinct from a service (operations) and a data object (no
+      persistence).
+    recognition:
+      base_classes: ["Illuminate\\Database\\Eloquent\\Model", "Authenticatable", "Model"]
+      traits: ["HasFactory", "SoftDeletes"]
+      paths: ["app/Models/**", "app/**/Models/**"]
+      name_suffix: []
+      methods: [relationships, casts, scopeActive]
+    good_use:
+      - "persistence + cohesive entity behaviour: relationships, casts, accessors, scopes"
+      - "reusable query logic in query scopes (scopeX), not duplicated across callers"
+      - "mass assignment via $fillable + create($request->validated())"
+      - "one entity per model; behaviour all describes that entity"
+    misuse:
+      - "God model: persistence + business rules + formatting + external API calls mixed"
+      - "business operations that belong in a Service/Action living on the model"
+      - "external calls (HTTP, mail, payment) reached from the model"
+      - "fat accessor/mutator doing multi-branch business logic"
+
+  - id: controller
+    name: Controller
+    intent: >
+      Takes an HTTP request and returns a response: validate (via a FormRequest),
+      call one Action/Service, shape the response. Resourceful by default. A
+      single-action controller (__invoke) is the idiomatic home for one endpoint.
+    recognition:
+      base_classes: ["Controller", "App\\Http\\Controllers\\Controller"]
+      traits: []
+      paths: ["app/Http/Controllers/**"]
+      name_suffix: [Controller]
+      methods: [index, show, store, update, destroy, "__invoke"]
+    good_use:
+      - "thin actions: validate (FormRequest param) -> call one Action/Service -> respond"
+      - "resourceful (index/show/store/update/destroy) or a single-action __invoke controller"
+      - "validation delegated to a FormRequest; authorization to a Policy"
+      - "returns a view / JsonResource / redirect, not assembled domain logic"
+    misuse:
+      - "business logic, file handling, or external calls in the action (fat-controller)"
+      - "inline $request->validate(...) / Validator::make instead of a FormRequest"
+      - "non-resourceful action sprawl signalling a missing resource/controller"
+      - "querying or building Eloquent queries directly in the action"
+
+  - id: form_request
+    name: Form Request
+    intent: >
+      A FormRequest that owns validation rules and authorization for one request,
+      keeping controllers thin. Distinct from a controller (no business logic) and
+      a Policy (authorization for a model action, not request shape).
+    recognition:
+      base_classes: ["Illuminate\\Foundation\\Http\\FormRequest", "FormRequest"]
+      traits: []
+      paths: ["app/Http/Requests/**"]
+      name_suffix: [Request]
+      methods: [rules, authorize]
+    good_use:
+      - "owns the request's validation rules() (and authorize()) in one place"
+      - "type-hinted in the controller action so validation runs before the body"
+      - "prepareForValidation / withValidator for input shaping only"
+      - "named for the operation (StoreUserRequest, UpdateUserRequest)"
+    misuse:
+      - "business logic or DB writes inside rules()/authorize()"
+      - "missing authorize() (defaults open) where authorization is required"
+      - "duplicating model/business rules instead of validating request shape"
+      - "one God request reused across unrelated endpoints"
+
+  - id: action
+    name: Action (single-purpose command)
+    intent: >
+      A single business action as an invokable command object — one public entry
+      (handle/execute/__invoke). Often via lorisleiva/laravel-actions (AsAction).
+      Distinct from a service (a service groups related operations; an action is one).
+    recognition:
+      base_classes: []
+      traits: ["AsAction", "Lorisleiva\\Actions\\Concerns\\AsAction"]
+      paths: ["app/Actions/**"]
+      name_suffix: [Action]
+      methods: [handle, execute, "__invoke"]
+    good_use:
+      - "one business action per class; a single public entry (handle/execute/__invoke)"
+      - "named after the action (CreateInvoice, PublishPost)"
+      - "dependencies injected via the container; returns a value/result"
+      - "reusable from a controller, a job, or a command unchanged"
+    misuse:
+      - "multiple public methods (should be one action)"
+      - "God action doing many unrelated things"
+      - "anemic pass-through forwarding to one Eloquent call with no behaviour"
+      - "HTTP/Request/Response concerns leaking into the action"
+
+  - id: service
+    name: Service
+    intent: >
+      A class holding a cohesive set of business operations for one concept,
+      invoked from controllers/actions/jobs. HTTP-agnostic. Distinct from an Action
+      (one operation) and a Repository (persistence mediation).
+    recognition:
+      base_classes: []
+      traits: []
+      paths: ["app/Services/**"]
+      name_suffix: [Service]
+      methods: []
+    good_use:
+      - "cohesive operations for ONE concept; named for the domain (BillingService)"
+      - "HTTP-agnostic: no Request/Response/redirect; raises domain exceptions"
+      - "dependencies injected via the container, not new'd"
+      - "wraps multi-step writes in DB::transaction where needed"
+    misuse:
+      - "grab-bag of unrelated public methods -> utility/namespace class"
+      - "God service doing an entire endpoint end to end"
+      - "anemic pass-through that only forwards to one model method"
+      - "static-only methods hiding shared mutable state"
+
+  - id: api_resource
+    name: API Resource
+    intent: >
+      A JsonResource (or ResourceCollection) that shapes an Eloquent model into a
+      JSON representation. Presentation only — the serialization layer for APIs.
+    recognition:
+      base_classes: ["Illuminate\\Http\\Resources\\Json\\JsonResource", "JsonResource", "ResourceCollection"]
+      traits: []
+      paths: ["app/Http/Resources/**"]
+      name_suffix: [Resource, Collection]
+      methods: [toArray]
+    good_use:
+      - "declares the attributes/relations to expose in toArray(); no domain logic"
+      - "one resource per representation; conditional fields via whenLoaded/when"
+      - "uses whenLoaded to avoid N+1 instead of always loading relations"
+      - "explicit attribute allow-list rather than dumping the whole model"
+    misuse:
+      - "business logic or computation inside toArray()"
+      - "N+1 by accessing un-eager-loaded relations per resource"
+      - "leaking sensitive attributes by returning the whole model"
+      - "role/shape branching better handled by separate resources"
+
+  - id: job
+    name: Job (Queued)
+    intent: >
+      A unit of deferred work (ShouldQueue) enqueued for async execution. It should
+      orchestrate, not contain, the business logic it triggers.
+    recognition:
+      base_classes: ["ShouldQueue"]
+      traits: ["Dispatchable", "InteractsWithQueue", "Queueable", "SerializesModels"]
+      paths: ["app/Jobs/**"]
+      name_suffix: [Job]
+      methods: [handle]
+    good_use:
+      - "thin handle() delegating to a Service/Action; one operation per job"
+      - "small serializable args (ids / SerializesModels), not whole graphs"
+      - "idempotent / safe to retry; failures surfaced for the queue to retry"
+      - "queue, tries, and backoff declared explicitly"
+    misuse:
+      - "heavy business logic inlined in handle() instead of delegated (fat-job)"
+      - "passing whole Eloquent models / large arrays as constructor args"
+      - "non-idempotent work that double-applies on retry"
+      - "swallowing exceptions so the queue never retries or alerts"
+
+  - id: event_listener
+    name: Event / Listener
+    intent: >
+      Domain events decouple a trigger from its reactions; listeners handle them.
+      The listener orchestrates a reaction; it should not become a hidden business
+      pipeline.
+    recognition:
+      base_classes: ["ShouldQueue"]
+      traits: []
+      paths: ["app/Events/**", "app/Listeners/**"]
+      name_suffix: [Event, Listener]
+      methods: [handle]
+    good_use:
+      - "events are immutable facts; listeners react to one concern each"
+      - "thin handle() delegating to a Service/Action"
+      - "queued listeners for slow side effects (ShouldQueue)"
+      - "no order-dependence between listeners of the same event"
+    misuse:
+      - "business logic chains hidden in listeners (action-at-a-distance)"
+      - "order-dependent listeners that break when reordered"
+      - "events fired from model boot hooks doing heavy side effects implicitly"
+      - "a listener that is really the whole operation, bypassing the request path"
+
+  - id: policy
+    name: Policy (Authorization)
+    intent: >
+      Answers "may this user do X to this model?" — one predicate per ability
+      (view/create/update/delete), used via Gate/authorize/@can. Authorization only.
+    recognition:
+      base_classes: []
+      traits: ["HandlesAuthorization"]
+      paths: ["app/Policies/**"]
+      name_suffix: [Policy]
+      methods: [view, create, update, delete, before]
+    good_use:
+      - "one predicate per ability; returns booleans only, no side effects"
+      - "authorization centralized here, not scattered in controllers/views"
+      - "before() for super-admin short-circuits"
+      - "invoked via authorize()/Gate/@can rather than inline role checks"
+    misuse:
+      - "predicates that mutate records or run side-effecting queries"
+      - "business logic beyond authorization living in the policy"
+      - "duplicated authorization also inlined in controllers/Blade"
+      - "role checks scattered in controllers instead of a policy"
+
+  - id: middleware
+    name: Middleware
+    intent: >
+      A cross-cutting HTTP layer wrapping requests — auth, throttling, headers,
+      tenancy. Thin and call-$next; not a place for business logic.
+    recognition:
+      base_classes: []
+      traits: []
+      paths: ["app/Http/Middleware/**"]
+      name_suffix: [Middleware]
+      methods: [handle]
+    good_use:
+      - "one cross-cutting concern per middleware; always returns $next($request)"
+      - "request/response envelope concerns (auth, throttle, headers, CORS) only"
+      - "terminable middleware for after-response work"
+      - "registered in the HTTP kernel / route groups, ordering intentional"
+    misuse:
+      - "business logic or domain decisions in middleware"
+      - "mutable shared state across requests on the middleware instance"
+      - "short-circuiting responses unexpectedly or swallowing errors"
+      - "one middleware doing several unrelated cross-cutting jobs"
+
+  - id: repository
+    name: Repository
+    intent: >
+      Mediates persistence for an aggregate, decoupling domain from Eloquent.
+      Contested in Laravel — Eloquent is already an Active Record / repository-ish
+      layer; flag when seen so its intent is confirmed rather than assumed accidental.
+    recognition:
+      base_classes: []
+      traits: []
+      paths: ["app/Repositories/**"]
+      name_suffix: [Repository, Repo]
+      methods: [find, all, save, delete, "findBy"]
+    good_use:
+      - "single source of persistence for one aggregate; a deliberate, documented choice"
+      - "domain depends on a repository interface, not the Eloquent builder directly"
+      - "returns domain objects/collections, not a leaked query Builder"
+      - "swappable with a fake for tests"
+    misuse:
+      - "thin wrapper duplicating Eloquent with no decoupling benefit"
+      - "leaks Eloquent\\Builder / Relation, defeating the abstraction"
+      - "business logic mixed into persistence mediation"
+      - "introduced inconsistently alongside direct model access elsewhere"
+
+  - id: service_provider
+    name: Service Provider
+    intent: >
+      Bootstraps the application: binds things into the container (register) and
+      wires runtime behaviour (boot). A composition root — high fan-out is expected;
+      business logic is not.
+    recognition:
+      base_classes: ["Illuminate\\Support\\ServiceProvider", "ServiceProvider"]
+      traits: []
+      paths: ["app/Providers/**"]
+      name_suffix: [ServiceProvider]
+      methods: [register, boot]
+    good_use:
+      - "register() only binds into the container; no resolving during register()"
+      - "boot() wires events, macros, gates, view composers"
+      - "fan-out here is wiring, not a god object — judge as a composition root"
+      - "deferred providers for expensive, rarely-used bindings"
+    misuse:
+      - "business logic or request handling in a provider"
+      - "heavy work (network, DB) at register/boot time slowing every request"
+      - "resolving services out of the container during register()"
+      - "one provider doing many unrelated bootstrapping jobs"
+
+  - id: data_object
+    name: Data Object / DTO
+    intent: >
+      A typed, usually immutable carrier of data between layers (a readonly class or
+      spatie/laravel-data object). Value semantics, no persistence. Distinct from an
+      Eloquent model (persistence) and a FormRequest (validation at the HTTP edge).
+    recognition:
+      base_classes: ["Spatie\\LaravelData\\Data", "Data"]
+      traits: []
+      paths: ["app/Data/**", "app/DataTransferObjects/**", "app/DTO/**"]
+      name_suffix: [Data, Dto, DTO]
+      methods: []
+    good_use:
+      - "immutable (readonly) typed properties; value semantics"
+      - "carries a structured payload between controller/action/service/job"
+      - "constructed from validated input; no persistence identity"
+      - "small and self-contained; no I/O"
+    misuse:
+      - "mutable where it should be readonly, defeating value semantics"
+      - "behaviour/business rules that belong in a Service/Action"
+      - "carries a database id and behaves like an entity"
+      - "used where a FormRequest (boundary validation) or model is needed"

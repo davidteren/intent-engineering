@@ -54,5 +54,27 @@ python:
     max_function_params: 6    # long parameter list -> introduce a dataclass/request object
     max_nesting_depth: 4      # deep if/for nesting -> guard clauses, early returns
 
+laravel:
+  controller:
+    max_loc: 150              # fat-controller signal (whole controller)
+    max_action_loc: 25        # business logic leaking into an action body
+    max_actions: 10           # well beyond the resourceful 7
+  model:
+    max_loc: 200              # fat Eloquent model signal
+    max_public_methods: 20
+    max_relationships: 15     # hasOne/hasMany/belongsTo/belongsToMany/morph*
+    max_scopes: 10            # scopeX methods
+  service:
+    max_public_methods: 5     # a service is cohesive; an Action should expose ONE
+    max_loc: 200              # a service this big is a God object in disguise
+  god_class:
+    max_collaborators: 15     # distinct classes referenced/instantiated (fan-out)
+    max_loc: 300
+  view:
+    max_loc: 100              # fat view composer signal
+  general:
+    max_method_loc: 30        # long-method signal
+    max_method_params: 6      # long parameter list -> introduce a DTO / data object
+
 # Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
 # rule pack lands. Unknown stacks fall back to `general` only.
