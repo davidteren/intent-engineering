@@ -53,7 +53,7 @@ out as parallel agents and return scored, deduplicated findings with concrete fi
 | **Convention** (`ie-convention-reviewer`) | convention-over-configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure/naming. *Reads your repo's `CLAUDE.md`/`AGENTS.md` first — local conventions win.* |
 | **Simplicity** (`ie-simplicity-reviewer`) | Occam, KISS, YAGNI | Needless abstraction, premature generality, knobs nobody sets, layers that don't earn their keep. Also guards against over-simplifying away real requirements. |
 | **Experience** (`ie-experience-reviewer`) | HIG, look-and-feel, UX | Missing interaction states, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design. User-facing surfaces only. |
-| **Architecture** (`ie-architecture-reviewer`) | structural quality, design patterns | Fat models/controllers, God objects, misused service objects, callback hell, Law of Demeter. Classifies design-pattern instances against a catalog, raises unidentified patterns, enforces your `.intense/` allow/block/approved policy. Framework-specific (Rails today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman`. |
+| **Architecture** (`ie-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.intense/` allow/block/approved policy. Framework-specific (Rails + Python today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby) or `ruff`/`radon` (Python). |
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries a
 confidence anchor, and proposes a concrete fix. When two principles conflict (e.g. DWIM's
@@ -84,16 +84,17 @@ checklist), good vs bad examples, how-to-apply, and cited sources.
 
 **Framework conventions** (`resources/frameworks/`): per-stack docs of the idioms a
 practitioner expects — `rails`, `ruby`, `react`, `typescript`, `python`, `swift-ios`,
-plus `rails-architecture` (the architecture lens's smell heuristics + thresholds). Seed
-set is driven by dogfood stacks.
+plus `rails-architecture` and `python-architecture` (the architecture lens's smell
+heuristics + thresholds). Seed set is driven by dogfood stacks.
 
 **Agnostic cross-cutting** (`resources/agnostic/`): topics that span stacks — `naming`,
 `defaults-and-configuration`, `error-handling`, `api-design`, `accessibility`,
 `information-architecture`.
 
-**Pattern catalog** (`resources/patterns/`): `rails.yaml` — 14 Rails design patterns
-(intent, recognition signature, good-use rubric, common misuse) the architecture lens uses
-to recognize, classify, and judge pattern instances.
+**Pattern catalog** (`resources/patterns/`): `rails.yaml` (14 Rails patterns) and
+`python.yaml` (13 Python/FastAPI patterns) — each entry an intent, recognition signature,
+good-use rubric, and common misuse the architecture lens uses to recognize, classify, and
+judge pattern instances.
 
 ---
 

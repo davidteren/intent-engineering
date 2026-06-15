@@ -135,7 +135,7 @@ intent-engineering/                      (repo / dev + marketplace)
 - **Phase 3 — Author plugin:** lens agents → shared references → skills.
 - **Phase 4 — Package & install:** `plugin.json`, `marketplace.json`, `README.md`;
   install locally via the plugin marketplace.
-- **Phase 5 — Dogfood:** run in this repo + `miela_app` + others; iterate from real
+- **Phase 5 — Dogfood:** run in this repo + real-world repos; iterate from real
   findings. Capture learnings back into the principle/convention docs.
 - **Phase 6 — Architecture, patterns & config:** framework-aware architectural audit
   (Rails first), design-pattern catalog + recognition, `.intense/` ways-of-working
@@ -191,6 +191,11 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 - **`resources/frameworks/rails-architecture.md`** — anti-pattern heuristics + default
   thresholds (fat model, God object, fat controller, misused service, callback hell,
   query-in-view, fat helper).
+- **`resources/frameworks/python-architecture.md`** + **`resources/patterns/python.yaml`** —
+  the second architecture stack (FastAPI-first, generalizes to any layered Python service):
+  fat-router, god-module, god-object, misused-service, business-logic-in-schema,
+  fat-dependency, layer-leak, law-of-demeter + a 13-pattern catalog. Proves the per-stack
+  rule-pack design: a stack ships when both files + a `<stack>.*` threshold namespace exist.
 - **`agents/ie-architecture-reviewer.md`** — the lens. Detects anti-patterns, classifies
   pattern instances, raises unknown patterns, honors allow/block/approved from config.
 - **Schema/catalog updates** — `architecture` added to the principle enum + optional
@@ -205,5 +210,4 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 
 The plugin repo isn't Rails, so the architecture lens is dogfooded against a small
 synthetic Rails fixture under `wip/fixtures/` (gitignored) with deliberate smells +
-recognizable + unknown patterns. Real-repo runs (e.g. `miela_app`) are left for the
-user to trigger.
+recognizable + unknown patterns. Real-repo runs are left for the user to trigger.

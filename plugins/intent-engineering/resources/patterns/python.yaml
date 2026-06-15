@@ -1,0 +1,330 @@
+# Intent Engineering — Python design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in a Python service codebase (FastAPI-first, but the service
+# patterns generalize to any layered Python service). Pattern `id`s here are the
+# stable keys referenced by `.intense/patterns.yaml` allowed / blocked / approved
+# lists. See README.md (this directory) for the schema and how the lens uses it.
+#
+# Recognition is ANY-OF: a unit matches a pattern if any strong signal hits. An
+# import/base-class/decorator is the strongest signal; a path or name suffix alone
+# is weaker — say which signal matched in the finding `evidence`.
+version: 1
+stack: python
+
+patterns:
+  - id: router
+    name: Router (FastAPI)
+    intent: >
+      A FastAPI APIRouter (or app) module mapping URL operations to handlers. The
+      handler is the transport edge: it validates input via a Pydantic model,
+      calls one service operation, and shapes the HTTP response. Confused with
+      service — the router owns HTTP concerns, the service owns behaviour.
+    recognition:
+      imports: ["fastapi.APIRouter", "from fastapi import APIRouter"]
+      decorators: ["@router.get", "@router.post", "@router.put", "@router.patch", "@router.delete", "@app.get", "@app.post"]
+      base_classes: []
+      paths: ["**/routers/**", "**/routes/**", "**/api/**", "**/endpoints/**"]
+      name_suffix: [Router]
+      functions: []
+    good_use:
+      - "thin handler: validate (Pydantic model param) -> call one service -> shape Response/status"
+      - "one router per resource/concern; prefix and tags set on APIRouter"
+      - "response_model / responses declared so the contract is explicit"
+      - "auth and shared inputs via Depends(...), not re-implemented per handler"
+    misuse:
+      - "business logic, queries, DataFrame/file work, or external calls in the handler (fat-router)"
+      - "handler reaches past the service straight into DB/integration (layer-leak)"
+      - "one giant router covering many unrelated resources"
+      - "no response_model / returning bare dicts where a schema is expected"
+
+  - id: dependency
+    name: Dependency (FastAPI DI)
+    intent: >
+      A callable resolved via Depends() that provides a value or resource to a
+      handler — auth/identity, settings, a DB session, parsed params. It resolves;
+      it does not perform the business operation.
+    recognition:
+      imports: ["fastapi.Depends", "from fastapi import Depends"]
+      decorators: []
+      base_classes: []
+      paths: ["**/dependencies.py", "**/dependencies/**", "**/deps.py"]
+      name_suffix: []
+      functions: [get_settings, get_db, get_session, verify_jwt, get_current_user]
+    good_use:
+      - "small: resolves and returns a value, or `yield`s a resource and cleans up"
+      - "composes other dependencies via Annotated[X, Depends(...)]"
+      - "no business mutation; identity/resource/param resolution only"
+      - "resolves shared state from app.state (constructed once), not a mutable global"
+    misuse:
+      - "heavy business logic or domain queries inside the dependency (fat-dependency)"
+      - "side effects / writes performed implicitly on every request"
+      - "@lru_cache or module-global singletons silently sharing state across requests/tests"
+      - "doing work that belongs in a service the handler should call"
+
+  - id: pydantic_schema
+    name: Pydantic Schema
+    intent: >
+      A BaseModel defining the shape of a request or response body (or an internal
+      DTO). It validates type/shape; it is not where business logic or persistence
+      lives. Distinct from settings (BaseSettings) and from a dataclass value object.
+    recognition:
+      imports: ["pydantic.BaseModel", "from pydantic import BaseModel"]
+      decorators: ["@field_validator", "@model_validator", "@validator"]
+      base_classes: [BaseModel]
+      paths: ["**/models/**", "**/schemas/**", "**/schemas.py", "**/dto/**"]
+      name_suffix: [Request, Response, Schema, Model, Payload]
+      functions: []
+    good_use:
+      - "type and shape validation only; validators are pure (normalise, bound, range-check)"
+      - "request and response models are distinct and explicit per operation"
+      - "field constraints via Field(...); security size/shape caps are legitimate validation"
+      - "no I/O, no DB, no side effects inside validators"
+    misuse:
+      - "validators that perform I/O, DB lookups, or cross-entity business rules (business-logic-in-schema)"
+      - "side effects on construction (surprising; runs in tests/fixtures too)"
+      - "god schema: many unrelated fields, or one model reused for request+response+persistence"
+      - "duplicating service-layer rules inside the model"
+
+  - id: settings
+    name: Settings (pydantic-settings)
+    intent: >
+      A pydantic-settings BaseSettings class that loads configuration from the
+      environment behind one typed object, validated at construction. The single
+      source of runtime config.
+    recognition:
+      imports: ["pydantic_settings.BaseSettings", "from pydantic_settings import BaseSettings"]
+      decorators: []
+      base_classes: [BaseSettings]
+      paths: ["**/config.py", "**/settings.py", "**/config/**"]
+      name_suffix: [Settings, Config]
+      functions: []
+    good_use:
+      - "one Settings class; env-driven with a declared prefix / model_config"
+      - "validators enforce safety (e.g. refuse weak secrets in production)"
+      - "injected via DI or app.state, not imported as a global from many modules"
+      - "secrets never hardcoded; production overrides required, not defaulted"
+    misuse:
+      - "scattered os.environ / os.getenv reads elsewhere instead of one Settings"
+      - "secrets defaulted to real values, or weak defaults usable in production"
+      - "multiple competing settings sources that can silently diverge"
+      - "mutable global settings singleton mutated at runtime"
+
+  - id: service
+    name: Service (application layer)
+    intent: >
+      The layer that owns a business operation, as module-level functions or a
+      class, invoked by routers/workers. It is HTTP-agnostic: it receives and
+      returns domain objects (Pydantic models, dataclasses), never Request/Response.
+    recognition:
+      imports: []
+      decorators: []
+      base_classes: []
+      paths: ["**/services/**", "**/services.py", "**/domain/**", "**/use_cases/**"]
+      name_suffix: [Service, UseCase]
+      functions: [render, calculate, build, process, generate, handle]
+    good_use:
+      - "owns business logic; one cohesive operation per public entrypoint, named for the action"
+      - "HTTP-agnostic: no fastapi/Request/Response/HTTPException imports"
+      - "receives and returns Pydantic models / dataclasses; raises domain errors"
+      - "hides DB/DataFrame/file/external details behind named functions"
+    misuse:
+      - "imports transport types or raises HTTPException (layer-leak, upward)"
+      - "grab-bag module of many unrelated public functions (misused-service)"
+      - "god service: one function doing an entire endpoint end to end"
+      - "anemic pass-through that only forwards to one util/DB call, adding no behaviour"
+
+  - id: repository
+    name: Repository / Data-access
+    intent: >
+      An object or module mediating persistence for an aggregate, decoupling the
+      domain from the ORM/driver. Returns domain objects, not raw rows/relations.
+      Standard in layered Python services; flag so its intent is confirmed.
+    recognition:
+      imports: ["sqlalchemy", "from sqlalchemy", "sqlmodel", "from sqlmodel"]
+      decorators: []
+      base_classes: []
+      paths: ["**/repositories/**", "**/repository.py", "**/db/**", "**/dao/**"]
+      name_suffix: [Repository, Repo, Dao, Store]
+      functions: [get, get_by_id, list, add, save, delete]
+    good_use:
+      - "single source of persistence for one aggregate/entity"
+      - "domain/service code depends on the repository interface, not the ORM session directly"
+      - "returns domain objects, not Session/Query/Row leaking outward"
+      - "a deliberate seam (testable with a fake), documented as such"
+    misuse:
+      - "thin wrapper duplicating the ORM with no decoupling benefit"
+      - "leaks Session/Query/Result objects, defeating the abstraction"
+      - "business logic mixed into persistence mediation"
+      - "introduced inconsistently alongside direct ORM access in routers/services"
+
+  - id: background_task
+    name: Background Task / Worker
+    intent: >
+      Deferred work run off the request path — FastAPI BackgroundTasks, or a
+      Celery/RQ/arq/Dramatiq task. The task orchestrates; it should not contain the
+      business logic it triggers.
+    recognition:
+      imports: ["fastapi.BackgroundTasks", "celery", "from celery", "arq", "rq", "dramatiq"]
+      decorators: ["@celery.task", "@shared_task", "@app.task", "@dramatiq.actor"]
+      base_classes: []
+      paths: ["**/tasks/**", "**/tasks.py", "**/workers/**", "**/jobs/**"]
+      name_suffix: [Task, Worker, Job]
+      functions: []
+    good_use:
+      - "thin orchestration delegating to a service; one operation per task"
+      - "small, serializable arguments (ids/primitives), not whole objects"
+      - "idempotent / safe to retry; failures surfaced for the queue to retry"
+      - "queue and retry policy declared explicitly"
+    misuse:
+      - "heavy business logic inlined in the task instead of delegated"
+      - "passing large/unserializable objects (ORM rows, DataFrames) as args"
+      - "non-idempotent work that double-applies on retry"
+      - "swallowing errors so the queue never retries or alerts"
+
+  - id: app_factory
+    name: Application Factory
+    intent: >
+      A create_app()-style function that constructs and wires the app — routers,
+      middleware, exception handlers, state, instrumentation. A composition root:
+      high fan-out is expected and acceptable; business logic is not.
+    recognition:
+      imports: ["fastapi.FastAPI", "from fastapi import FastAPI"]
+      decorators: []
+      base_classes: []
+      paths: ["**/main.py", "**/app.py", "**/asgi.py", "**/factory.py"]
+      name_suffix: []
+      functions: [create_app, make_app, get_app, build_app]
+    good_use:
+      - "single factory that wires routers/middleware/handlers/state and returns the app"
+      - "accepts settings (testable); no business logic in the factory"
+      - "no import-time side effects beyond the module-level app = create_app()"
+      - "high fan-out here is wiring, not a god object — judge it as a composition root"
+    misuse:
+      - "business logic or request handling implemented in the factory"
+      - "heavy work at import time (network, file, env) instead of inside the factory/lifespan"
+      - "the constructed app mutated globally elsewhere after construction"
+      - "multiple competing factories that configure the app inconsistently"
+
+  - id: exception_handler
+    name: Exception Handler
+    intent: >
+      A handler registered via @app.exception_handler / add_exception_handler that
+      maps an exception type to a normalized HTTP response envelope. Centralizes
+      error -> response translation; no business logic.
+    recognition:
+      imports: ["fastapi.exception_handlers", "starlette.exceptions"]
+      decorators: ["@app.exception_handler"]
+      base_classes: []
+      paths: ["**/main.py", "**/app.py", "**/errors.py", "**/handlers/**", "**/exceptions.py"]
+      name_suffix: [Handler]
+      functions: []
+    good_use:
+      - "maps exception types to one consistent error envelope (e.g. {errors: [...]})"
+      - "registered centrally so every route benefits, including auth/validation failures"
+      - "translation only; no domain decisions"
+      - "logs server-side detail while returning a stable client message"
+    misuse:
+      - "business logic or branching on domain state inside the handler"
+      - "ad-hoc per-route error shaping duplicated instead of one central handler"
+      - "swallowing / log-and-ignore that hides failures from the client and metrics"
+      - "leaking internal exception text / stack detail to the client"
+
+  - id: middleware
+    name: Middleware
+    intent: >
+      A cross-cutting HTTP layer wrapping every request/response — CORS, body-size
+      limits, request ids, auth headers. Thin and call-next; not a place for
+      business logic.
+    recognition:
+      imports: ["starlette.middleware", "BaseHTTPMiddleware", "fastapi.middleware"]
+      decorators: ["@app.middleware"]
+      base_classes: [BaseHTTPMiddleware]
+      paths: ["**/middleware/**", "**/middleware.py", "**/main.py"]
+      name_suffix: [Middleware]
+      functions: []
+    good_use:
+      - "one cross-cutting concern per middleware; thin, always calls the next handler"
+      - "request/response envelope concerns (headers, ids, limits, CORS) only"
+      - "ordering documented when it matters; no hidden order-dependent coupling"
+      - "fails closed on security concerns (e.g. body-size limit before deserialization)"
+    misuse:
+      - "business logic or per-route decisions in middleware"
+      - "mutable shared state across requests stored on the middleware instance"
+      - "swallowing exceptions or short-circuiting responses unexpectedly"
+      - "one middleware doing several unrelated cross-cutting jobs"
+
+  - id: adapter_client
+    name: Adapter / Client (external integration)
+    intent: >
+      Wraps an external API/SDK behind a stable internal interface, isolating vendor
+      specifics. Distinct from repository (persistence) — this is for outbound
+      third-party systems.
+    recognition:
+      imports: ["httpx", "requests", "aiohttp"]
+      decorators: []
+      base_classes: []
+      paths: ["**/clients/**", "**/adapters/**", "**/integrations/**", "**/gateways/**"]
+      name_suffix: [Client, Adapter, Gateway]
+      functions: []
+    good_use:
+      - "presents a stable internal interface over an external API/SDK"
+      - "one adapter per external system; vendor types/exceptions do not leak past it"
+      - "swappable (real vs fake) behind a common interface for tests"
+      - "translation and transport only; no domain business rules"
+    misuse:
+      - "leaks the vendor library's objects/exceptions to callers"
+      - "accumulates business logic beyond translation"
+      - "one client spanning several unrelated external systems"
+      - "instantiated ad hoc per call site instead of injected/centralized"
+
+  - id: document_renderer
+    name: Document / Format Renderer
+    intent: >
+      Generates a file/document artifact (Excel, PDF, CSV, a rendered template) from
+      domain data, hiding the formatting library (openpyxl, pandas, reportlab, jinja,
+      csv) behind a named seam. The center of gravity for report/file-generating
+      services. Distinct from service (a renderer's job is producing a format, not
+      owning the business operation) and adapter_client (no external API — local
+      formatting).
+    recognition:
+      imports: ["openpyxl", "pandas", "reportlab", "jinja2", "csv", "xlsxwriter", "weasyprint"]
+      decorators: []
+      base_classes: []
+      paths: ["**/renderers/**", "**/reports/**", "**/templates/**", "**/exporters/**", "**/util/**"]
+      name_suffix: [Renderer, Report, Exporter, Writer, Builder, Template]
+      functions: [render, build, export, write, to_xlsx, to_pdf, to_csv]
+    good_use:
+      - "hides the formatting library (openpyxl/pandas/reportlab) behind named functions"
+      - "returns bytes / a path / a value object; library types do not leak to callers"
+      - "no HTTP and no business decisions — receives prepared domain data, emits a format"
+      - "declarative sheet/table/template assembly; verbose bodies are acceptable here"
+    misuse:
+      - "format-library objects (Workbook, DataFrame) leak past the seam to routers/services"
+      - "business rules (pricing, eligibility) decided inside the renderer instead of upstream"
+      - "HTTP/Response concerns mixed into rendering"
+      - "one mega-module rendering many unrelated documents (split by document type)"
+
+  - id: dataclass_value
+    name: Dataclass Value Object
+    intent: >
+      A small immutable object defined by its attributes (a result/artifact/value),
+      typically a frozen dataclass or NamedTuple. Value equality, no identity.
+      Distinct from a Pydantic schema (no validation/serialization contract).
+    recognition:
+      imports: ["dataclasses.dataclass", "from dataclasses import dataclass", "typing.NamedTuple"]
+      decorators: ["@dataclass", "@dataclass(frozen=True)"]
+      base_classes: [NamedTuple]
+      paths: []
+      name_suffix: [Value, Result, Artifact]
+      functions: []
+    good_use:
+      - "immutable after construction (frozen=True / NamedTuple)"
+      - "defined by attributes; value equality; small and self-contained"
+      - "carries a result/value between layers (e.g. a generated artifact) without behaviour"
+      - "no persistence identity, no I/O"
+    misuse:
+      - "mutable where it should be frozen, defeating value semantics"
+      - "heavyweight responsibilities/behaviour that belong in a service or entity"
+      - "carries a database id / behaves like an entity"
+      - "used where a Pydantic schema is needed for validation at a boundary"

@@ -36,12 +36,13 @@ plan validation, code review, and codebase audit:
 - **Experience** (`ie-experience-reviewer`) — HIG, look-and-feel, UX. Missing
   interaction states, broken keyboard/focus, accessibility gaps, weak information
   architecture, AI-slop design. Runs only on user-facing surfaces.
-- **Architecture** (`ie-architecture-reviewer`) — framework structure (Rails today).
-  Fat models/controllers, God objects, misused service objects, callback hell, Law of
-  Demeter. Classifies design-pattern instances against a catalog, raises unidentified
+- **Architecture** (`ie-architecture-reviewer`) — framework structure (Rails + Python
+  today). Fat models/routers, God objects/modules, fat controllers, misused service
+  objects, callback hell, business logic in schemas, layer leaks, Law of Demeter.
+  Classifies design-pattern instances against a per-stack catalog, raises unidentified
   patterns, and enforces your `.intense/` allow/block/approved policy. Heuristic-first;
-  optionally enriched by `reek`/`flog`/`brakeman` if installed. Code/audit only, when a
-  supported framework is detected.
+  optionally enriched by `reek`/`flog`/`brakeman` (Ruby) or `ruff`/`radon` (Python) if
+  installed. Code/audit only, when a supported framework is detected.
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries
 a confidence anchor, and proposes a concrete fix. When two principles conflict (e.g.
@@ -59,8 +60,8 @@ plugin):
   Python, Swift/iOS).
 - `resources/agnostic/` — cross-cutting topics (naming, defaults & configuration, error
   handling, API design, accessibility, information architecture).
-- `resources/frameworks/rails-architecture.md` + `resources/patterns/rails.yaml` — the
-  architecture lens's smell heuristics and design-pattern catalog.
+- `resources/frameworks/{rails,python}-architecture.md` + `resources/patterns/{rails,python}.yaml`
+  — the architecture lens's per-stack smell heuristics and design-pattern catalogs.
 
 The "Violation smells" section of each doc is the lens's detection checklist.
 

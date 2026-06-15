@@ -90,7 +90,7 @@ intent-engineering/                       dev repo + marketplace
    selection.
 2. **Select lenses** (`references/lens-catalog.md`): predictability + simplicity are
    always-on; convention is on for essentially all code; experience only on user-facing
-   surfaces; architecture only on a supported framework (Rails today), code/audit only.
+   surfaces; architecture only on a supported framework (Rails + Python today), code/audit only.
    Resolved `lenses:` toggles (`on`/`off`/`auto`) override the defaults.
 3. **Dispatch** each lens in parallel using `references/subagent-template.md`, binding
    `run_artifact_dir = $OUT`. Each lens reads its `resources/` heuristic docs, returns
@@ -203,12 +203,13 @@ pattern catalog:
 - `principles/` — one doc per design principle (definition, origin, core tenets,
   **violation smells**, good/bad examples, how-to-apply, **Sources**).
 - `frameworks/` — per-stack convention docs (rails, ruby, react, typescript, python,
-  swift-ios) plus `rails-architecture.md` for the architecture lens. Variant headings:
-  "Convention violation smells", "Least-astonishment traps".
+  swift-ios) plus `rails-architecture.md` and `python-architecture.md` for the architecture
+  lens. Variant headings: "Convention violation smells", "Least-astonishment traps".
 - `agnostic/` — cross-cutting topics (naming, error-handling, api-design,
   defaults-and-configuration, accessibility, information-architecture). Heading:
   "Detectable smells".
-- `patterns/` — YAML design-pattern catalog (`rails.yaml`, 14 patterns) + format README.
+- `patterns/` — YAML design-pattern catalogs (`rails.yaml` 14, `python.yaml` 13 patterns) +
+  format README.
 
 **The "Violation smells" / "Detectable smells" section is load-bearing** — it *is* the
 lens's detection checklist. Every doc a lens reads must have one. Every doc ends with a
@@ -248,9 +249,10 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   check. It asserts JSON/YAML parse, lens-identity 4-way agreement (schema enum == agents ==
   lens-catalog == scoring-rubric), agent frontmatter (name == filename, in the enum, tools +
   model present), that every `${CLAUDE_PLUGIN_ROOT}/...` path resolves, the pattern-catalog
-  schema, that emitted `principle:` ids are in the enum, cross-references (every threshold
-  metric cited in `rails-architecture.md` is defined in `thresholds.yaml`; every pattern id
-  in policy/README exists in the catalog; unreferenced metrics warned), resource-doc
+  schema, that emitted `principle:` ids are in the enum, cross-references (per stack with a
+  `<stack>.*` threshold namespace, its `<stack>-architecture.md` exists and every metric it
+  cites is defined in `thresholds.yaml`; every pattern id in policy/README exists in some
+  catalog; unreferenced metrics warned), resource-doc
   structure (each principle/framework/agnostic doc has a detection "smells" section + a
   Sources section with ≥2 links; no orphan docs missing from `principle-index.md`/
   `lens-catalog.md`), and that the five agents are git-tracked (the gitignore trap). Exits

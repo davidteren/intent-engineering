@@ -3,7 +3,8 @@
 # Used by ie-architecture-reviewer to flag structural smells. These are deliberately
 # generous starting points — tune per codebase in `.intense/thresholds.yaml`. A
 # threshold is a SIGNAL, not a verdict: the lens still judges responsibilities, not
-# just counts. See resources/frameworks/rails-architecture.md for what each smell means.
+# just counts. See resources/frameworks/<stack>-architecture.md (rails-architecture.md,
+# python-architecture.md) for what each smell means.
 version: 1
 
 rails:
@@ -27,6 +28,31 @@ rails:
   general:
     max_method_loc: 25
     max_method_abc: 25        # ABC/flog score, only if flog is available
+
+python:
+  module:
+    max_loc: 400              # god-module signal (whole .py file)
+    max_public_functions: 15  # dumping-ground module (top-level defs without leading _)
+    max_public_classes: 8
+  router:
+    max_loc: 150              # fat-router signal (whole router module)
+    max_handler_loc: 25       # business logic leaking into a route handler body
+    max_routes: 15            # well beyond a cohesive resource's operations
+  dependency:
+    max_loc: 40               # a Depends() callable should resolve-and-return, not do work
+  service:
+    max_public_functions: 10  # grab-bag service module (misused-service)
+    max_loc: 200              # a service this big is a God object in disguise
+  schema:
+    max_validators: 5         # business-logic-in-schema signal (field/model validators)
+    max_fields: 30            # god schema
+  god_object:
+    max_collaborators: 15     # distinct classes referenced/instantiated (fan-out)
+    max_loc: 300
+  general:
+    max_function_loc: 50      # long-function signal (PEP 8 / readability)
+    max_function_params: 6    # long parameter list -> introduce a dataclass/request object
+    max_nesting_depth: 4      # deep if/for nesting -> guard clauses, early returns
 
 # Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
 # rule pack lands. Unknown stacks fall back to `general` only.

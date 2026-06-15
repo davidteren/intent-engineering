@@ -43,10 +43,11 @@ Coverage. Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
 - Predictability + simplicity always on.
 - Convention on when stack/repo standards exist.
 - Experience on only if the target has user-facing surfaces.
-- **Architecture on when a supported framework is detected** (Rails: `Gemfile` +
-  `app/` structure). This is the lens that audits fat models/controllers, God objects,
-  misused services, and classifies/raises patterns — usually the highest-value pass in a
-  codebase audit. Pass it the resolved `thresholds` + pattern policy.
+- **Architecture on when a supported framework is detected** (Rails: `Gemfile` + `app/`
+  structure; Python: `pyproject.toml`/`setup.py` + `.py` sources). This is the lens that
+  audits fat models/routers, God objects/modules, misused services, business logic in
+  schemas, layer leaks, and classifies/raises patterns — usually the highest-value pass in
+  a codebase audit. Pass it the resolved `thresholds` + pattern policy.
 
 Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENTS.md`
 + `.intense` conventions for the convention and architecture lenses. Announce the team.

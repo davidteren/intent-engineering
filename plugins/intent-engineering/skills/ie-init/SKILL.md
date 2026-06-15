@@ -26,9 +26,15 @@ fall back to a numbered list and wait for the user's reply — never silently pi
 - Target dir is `.intense/` at the repo root (current working directory's repo).
 - Detect the stack to pre-select relevant templates and pre-fill comments:
   - **Rails:** `Gemfile` with `rails`, or `config/application.rb`, or `app/models`.
-  - (Other stacks: thresholds/patterns templates are Rails-oriented today; still offer
-    `ways-of-working.yaml`, which is stack-agnostic, and note that pattern/threshold
-    packs for this stack aren't available yet.)
+  - **Python:** `pyproject.toml`/`setup.py`/`setup.cfg` + `.py` sources (FastAPI-first;
+    the `python.*` thresholds and `patterns/python.yaml` pack apply to any layered Python
+    service).
+  - The shipped `thresholds.yaml` carries both `rails.*` and `python.*` namespaces and
+    `patterns.yaml` policy can reference either catalog — scaffold the full file; the team
+    prunes the namespace they don't use.
+  - (Other stacks: pattern/threshold packs aren't available yet; still offer
+    `ways-of-working.yaml`, which is stack-agnostic, and note packs for this stack aren't
+    available.)
 
 ### 2. Choose what to scaffold
 
