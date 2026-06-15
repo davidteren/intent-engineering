@@ -54,11 +54,36 @@ Install in any repo:
   grep false-positive, a missing `document_renderer` pattern) and a placement smell — all
   folded back into the docs/catalog before commit.
 
+## Stack coverage roadmap
+
+The extension point is in place: a stack is **data** (a `stack-catalog.md` row + packs),
+not skill edits. Each new architecture stack is authored **research-first with cited
+Sources** (same bar as the rest of the KB), then dogfooded on a real repo.
+
+**Per stack, "done" = all four:** `frameworks/<stack>-architecture.md` (smells + Sources),
+`patterns/<stack>.yaml` (catalog), a `<stack>.*` namespace in `thresholds.yaml`, and the
+`stack-catalog.md` row flipped to **Arch pack ✅** (the contract check enforces agreement).
+
+| Stack | Convention doc | Arch pack | Status / next step |
+|-------|:--------------:|:---------:|--------------------|
+| `rails` | ✅ | ✅ | Done. Dogfood on a real Rails repo still pending. |
+| `python` | ✅ | ✅ | Done (FastAPI-first). Dogfooded on a real FastAPI service. |
+| **PHP / Laravel** | ⬜ | ⬜ | **Next — highest Rails-fit.** Research seeded (alexeymezenin/laravel-best-practices, Spatie guidelines, fat-controller/fat-model/service-vs-action). Author smells (fat-controller, fat-eloquent-model, business-logic-in-controller, misused-service vs action, fat-form-request, repository-overuse, n+1) + a Laravel pattern catalog. |
+| **Express / Node** | ⬜ | ⬜ | Author smells (fat-route-handler, fat-middleware, god-module, layer-leak, callback/promise tangles) + catalog (router, middleware, controller, service, repository, model). Research first. |
+| **Elixir / Phoenix** | ⬜ | ⬜ | Author contexts/controllers/schemas/LiveView smells + catalog. **Flag:** likely first candidate for a *dedicated per-stack agent* if OTP/supervision-tree reasoning is wanted (data packs may not carry it). Decide during research. |
+| **React / Node (frontend)** | ✅ (`react.md`) | ⬜ | Mostly a **convention + experience** concern, less architecture. Decide during research whether an arch pack earns its keep or the existing convention doc + experience lens suffice. |
+| `ruby`, `typescript`, `swift-ios` | ✅ | ⬜ | Convention-only by design; no arch pack planned unless a real consumer appears. |
+
+Research uses Exa + Firecrawl; author the two data files + threshold namespace, flip the
+registry row, run `check-contracts.rb`, then dogfood on a real repo and fold findings back.
+
 ## Pending
 
 - [ ] **Install & use it** — now installable from the published repo (above); run the
       `/ie-*` skills as installed skills (so far orchestrated by hand / via the audit run).
 - [ ] **Run on a real Rails repo**; fold learnings back into `resources/`.
+- [ ] **Architecture stack packs** — PHP/Laravel (next), Express/Node, Elixir/Phoenix,
+      React (see roadmap above). Research-first, drop into the registry.
 - [ ] **Deferred niceties** → `wip/improvements.md` — the hardening backlog is closed
       (contract check covers it); remaining are optional: a committed test fixture + lens
       regression test, a single-sourced orchestration reference, and a git pre-commit hook.
