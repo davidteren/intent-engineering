@@ -1,0 +1,26 @@
+STATUS.md
+  s_de3e8900bd34bc::t_c00293909a089d 7
+  s_de3e8900bd34bc::t_91a1e2fcc40aef 35
+.claude-plugin/marketplace.json
+  s_de3e8900bd34bc::t_e4344a6aa00d49 8
+plugins/intent-engineering/.claude-plugin/plugin.json
+  s_de3e8900bd34bc::t_e4344a6aa00d49 3
+CHANGELOG.md
+  s_de3e8900bd34bc::t_1cd4e2572c94b8 8-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "be4bebc68df8e5323d01c84021ec32f1f9961fb6",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
