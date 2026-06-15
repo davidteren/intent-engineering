@@ -19,8 +19,8 @@ prompt stays stack-neutral — the stack knowledge lives in the data packs it re
 
 The supported stacks are **registered in
 `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`** — the rows with **Arch pack** ✅ are the
-authoritative list (Rails, Python, Laravel, Express, and Phoenix at the time of writing; read
-the catalog, don't trust this parenthetical). A stack is supported only if both
+authoritative list (Rails, Python, Laravel, Express, Phoenix, and React at the time of
+writing; read the catalog, don't trust this parenthetical). A stack is supported only if both
 `${CLAUDE_PLUGIN_ROOT}/resources/frameworks/<stack>-architecture.md` and
 `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` exist. If the detected stack has
 no rule pack, do not analyze — return `{"lens":"architecture","findings":[],"observations":["no architecture rule pack for <stack>; skipped"]}`.

@@ -54,6 +54,8 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | Express / Node design-pattern catalog | `resources/patterns/express.yaml` | architecture |
 | Phoenix / Elixir architecture smells | `resources/frameworks/phoenix-architecture.md` | architecture |
 | Phoenix / Elixir design-pattern catalog | `resources/patterns/phoenix.yaml` | architecture |
+| React architecture smells | `resources/frameworks/react-architecture.md` | architecture |
+| React design-pattern catalog | `resources/patterns/react.yaml` | architecture |
 
 ## Config
 
