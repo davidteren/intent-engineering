@@ -1,0 +1,41 @@
+scripts/check-contracts.rb
+  s_de3e8900bd34bc::t_4accfd86dad258 416-436,439-463,465
+  s_de3e8900bd34bc::t_ac0fca7791a081 437-438
+  s_de3e8900bd34bc::t_861ad91166f9d9 464
+STATUS.md
+  s_de3e8900bd34bc::t_523ede86369007 19-20
+  s_de3e8900bd34bc::t_b7a3beb9fdbbf2 24-29
+plugins/intent-engineering/references/stack-catalog.md
+  s_de3e8900bd34bc::t_e3162052e972ef 1-54
+AGENTS.md
+  s_de3e8900bd34bc::t_0d6a61fdf53188 76-77
+  s_de3e8900bd34bc::t_65b9ef591028cb 162-166
+  s_de3e8900bd34bc::t_0b9e20c86e4efa 268-271
+  s_de3e8900bd34bc::t_b5a36b4000d1be 233-242
+plugins/intent-engineering/agents/ie-architecture-reviewer.md
+  s_de3e8900bd34bc::t_c70c83e4e65bd4 19-20
+plugins/intent-engineering/skills/ie-init/SKILL.md
+  s_de3e8900bd34bc::t_914750f107583c 27-38
+  s_de3e8900bd34bc::t_ec5ea022d52701 54-95
+CHANGELOG.md
+  s_de3e8900bd34bc::t_904cc75585b3f1 39-40
+  s_de3e8900bd34bc::t_00a48566fd00a4 24-33
+plugins/intent-engineering/references/lens-catalog.md
+  s_de3e8900bd34bc::t_f80219cd868583 31-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "d383678bd41b70c3ee10432c53542616a5867849",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
