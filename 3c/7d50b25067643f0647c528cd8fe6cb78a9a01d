@@ -1,0 +1,55 @@
+AGENTS.md
+  s_de3e8900bd34bc::t_4b636e573235dc 211-213
+  s_de3e8900bd34bc::t_d3015d5a8bb2ee 217-218
+plugins/intent-engineering/resources/patterns/laravel.yaml
+  s_de3e8900bd34bc::t_50dd62a2b787db 1-310
+plugins/intent-engineering/resources/frameworks/laravel-architecture.md
+  s_de3e8900bd34bc::t_41ed335340403a 1-228
+docs/index.html
+  s_de3e8900bd34bc::t_c4997fd6f96fe0 185
+plugins/intent-engineering/README.md
+  s_de3e8900bd34bc::t_2eeed25b6d8057 39-46
+  s_de3e8900bd34bc::t_b7dff764b68eef 61
+  s_de3e8900bd34bc::t_cd0332b9e44a72 64
+CHANGELOG.md
+  s_de3e8900bd34bc::t_9ff5125f19423d 8-27
+plugins/intent-engineering/references/stack-catalog.md
+  s_de3e8900bd34bc::t_694cb2613a69ba 37-39
+  s_de3e8900bd34bc::t_bd3fbaaa162fd6 30
+plugins/intent-engineering/references/principle-index.md
+  s_de3e8900bd34bc::t_f16124c7689c3c 38
+  s_de3e8900bd34bc::t_31cc0866e2861a 49-50
+README.md
+  s_de3e8900bd34bc::t_c725bc2004540f 94-97
+  s_de3e8900bd34bc::t_6c60689eb0249c 86-88
+  s_de3e8900bd34bc::t_bee39ee511a928 56
+STATUS.md
+  s_de3e8900bd34bc::t_27b357dcd23d8b 71-72
+  s_de3e8900bd34bc::t_3e542391a78a73 85-87
+  s_de3e8900bd34bc::t_922c8e228e5d68 14,17,21-24
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_6b8f7a55f668c5 57-78
+plugins/intent-engineering/resources/frameworks/laravel.md
+  s_de3e8900bd34bc::t_e696c39b3624a9 1-103
+plugins/intent-engineering/references/lens-catalog.md
+  s_de3e8900bd34bc::t_f71888e4908e9c 34-35
+  s_de3e8900bd34bc::t_541b2aaa76d8f9 16
+plugins/intent-engineering/agents/ie-architecture-reviewer.md
+  s_de3e8900bd34bc::t_0bd51c6d86fb17 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3c7d50b25067643f0647c528cd8fe6cb78a9a01d",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
