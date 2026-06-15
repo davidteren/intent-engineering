@@ -209,13 +209,15 @@ pattern catalog:
   **violation smells**, good/bad examples, how-to-apply, **Sources**).
 - `frameworks/` — per-stack convention docs (rails, ruby, react, typescript, python,
   laravel, express, phoenix, swift-ios) plus `rails-architecture.md`, `python-architecture.md`,
-  `laravel-architecture.md`, `express-architecture.md`, and `phoenix-architecture.md` for the
-  architecture lens. Variant headings: "Convention violation smells", "Least-astonishment traps".
+  `laravel-architecture.md`, `express-architecture.md`, `phoenix-architecture.md`, and
+  `react-architecture.md` for the architecture lens. Variant headings: "Convention violation
+  smells", "Least-astonishment traps".
 - `agnostic/` — cross-cutting topics (naming, error-handling, api-design,
   defaults-and-configuration, accessibility, information-architecture). Heading:
   "Detectable smells".
 - `patterns/` — YAML design-pattern catalogs (`rails.yaml` 14, `python.yaml` 13,
-  `laravel.yaml` 14, `express.yaml` 12, `phoenix.yaml` 11 patterns) + format README.
+  `laravel.yaml` 14, `express.yaml` 12, `phoenix.yaml` 11, `react.yaml` 11 patterns) + format
+  README.
 
 **The "Violation smells" / "Detectable smells" section is load-bearing** — it *is* the
 lens's detection checklist. Every doc a lens reads must have one. Every doc ends with a

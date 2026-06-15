@@ -32,13 +32,13 @@ and the whole pipeline picks it up. This is the registry that keeps stack knowle
 | `phoenix` | `mix.exs` with `:phoenix`; `lib/<app>_web/`; `.ex`/`.exs` sources | `frameworks/phoenix.md` | ✅ | `frameworks/phoenix-architecture.md` | `patterns/phoenix.yaml` | `phoenix.*` |
 | `ruby` | `.rb` sources without Rails (gems, plain Ruby); `*.gemspec` | `frameworks/ruby.md` | ⬜ | — | — | — |
 | `typescript` | `tsconfig.json`; `.ts`/`.tsx` sources | `frameworks/typescript.md` | ⬜ | — | — | — |
-| `react` | `react` in `package.json`; `.jsx`/`.tsx` components | `frameworks/react.md` | ⬜ | — | — | — |
+| `react` | `react` in `package.json`; `.jsx`/`.tsx` components | `frameworks/react.md` | ✅ | `frameworks/react-architecture.md` | `patterns/react.yaml` | `react.*` |
 | `swift-ios` | `.swift` sources; `Package.swift`; `.xcodeproj`/`.xcworkspace` | `frameworks/swift-ios.md` | ⬜ | — | — | — |
 
 **Arch pack `⬜`** = convention coverage only; the architecture lens skips the stack until
-both architecture files + a threshold namespace land. React is the next candidate (mostly a
-convention + experience concern — decide during research whether a full arch pack earns its
-keep). Research first, then author the packs, then flip the row to ✅.
+both architecture files + a threshold namespace land. `ruby`, `typescript`, and `swift-ios`
+are convention-only by design — no arch pack is planned unless a real consumer appears.
+Research first, then author the packs, then flip the row to ✅.
 
 ## Adding a stack
 

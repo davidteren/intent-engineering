@@ -122,5 +122,25 @@ phoenix:
     max_function_params: 5    # long parameter list -> struct / keyword opts
     max_nesting_depth: 3      # nested case/cond/with -> with chains, multi-clause
 
-# Other stacks inherit nothing yet; add a top-level key (e.g. `react:`) when that
-# rule pack lands. Unknown stacks fall back to `general` only.
+react:
+  component:
+    max_loc: 150              # god-component signal (whole component)
+    max_jsx_depth: 5          # deeply nested JSX -> extract components
+    max_props: 10             # too many props / pass-through (prop-drilling)
+    max_hooks: 10             # too many hook calls in one component
+    max_use_state: 8          # scattered local state -> useReducer / extract
+  hook:
+    max_loc: 80               # fat custom hook signal
+    max_returns: 8            # sprawling hook return surface
+  context:
+    max_loc: 120              # god-context signal
+  module:
+    max_loc: 300              # god-module signal (whole file)
+    max_exports: 15           # barrel-file / dumping-ground module
+  general:
+    max_function_loc: 50      # long function/handler signal
+    max_function_params: 5    # long parameter list -> props object
+    max_nesting_depth: 4      # nested conditionals/ternaries in JSX
+
+# Other stacks inherit nothing yet; add a top-level key when that rule pack lands.
+# Unknown stacks fall back to `general` only.

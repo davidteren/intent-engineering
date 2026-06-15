@@ -5,9 +5,26 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
-## [Unreleased]
+## [0.4.0] — 2026-06-15
+
+Third feature release: four new architecture stacks — **Laravel, Express/Node, Phoenix/Elixir,
+and React** — each authored research-first and added purely through the v0.3.0 stack registry
+(data + a catalog row, no lens/skill code changes). The architecture lens now covers **six
+stacks**. (Python is FastAPI-first.)
 
 ### Added
+- **React architecture stack** — fourth registry-only stack addition:
+  - `resources/frameworks/react-architecture.md` — 8 structural smells (`god-component`,
+    `logic-in-component`, `fat-hook`, `prop-drilling`, `effect-overuse`, `god-context`,
+    `god-module`, `law-of-demeter`) + general metrics; optional eslint/madge enrichment.
+  - `resources/patterns/react.yaml` — 11-pattern catalog (function_component, custom_hook,
+    context_provider, reducer, data_fetching_hook, state_store, higher_order_component,
+    render_prop, error_boundary, memoized_component, compound_component).
+  - `config/defaults/thresholds.yaml` — a `react.*` threshold namespace; registered in
+    `stack-catalog.md` (Arch pack ✅, flipped from convention-only) + `principle-index.md`.
+    Detected from `package.json` (`react`) + `.jsx`/`.tsx`. Research-backed (React docs "You
+    Might Not Need an Effect" / custom hooks / context, patterns.dev, Martin Fowler). The arch
+    pack complements the existing react convention doc + the experience lens. Dogfood pending.
 - **Phoenix / Elixir architecture stack** — third registry-only stack addition:
   - `resources/frameworks/phoenix-architecture.md` — 8 structural smells (`fat-controller`,
     `context-bypass`, `god-context`, `fat-liveview`, `business-logic-in-changeset`,

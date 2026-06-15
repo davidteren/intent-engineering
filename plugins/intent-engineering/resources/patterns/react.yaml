@@ -1,0 +1,260 @@
+# Intent Engineering — React design-pattern catalog
+#
+# Consumed by the architecture-reviewer lens to recognize, classify, and check
+# pattern instances in a React codebase. Pattern `id`s here are the stable keys
+# referenced by `.intense/patterns.yaml` allowed / blocked / approved lists.
+# See README.md (this directory) for the schema.
+#
+# Recognition is ANY-OF: a unit matches if any strong signal hits. A hook call /
+# API / signature is the strongest signal; a path or name alone is weaker — say
+# which signal matched in the finding `evidence`.
+version: 1
+stack: react
+
+patterns:
+  - id: function_component
+    name: Function Component
+    intent: >
+      A function returning JSX that renders UI from props and state. The unit of a
+      React UI. A presentational component is a function component with no logic or
+      data access — pure UI from props.
+    recognition:
+      imports: ["react"]
+      calls: ["return (", "jsx", "tsx"]
+      paths: ["**/components/**", "**/*.jsx", "**/*.tsx"]
+      name_pascal_case: true
+      hooks: []
+    good_use:
+      - "renders UI from props/state; single responsibility"
+      - "presentational components are pure: props in, JSX out, no fetching/logic"
+      - "small and composable; complex logic extracted to custom hooks"
+      - "derives values during render (or useMemo), not via effects"
+    misuse:
+      - "mixes data fetching + business logic + a large UI tree (god-component)"
+      - "fetch/axios/business rules inline in the body (logic-in-component)"
+      - "deeply nested JSX with branching that should be extracted components"
+      - "huge prop list largely forwarded onward (prop-drilling)"
+
+  - id: custom_hook
+    name: Custom Hook
+    intent: >
+      A `useX` function that extracts and reuses stateful logic across components.
+      React's logic-reuse unit. Returns a small, cohesive API.
+    recognition:
+      imports: []
+      calls: ["useState", "useEffect", "useMemo", "useCallback"]
+      paths: ["**/hooks/**"]
+      name_prefix: ["use"]
+      hooks: []
+    good_use:
+      - "extracts one cohesive piece of stateful logic; named useThing"
+      - "returns a small, cohesive API ({ data, error, isLoading } / [value, setValue])"
+      - "composes other hooks; follows the Rules of Hooks (top-level, not conditional)"
+      - "reusable across components; no JSX"
+    misuse:
+      - "god hook bundling many unrelated concerns (fat-hook)"
+      - "returns a sprawling grab-bag surface"
+      - "hides too much behind one call, becoming hard to change"
+      - "effects inside that only derive React state (effect-overuse)"
+
+  - id: context_provider
+    name: Context Provider
+    intent: >
+      A React Context plus its Provider, used to pass cross-cutting data (theme,
+      current user, a feature's state) without prop drilling. Dependency injection
+      for the tree — focused, not global-state-by-accident.
+    recognition:
+      imports: ["react"]
+      calls: ["createContext", "useContext", "Provider", "value="]
+      paths: ["**/context/**", "**/contexts/**", "**/providers/**"]
+      name_suffix: [Context, Provider]
+      hooks: []
+    good_use:
+      - "one focused concern per context (theme, auth, a single feature)"
+      - "provider value is memoized (useMemo) to avoid re-rendering all consumers"
+      - "paired with a typed useThisContext() accessor hook"
+      - "removes genuine cross-cutting prop drilling"
+    misuse:
+      - "kitchen-sink context bundling many unrelated concerns (god-context)"
+      - "value object rebuilt every render -> all consumers re-render"
+      - "used as global app state where a state library fits better"
+      - "deeply nested provider pyramids hiding coupling"
+
+  - id: reducer
+    name: Reducer (useReducer)
+    intent: >
+      A pure reducer function plus useReducer, centralizing complex state
+      transitions. Distinct from scattered useState when transitions are related.
+    recognition:
+      imports: []
+      calls: ["useReducer", "dispatch", "case ", "action.type"]
+      paths: ["**/reducers/**", "**/state/**"]
+      name_suffix: [Reducer]
+      hooks: [useReducer]
+    good_use:
+      - "pure reducer: (state, action) => newState; no side effects"
+      - "centralizes related state transitions that several useStates would tangle"
+      - "actions are typed/named; transitions are explicit and testable"
+      - "side effects handled outside the reducer (in handlers/effects)"
+    misuse:
+      - "side effects or async inside the reducer"
+      - "a reducer for trivial single-value state (useState would do)"
+      - "god reducer covering many unrelated state slices"
+      - "mutating state instead of returning a new object"
+
+  - id: data_fetching_hook
+    name: Data-fetching Hook
+    intent: >
+      A hook that owns server data — a React Query/SWR query or a custom fetch hook
+      — exposing data/loading/error. The data layer seam, keeping fetching out of
+      components.
+    recognition:
+      imports: ["@tanstack/react-query", "swr", "react-query"]
+      calls: ["useQuery", "useMutation", "useSWR", "fetch(", "axios"]
+      paths: ["**/hooks/**", "**/queries/**", "**/api/**"]
+      name_prefix: ["use"]
+      hooks: []
+    good_use:
+      - "owns fetching/caching for one resource; exposes { data, error, isLoading }"
+      - "components consume the hook and render; no fetch in the component body"
+      - "query keys / cache invalidation handled in one place"
+      - "mutations colocated with their query invalidation"
+    misuse:
+      - "fetching duplicated inline in components instead of this hook (logic-in-component)"
+      - "manual useEffect + useState fetching where a query lib is already used"
+      - "one mega-hook fetching many unrelated resources"
+      - "no error/loading handling exposed to the UI"
+
+  - id: state_store
+    name: State Store (Redux / Zustand / Jotai)
+    intent: >
+      A dedicated client state container — a Redux slice, Zustand store, or Jotai
+      atom — for cross-cutting app state that outgrows component state and Context.
+    recognition:
+      imports: ["@reduxjs/toolkit", "zustand", "jotai", "redux"]
+      calls: ["createSlice", "configureStore", "create(", "atom(", "useSelector"]
+      paths: ["**/store/**", "**/stores/**", "**/slices/**", "**/state/**"]
+      name_suffix: [Slice, Store, Atom]
+      hooks: []
+    good_use:
+      - "holds genuinely cross-cutting/global client state"
+      - "sliced by domain; selectors derive view data"
+      - "updates are pure/immutable (RTK's Immer, Zustand setters)"
+      - "async/side effects in thunks/middleware, not in reducers"
+    misuse:
+      - "putting server cache in a store instead of a query lib"
+      - "one god store/slice mixing unrelated domains"
+      - "local UI state hoisted to global state unnecessarily"
+      - "business logic buried in reducers that belongs in services/hooks"
+
+  - id: higher_order_component
+    name: Higher-Order Component (HOC)
+    intent: >
+      A function that takes a component and returns an enhanced component
+      (`withX`). A legacy logic-reuse pattern; custom hooks usually supersede it.
+    recognition:
+      imports: []
+      calls: ["return function", "WrappedComponent", "displayName"]
+      paths: ["**/hocs/**", "**/hoc/**"]
+      name_prefix: ["with"]
+      hooks: []
+    good_use:
+      - "wraps a component to inject cross-cutting behaviour (auth, logging)"
+      - "forwards refs and copies displayName for debuggability"
+      - "used where a hook can't apply (wrapping arbitrary components)"
+      - "composable and transparent about the props it injects"
+    misuse:
+      - "HOC where a custom hook would be simpler and clearer (prefer hooks)"
+      - "deeply nested HOC wrapping ('wrapper hell') obscuring the tree"
+      - "swallowing/renaming props unpredictably"
+      - "business logic buried in the HOC"
+
+  - id: render_prop
+    name: Render Prop
+    intent: >
+      A component that takes a function (often `children`) and calls it with data to
+      render. A composition/logic-sharing pattern; often replaced by hooks.
+    recognition:
+      imports: []
+      calls: ["children(", "props.render(", "children={"]
+      paths: ["**/components/**"]
+      name_suffix: []
+      hooks: []
+    good_use:
+      - "shares behaviour/state by letting the caller render with provided data"
+      - "good for composition (inverting prop drilling) and flexible UIs"
+      - "clear contract for what data the render function receives"
+      - "used where a hook's output still needs caller-controlled rendering"
+    misuse:
+      - "render-prop nesting ('callback pyramid') where a hook reads cleaner"
+      - "heavy logic in the render prop body"
+      - "overuse where simple composition/children would do"
+      - "recreating the render function every render causing re-renders"
+
+  - id: error_boundary
+    name: Error Boundary
+    intent: >
+      A class component implementing getDerivedStateFromError/componentDidCatch (or
+      react-error-boundary) that catches render errors in its subtree and shows a
+      fallback. The UI's error seam.
+    recognition:
+      imports: ["react-error-boundary"]
+      calls: ["componentDidCatch", "getDerivedStateFromError", "ErrorBoundary"]
+      paths: ["**/components/**", "**/errors/**"]
+      name_suffix: [ErrorBoundary, Boundary]
+      hooks: []
+    good_use:
+      - "catches render errors in a subtree and renders a fallback UI"
+      - "placed at meaningful boundaries (route/feature level)"
+      - "reports the error (logging) and offers recovery (reset)"
+      - "presentation/recovery only; no business logic"
+    misuse:
+      - "no error boundaries at all (one error blanks the whole app)"
+      - "one app-wide boundary that hides where failures originate"
+      - "business logic or data fetching inside the boundary"
+      - "swallowing errors without logging or recovery"
+
+  - id: memoized_component
+    name: Memoized Component
+    intent: >
+      A component wrapped in React.memo (often with useMemo/useCallback for stable
+      props) to skip re-renders when props are unchanged. A performance tool, applied
+      where it pays.
+    recognition:
+      imports: ["react"]
+      calls: ["React.memo", "memo(", "useMemo", "useCallback"]
+      paths: ["**/components/**"]
+      name_suffix: []
+      hooks: [useMemo, useCallback]
+    good_use:
+      - "memoizes a genuinely expensive or frequently-re-rendered component"
+      - "paired with stable props (useCallback/useMemo) so memo actually helps"
+      - "applied after measuring, where it pays off"
+      - "custom comparator only when prop equality needs it"
+    misuse:
+      - "memo everywhere by default (premature optimization, added complexity)"
+      - "React.memo with inline object/function props that change every render (no-op)"
+      - "useMemo/useCallback on trivial values where the overhead exceeds the benefit"
+      - "memoization masking a deeper re-render/structure problem"
+
+  - id: compound_component
+    name: Compound Component
+    intent: >
+      A set of components that share implicit state via Context to work together as
+      one API (`<Tabs><Tab/></Tabs>`). Expressive composition for related UI parts.
+    recognition:
+      imports: ["react"]
+      calls: ["createContext", "useContext", "Children", "cloneElement"]
+      paths: ["**/components/**"]
+      name_suffix: []
+      hooks: []
+    good_use:
+      - "related subcomponents share state via a local Context (Tabs/Tab/Panel)"
+      - "expressive, flexible API for the consumer; clear composition"
+      - "internal context scoped to the compound, not global"
+      - "subcomponents are presentational; the parent owns the shared state"
+    misuse:
+      - "implicit coupling that's hard to follow for a simple component"
+      - "cloneElement/Children gymnastics where plain props would do"
+      - "leaking the internal context outside the compound"
+      - "business logic in the shared state instead of a hook"

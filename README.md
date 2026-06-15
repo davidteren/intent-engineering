@@ -53,7 +53,7 @@ out as parallel agents and return scored, deduplicated findings with concrete fi
 | **Convention** (`ie-convention-reviewer`) | convention-over-configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure/naming. *Reads your repo's `CLAUDE.md`/`AGENTS.md` first — local conventions win.* |
 | **Simplicity** (`ie-simplicity-reviewer`) | Occam, KISS, YAGNI | Needless abstraction, premature generality, knobs nobody sets, layers that don't earn their keep. Also guards against over-simplifying away real requirements. |
 | **Experience** (`ie-experience-reviewer`) | HIG, look-and-feel, UX | Missing interaction states, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design. User-facing surfaces only. |
-| **Architecture** (`ie-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.intense/` allow/block/approved policy. Framework-specific (Rails + Python + Laravel + Express + Phoenix today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express), or `credo`/`boundary` (Phoenix). |
+| **Architecture** (`ie-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.intense/` allow/block/approved policy. Framework-specific (Rails, Python (FastAPI), Laravel, Express, Phoenix, React today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix). |
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries a
 confidence anchor, and proposes a concrete fix. When two principles conflict (e.g. DWIM's
@@ -85,8 +85,9 @@ checklist), good vs bad examples, how-to-apply, and cited sources.
 **Framework conventions** (`resources/frameworks/`): per-stack docs of the idioms a
 practitioner expects — `rails`, `ruby`, `react`, `typescript`, `python`, `laravel`,
 `express`, `phoenix`, `swift-ios`, plus `rails-architecture`, `python-architecture`,
-`laravel-architecture`, `express-architecture`, and `phoenix-architecture` (the architecture
-lens's smell heuristics + thresholds). Seed set is driven by dogfood stacks.
+`laravel-architecture`, `express-architecture`, `phoenix-architecture`, and
+`react-architecture` (the architecture lens's smell heuristics + thresholds). Seed set is
+driven by dogfood stacks.
 
 **Agnostic cross-cutting** (`resources/agnostic/`): topics that span stacks — `naming`,
 `defaults-and-configuration`, `error-handling`, `api-design`, `accessibility`,
@@ -94,9 +95,10 @@ lens's smell heuristics + thresholds). Seed set is driven by dogfood stacks.
 
 **Pattern catalog** (`resources/patterns/`): `rails.yaml` (14 Rails patterns),
 `python.yaml` (13 Python/FastAPI patterns), `laravel.yaml` (14 Laravel patterns),
-`express.yaml` (12 Express/Node patterns), and `phoenix.yaml` (11 Phoenix/Elixir patterns) —
-each entry an intent, recognition signature, good-use rubric, and common misuse the
-architecture lens uses to recognize, classify, and judge pattern instances.
+`express.yaml` (12 Express/Node patterns), `phoenix.yaml` (11 Phoenix/Elixir patterns), and
+`react.yaml` (11 React patterns) — each entry an intent, recognition signature, good-use
+rubric, and common misuse the architecture lens uses to recognize, classify, and judge
+pattern instances.
 
 ---
 
