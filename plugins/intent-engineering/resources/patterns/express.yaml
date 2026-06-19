@@ -91,12 +91,16 @@ patterns:
     recognition:
       imports: []
       calls: []
-      paths: ["**/services/**", "**/service/**", "**/domain/**", "**/use-cases/**"]
-      name_suffix: [Service, service, UseCase]
+      # The service layer is often NAMED FOR THE TRANSPORT IT FRONTS (e.g. `api/`), not the
+      # word "service", and is often shared by REST + websocket callers via a (caller, data)
+      # signature. Recognize by location AND by the HTTP-agnostic call shape, not just the name.
+      paths: ["**/services/**", "**/service/**", "**/domain/**", "**/use-cases/**", "**/api/**", "**/<domain>/**"]
+      name_suffix: [Service, service, UseCase, API]
+      call_signature: ["(caller, data)", "(uid, data)", "(req-like data param, not res)"]
       functions: []
     good_use:
       - "owns business logic; one cohesive operation per public method"
-      - "HTTP-agnostic: no req/res/next, no express import, no status codes"
+      - "HTTP-agnostic: no express import, no res.json/res.status/res.send (a passed-in `data.req`/`caller` for .uid/.ip/.session is data, NOT transport coupling)"
       - "dependencies injected (constructor / factory), not reached globally"
       - "uses a data-access/repository layer for persistence; emits events for side effects"
     misuse:
@@ -272,8 +276,8 @@ patterns:
       a 1000-line imperative side-effect chain.
     recognition:
       imports: ["events", "eventemitter2"]
-      calls: ["eventEmitter.on", "emitter.emit", ".on(", ".emit("]
-      paths: ["**/subscribers/**", "**/listeners/**", "**/events/**"]
+      calls: ["eventEmitter.on", "emitter.emit", ".on(", ".emit(", "hooks.fire", "filter:", "action:"]
+      paths: ["**/subscribers/**", "**/listeners/**", "**/events/**", "**/hooks/**"]
       name_suffix: [Subscriber, Listener]
       functions: []
     good_use:

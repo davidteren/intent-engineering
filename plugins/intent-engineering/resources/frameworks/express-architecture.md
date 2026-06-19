@@ -20,6 +20,19 @@ cross-cutting concerns; a centralized error handler turns thrown errors into res
 side effects fan out via events (pub/sub). The smells below detect where that layering has
 broken down. When a repo states its own structure in `CLAUDE.md`/`AGENTS.md`, that wins.
 
+**Recognition reality — Express apps vary wildly; key on behaviour, not boilerplate.** Real
+Express codebases are **CommonJS** (`require`/`module.exports`) as often as ESM, hand-roll
+persistence (no ORM), and name the service layer for the transport it fronts (`api/`) rather
+than `services/`. Before applying a smell, account for this: (1) **the export/public surface
+is whatever augments the module object** — `module.exports.x = …`, `Obj.x = …` (including a
+mixin `module.exports = function (Obj) { Obj.x = … }`), not only literal `export`/`module.exports
+= {…}` tokens; a 600-line module can export 30 functions with zero `export` keywords. (2) **A
+service layer can live anywhere** (`api/`, a `src/<domain>/` module) and is identified by being
+HTTP-agnostic (no `res`), not by the word "service". (3) **Async error handling is often a
+project-local wrapper** (a helper that wraps every handler in try/catch→`next(err)`), not the
+named `express-async-errors`/`asyncHandler` libs — look for the local seam before declaring a
+gap. Missing these makes the lens both over- and under-report on mature apps.
+
 ## Smells (detectable)
 
 **Canonical smell ids** (the stable vocabulary used by the finding `smell` field, the
@@ -54,6 +67,12 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
 - **Confirm (not just count):** A handler that validates (via a validation middleware/schema),
   calls one service function, and sends the result is *thin* — even with a few lines of
   response shaping (status code, headers). Count the *work*, not the route registration.
+  **Distinguish render controllers from REST controllers:** a *server-rendered* page handler
+  routinely runs long assembling a **view model** (breadcrumbs, pagination, OG tags,
+  privilege-gated visibility) — that presentation assembly is lower-severity than *business
+  logic* in a handler. Flag query-building / domain rules / external calls (P2); treat pure
+  view-model assembly in a render controller as P3 at most (and ideally a presenter/view-model
+  helper, not a service).
 - **Fix direction:** Move computation into a **service** that receives plain inputs and
   returns domain values, knowing nothing about `req`/`res`; keep the handler as
   parse-request -> call service -> send response -> `next(err)` on failure. Route inline
@@ -65,9 +84,13 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
 - **Signal:** A module over `express.module.max_loc`, or exporting more than
   `express.module.max_exports` public names. The classic offenders are a single giant
   `index.js`/`app.js`/`routes.js`, or a `utils.js`/`helpers.js` that accretes unrelated
-  functions. Count `module.exports`/`export` names and top-level declarations. Module-level
-  mutable state (a top-level `let`/object mutated at runtime, a cache hiding config) is a
-  strong corroborating signal.
+  functions. **Count the public surface correctly:** in CommonJS the exports are every
+  `module.exports.x = …` / `exports.x = …` / `Obj.x = …` assignment — including the mixin form
+  `module.exports = function (Obj) { Obj.a = …; Obj.b = … }` where the *injected parameter*
+  (whatever it's named) is the export object. A naive `grep export` returns 0–1 for a 600-line
+  module that really exports 30 functions, so count `<Obj>.<name> =` assignments against the
+  module/param object. Module-level mutable state (a top-level `let`/object mutated at runtime,
+  a cache hiding config) is a strong corroborating signal.
 - **Why it matters:** A module is Node's primary unit of reuse. One that holds many
   unrelated responsibilities becomes a hub every other file imports, so a change for one
   concern risks unrelated ones, and circular `require`/`import` cycles cluster around it.
@@ -115,8 +138,13 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
 
 ### 5. Layer leak (transport ↔ domain ↔ data bleed) — `layer-leak`
 - **Signal:** Three directions. (a) **Service knows HTTP:** a service/domain module
-  references `req`/`res`/`next`, returns a status code or headers, or imports `express`.
-  Grep `services/**` for `req`, `res`, `res.status`, `res.json`, `require('express')`. (b)
+  references the **response** (`res.json`/`res.status`/`res.send`/`res.render`), returns a
+  status code or headers, or imports `express`. Grep the service/domain layer for
+  `res.json`/`res.status`/`res.send`/`require('express')` — **NOT a bare `req`/`res`**: a
+  domain function that takes a sanitized request as a *data parameter* (`data.req`, `caller`)
+  to read `.uid`/`.ip`/`.session` is using it as data, not coupling to transport — a common,
+  legitimate idiom that a bare `req`/`res` grep false-flags. The leak is *writing the
+  response* or *importing express* from the domain. (b)
   **Controller skips the service into data:** a route/controller calls the ORM/DB directly
   (`Model.find`, `sequelize`, `prisma.`, `knex`, raw SQL) when a service/repository seam
   exists. Grep `routes/**` and `controllers/**` for those. (c) **Data-access leaks
@@ -165,7 +193,12 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
   reliable Node service.
 - **Confirm (not just count):** A handler whose every `await` is inside `try/catch` (or
   wrapped by an `asyncHandler`/`express-async-errors`) and forwards via `next(err)` is fine.
-  A genuinely intentional ignored error must be narrow and commented.
+  A genuinely intentional ignored error must be narrow and commented. **Look for a
+  project-local async wrapper first** — many apps roll their own (a route-setup helper that
+  detects `AsyncFunction` handlers and wraps them in try/catch→`next(err)`, e.g. a
+  `routes/helpers.js` `tryRoute`). If every route is registered through such a seam, the gap
+  does NOT exist — do not flag the individual handlers. Grep for a central handler-wrapping
+  helper before concluding async errors are unhandled.
 - **Fix direction:** Wrap async handlers (`asyncHandler`, `express-async-errors`) or
   `try/catch` + `next(err)`; add one centralized error-handling middleware that maps errors
   to responses and distinguishes operational from programmer errors; never swallow.
