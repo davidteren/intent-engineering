@@ -21,6 +21,13 @@ single-purpose invokable command). Both are valid; the smells below detect where
 broken down. When a repo states its own structure in `CLAUDE.md`/`AGENTS.md` (e.g. "we use
 Actions, not Services"), that local choice wins.
 
+**Layout-agnostic recognition.** Many mature Laravel apps are *domain-organized*
+(`app/<Domain>/Controllers/`, `app/<Domain>/Models/`, an app-named `Repos/`/`Queries/`/`Tools/`
+layer) rather than the default flat `app/Http/Controllers` + `app/Models` + `app/Services`.
+Recognize units by **base class** (`extends Model`/`Controller`/`FormRequest`), **name suffix**
+(`*Controller`/`*Service`/`*Repo`), and **characteristic methods** as much as by path — the
+catalog's `paths:` are a hint, not the gate. A domain layout is a convention, not a smell.
+
 ## Smells (detectable)
 
 **Canonical smell ids** (the stable vocabulary used by the finding `smell` field, the
@@ -53,7 +60,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/laravel.yaml`) ar
 - **Confirm (not just count):** A controller with many *thin* resourceful actions that each
   type-hint a FormRequest and delegate one line to a service/action is not fat — count
   action *bodies*, not action *names*. Response shaping (returning a view / `JsonResource` /
-  redirect) is legitimate controller work.
+  redirect) is legitimate controller work. **GET form-render twins legitimately double the
+  action count** — `create`/`store`, `edit`/`update`, `showDelete`/`destroy`,
+  `showMove`/`move` are idiomatic pairs, so a resourceful controller with ~12–15 *thin*
+  actions is healthy; `max_actions` is a look-closer signal, not a verdict.
 - **Fix direction:** Validation -> a `FormRequest` (`app/Http/Requests`). Business logic ->
   a Service or single-purpose Action. Non-resourceful actions usually mean a missing
   resource — extract a new controller (convention over configuration). See
@@ -134,7 +144,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/laravel.yaml`) ar
 - **Confirm (not just count):** Accessing an **eager-loaded** relation in a view
   (`User::with('profile')` upstream) is fine — the smell is the *missing* `with()` plus
   per-row access, or a raw query in the template. Pure presentation (formatting a cast date,
-  building a CSS class) is exactly what Blade is for.
+  building a CSS class) is exactly what Blade is for. **A bare `::all()`/`::where(` grep
+  over-triggers** — `Foo::all()`/`Foo::CONST` only count when `Foo` is an **Eloquent model**;
+  exclude enums, config, and static helper classes (e.g. an `ActivityType::all()` enum helper
+  is not a query). N+1 only matters inside a loop over a **non-eager-loaded** collection.
 - **Fix direction:** Load data in the controller/action (eager-load with `with()`), pass
   prepared data (or an API Resource / view model) to the view; move display logic into a
   Blade component or presenter. See the N+1 guidance in the Laravel Eloquent docs.
@@ -175,8 +188,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/laravel.yaml`) ar
 ### 8. Law of Demeter violations (`a->b->c->d` chains) — `law-of-demeter`
 - **Signal:** "Train wreck" chains navigating across object boundaries —
   `$order->customer->address->city`, `$user->account->plan->name` — more than one arrow of
-  *navigation* (not fluent query builders). Grep code and Blade for `->` chains reaching
-  through intermediate objects.
+  *navigation* (not fluent query builders). **A raw `->a->b->c` grep is low-signal** — it is
+  dominated by fluent builders (`->query()->where()->orderBy()`) and `$this->` chains the
+  rubric excludes, so treat this as **manual spot-check** guidance, not a count. Confirm the
+  receiver is a domain object (not a Builder/Collection/`$this`) before flagging.
 - **Why it matters:** Each extra arrow couples the caller to the internal shape of every
   intermediate object; a change to any link breaks distant code, and a `null` mid-chain
   throws far from its cause (mitigated but not fixed by `?->`).

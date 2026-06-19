@@ -8,6 +8,20 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Changed
+- **Laravel pack tuned from a real-world dogfood** (read-only run on a mature open-source
+  Laravel 12 app with a non-default *domain-organized* layout). The pack's prose held
+  (confirm-don't-count prevented every false positive; the app came back structurally clean),
+  but the structured signals were calibrated for vanilla Laravel. Folded back:
+  - **Layout-agnostic recognition** — added `app/**/{Controllers,Services,Requests,Resources,Jobs,Events,Listeners,Policies,Middleware,Repositories,Repos}/**`
+    fallback path globs to every pattern (only `eloquent_model` had one), so domain-organized
+    apps classify on path as well as base-class/suffix.
+  - **Two new catalog patterns** (`query_object`, `notification`) and a broadened `action`
+    pattern that also recognises hand-rolled domain-operation objects (`Tools/`/`Operations/`,
+    `run()`/`handle()`) — these were `(unmatched)` on the dogfood. `laravel.yaml` 13 → 15.
+  - **Threshold + caveats** — `laravel.controller.max_actions` 10 → 15 (GET form-render twins
+    legitimately double the count); doc caveats that a bare `::all()`/`::where(` Blade grep
+    over-triggers on enums/static helpers, and that the Law-of-Demeter grep is low-signal
+    (manual spot-check, not a count).
 - **React pack tuned from a real-world dogfood** (read-only run on a large production React 18
   + Next + MobX app, ~429 components). The React-core heuristics held (real god-components and
   a derived-state-in-effect found); two gaps were folded back:

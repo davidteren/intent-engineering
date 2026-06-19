@@ -216,7 +216,7 @@ pattern catalog:
   defaults-and-configuration, accessibility, information-architecture). Heading:
   "Detectable smells".
 - `patterns/` — YAML design-pattern catalogs (`rails.yaml` 14, `python.yaml` 13,
-  `laravel.yaml` 14, `express.yaml` 12, `phoenix.yaml` 11, `react.yaml` 11 patterns) + format
+  `laravel.yaml` 15, `express.yaml` 12, `phoenix.yaml` 11, `react.yaml` 11 patterns) + format
   README.
 
 **The "Violation smells" / "Detectable smells" section is load-bearing** — it *is* the

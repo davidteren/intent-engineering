@@ -94,7 +94,7 @@ driven by dogfood stacks.
 `information-architecture`.
 
 **Pattern catalog** (`resources/patterns/`): `rails.yaml` (14 Rails patterns),
-`python.yaml` (13 Python/FastAPI patterns), `laravel.yaml` (14 Laravel patterns),
+`python.yaml` (13 Python/FastAPI patterns), `laravel.yaml` (15 Laravel patterns),
 `express.yaml` (12 Express/Node patterns), `phoenix.yaml` (11 Phoenix/Elixir patterns), and
 `react.yaml` (11 React patterns) — each entry an intent, recognition signature, good-use
 rubric, and common misuse the architecture lens uses to recognize, classify, and judge
