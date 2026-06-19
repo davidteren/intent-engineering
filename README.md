@@ -5,10 +5,14 @@
 
 **Site:** [davidteren.github.io/intent-engineering](https://davidteren.github.io/intent-engineering/)
 
-A Claude Code plugin that enforces **intent engineering**: software that behaves the way
-a reasonable developer or user already expects. It applies a set of well-established
-design principles — plus framework architecture analysis — as review **lenses** that fan
-out as parallel agents and return scored, deduplicated findings with concrete fixes.
+A Claude Code plugin that enforces **intent engineering**: software — and the experience
+around it — that behaves the way a reasonable developer or user already expects. It guards
+against *surprise* on both sides: hidden side effects and reinvented conventions in the
+**code**, and broken flows, weak interaction states, or dark patterns in the **UX**. It
+applies a set of well-established design principles — plus framework architecture analysis
+across six stacks (Rails, Python/FastAPI, Laravel, Express, Phoenix, React) — as review
+**lenses** that fan out as parallel agents and return scored, deduplicated findings with
+concrete fixes.
 
 > **What / Why / How (plain language)**
 >
