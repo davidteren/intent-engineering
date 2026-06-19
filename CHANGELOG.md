@@ -5,7 +5,13 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
-## [Unreleased]
+## [0.5.0] — 2026-06-19
+
+Hardening release: all six architecture packs (Rails, Python, Laravel, Express, Phoenix,
+React) **dogfooded read-only on real production apps** and tuned from the findings, plus a new
+**external-tool-deferral config** so a team already running reek/eslint/phpstan/… isn't given
+duplicate findings. No new stacks — this release makes the existing six trustworthy on real
+codebases.
 
 ### Added
 - **External-tool preference / anti-duplication config** (`tools.architecture` in
