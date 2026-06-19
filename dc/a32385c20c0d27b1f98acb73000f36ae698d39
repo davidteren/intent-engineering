@@ -1,0 +1,21 @@
+README.md
+  s_de3e8900bd34bc::t_8cd4ca3dfe7815 8-15
+STATUS.md
+  s_de3e8900bd34bc::t_36296d569d327f 66-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "dca32385c20c0d27b1f98acb73000f36ae698d39",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
