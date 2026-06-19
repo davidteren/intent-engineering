@@ -63,6 +63,19 @@ Install in any repo:
   grep false-positive, a missing `document_renderer` pattern) and a placement smell — all
   folded back into the docs/catalog before commit.
 
+## Open question — potential name/positioning change (PARKED)
+
+Considering renaming **"Intent Engineering"** — "engineering" undersells the mission (only 1
+of 5 lenses is code-specific; the tool is about *behaving as expected across code AND UX*, no
+dark patterns). Front-runners: **Intent Development** / **Intent Product Development (IPD)**
+(owner leans "development" over "design" — design reads UI-only). Key insight: positioning
+(name/tagline) is **separable** from the costly identifier migration (`ie-*`, `.intense/`,
+marketplace, installs); and a product-level name should be *earned* by first building out the
+under-developed UX/predictability half. **Recommendation: Path B** — reposition the words now,
+invest in the UX lenses next, then rename. **No change made.** Full analysis +
+options + 3 paths: `wip/naming-and-positioning-report.md`; shareable visual summary:
+https://radiant-reef-pm3s.here.now/
+
 ## Stack coverage roadmap
 
 The extension point is in place: a stack is **data** (a `stack-catalog.md` row + packs),
