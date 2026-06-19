@@ -54,17 +54,29 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/phoenix.yaml`) ar
   exist precisely so this logic is named and reusable.
 - **Confirm (not just count):** An action that reads params, calls one context function, and
   renders (handling the `{:ok, _} | {:error, changeset}` tuple) is thin even across a few
-  lines. Count the *work*, not the `conn` plumbing.
+  lines. Count the *work*, not the `conn` plumbing. **API / RPC dashboard controllers
+  legitimately exceed `max_actions`** — a stats controller with `top_sources`/`referrers`/
+  `pages`/`countries`/… is many *thin* RPC endpoints, not sprawl; that's action *count*, not
+  fat bodies. Flag only when the action bodies hold business logic / query-building (P2); pure
+  action-count sprawl with thin bodies is P3 at most (a missing-resource / split-controller
+  nudge).
 - **Fix direction:** Move the work into a context function (`MyApp.Accounts.create_user/1`);
   the action becomes pattern-match-on-result -> render. See `resources/patterns/phoenix.yaml`.
 - **Default severity:** P2 when business logic/`Repo` lives in the action; P3 for action
   sprawl with otherwise-thin actions.
 
 ### 2. Context bypass (web layer → Repo/schema directly) — `context-bypass`
-- **Signal:** The web layer reaching past the context straight into persistence: `Repo.*`
-  (`Repo.all`, `Repo.get`, `Repo.insert`, `Repo.preload`), `from`/`Ecto.Query`, or a schema's
-  `changeset/2` called **inside** `lib/*_web/**` (controllers, LiveViews, components, views).
-  Grep `lib/*_web/**` for `Repo.`, `from(`, `|> Ecto.Query`, `Schema.changeset(`.
+- **Signal:** The web layer reaching past the context straight into persistence inside
+  `lib/*_web/**` (controllers, LiveViews, components). **Match precisely — two common
+  false-positive traps:** (1) the Ecto query macro is `from(<binding> in <Schema>, …)` — grep
+  the **`from(... in ...)` form**, NOT a bare `from(`, because a context query-builder is often
+  a *function literally named `from`* (e.g. `Stats.Query.from(site, params)`) and a bare grep
+  flags every call to it. (2) **Tier the `Repo.` calls by severity** — query-building / writes
+  (`Repo.all`/`Repo.get_by`/`Repo.insert`/`Repo.update`/`Repo.delete_all` with a `from(… in
+  Schema)`) is the real bypass (**P2**); a lone `Repo.preload`/`Repo.reload` hydrating a struct
+  the context already returned is a mild nudge (**P3**). Also flag a schema's `changeset/2`
+  called directly in `*_web`. So: grep `lib/*_web/**` for `Repo.(all|get|get_by|insert|update|delete|delete_all)`,
+  `from(\w+ in `, and `Schema.changeset(` — and disambiguate before flagging.
 - **Why it matters:** Contexts are the application's public API and the seam where data
   access lives. When the web layer queries directly, the boundary dissolves — data-access
   rules scatter across controllers and LiveViews, the domain can't be reused or tested off
@@ -72,10 +84,14 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/phoenix.yaml`) ar
 - **Confirm (not just count):** Calling `Repo` from a context is correct — that is the
   context's job. The smell is `Repo`/`Ecto.Query`/schema-changeset usage *in `*_web/`*. A
   documented deliberate "no contexts" architecture (some teams use operations/use-cases
-  instead) is the convention there — judge against the repo's stated design.
+  instead) is the convention there — judge against the repo's stated design. **Scope:** this
+  smell targets `lib/*_web/**` — the web→data leap. An **Oban worker / mix task** that builds
+  its own Ecto query is *application-layer* (not web), so it's the milder concern "data-access
+  scattered outside a context", a P3 placement nudge, not this P2 web-bypass.
 - **Fix direction:** Add or extend a context function that owns the query/validation; the web
   layer calls the context and never `Repo`.
-- **Default severity:** P2 — bypassing the context is the central Phoenix layering violation.
+- **Default severity:** P2 for query-building / writes in the web layer (the central Phoenix
+  layering violation); P3 for a lone `Repo.preload`/`Repo.reload` on a context-provided struct.
 
 ### 3. God context (context grouping unrelated functionality) — `god-context`
 - **Signal:** A context module over `phoenix.context.max_loc` or exposing more than
@@ -105,7 +121,12 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/phoenix.yaml`) ar
   from controllers or jobs; it also bloats the process state.
 - **Confirm (not just count):** `mount`/`handle_event` that read params, call one context
   function, and assign the result to socket state are thin even with several assigns. Flag
-  domain logic and direct data access.
+  domain logic and direct data access. **Colocated function-component markup inflates LOC** —
+  a modern (Phoenix 1.7+) LiveView keeps its `attr`/`~H` function components in the same
+  module, so a 1000-LOC LiveView with **zero `Repo.`/`from(… in …)`** that delegates to
+  contexts is UI-only, not fat. Judge **handler/domain LOC** (`max_handler_loc`) and data
+  access, not total module LOC; an oversized-but-UI-only module is at most a P3 "extract the
+  components" nudge.
 - **Fix direction:** Move domain work to a context; the LiveView calls the context and
   manages only `assigns`/socket state. Extract presentation into function components.
 - **Default severity:** P2 when business logic/`Repo` lives in the LiveView; P3 for an
@@ -185,7 +206,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/phoenix.yaml`) ar
 `phoenix.general.max_function_loc` (long function -> extract / compose with pipes),
 `phoenix.general.max_function_params` (long parameter list -> a struct / keyword options),
 and `phoenix.general.max_nesting_depth` (deeply nested `case`/`cond`/`with` -> `with` chains,
-multi-clause functions, early pattern matches) apply to any function.
+multi-clause functions, early pattern matches) apply to any function. **Count `with` legs as
+flat, not nested** — a single multi-clause `with a <- x, b <- y, ... do` head is one flat
+pipeline (the idiomatic *fix* for nesting), not N levels of depth; don't flag it as deep
+nesting.
 
 ## Tool enrichment (optional)
 
