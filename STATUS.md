@@ -30,6 +30,10 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
 - **Stack registry** (`references/stack-catalog.md`) — one source of truth for stack
   detection + which packs each loads; the architecture lens, the skills, and a stack-aware
   `/ie-init` read it, so adding a stack is data + a catalog row, not skill edits.
+- **Configurable lenses + external-tool deferral** — `ways-of-working.yaml` turns any lens
+  (agent) `off`, and `tools.architecture` (`enrich`/`prefer`/`report`/`off`) makes the
+  architecture lens defer to an installed static-analysis tool (reek/eslint/phpstan/…) instead
+  of duplicating it. `/ie-init` surfaces both as opt-in at setup.
 
 ## Published
 

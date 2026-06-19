@@ -44,12 +44,30 @@ present the menu (multi-select):
 
 | Option | File created | What it controls |
 |--------|--------------|------------------|
-| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, severity overrides, local conventions, confidence gate, report dir |
+| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, **external-tool preference**, severity overrides, local conventions, confidence gate, report dir |
 | Pattern policy | `.intense/patterns.yaml` | allowed / blocked / pre-approved design patterns, unknown-pattern handling |
 | Thresholds | `.intense/thresholds.yaml` | architecture metric limits (fat model/controller, God object, service object, …) |
 | All | all three | full config set |
 
 Recommend **All** for a first run.
+
+### 2b. Opt in/out of lenses + external tools (when scaffolding ways-of-working)
+
+If `ways-of-working.yaml` is being scaffolded **and** the menu is interactive (AskUserQuestion
+available), present two short opt-in questions and write the answers into the file (Step 3),
+so the team configures which modules run at init rather than editing YAML afterward:
+
+1. **Which lenses run?** Default `predictability`, `convention`, `simplicity` on;
+   `experience`, `architecture` auto. Let the user turn any **off** (e.g. a team that relies
+   solely on its own pipeline might set `architecture: off`). Write to `lenses.*`.
+2. **External-tool preference** (only meaningful if the architecture lens is on). "If your repo
+   already runs a static-analysis tool (reek/rubocop, ruff, phpstan, eslint, credo…), how
+   should the architecture lens treat it?" → `enrich` (default — heuristics + tool),
+   `prefer` (run the tool, suppress overlapping heuristics — no duplication), `report`
+   (tool findings only), `off` (ignore tools). Write to `tools.architecture`.
+
+Non-interactive / `$ARGUMENTS`-driven runs: skip the prompts and scaffold the documented
+defaults verbatim (the file's comments explain every option for later editing).
 
 ### 3. Copy templates (idempotent, stack-aware)
 

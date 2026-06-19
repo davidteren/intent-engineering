@@ -7,6 +7,20 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Added
+- **External-tool preference / anti-duplication config** (`tools.architecture` in
+  `ways-of-working.yaml`): `enrich` (default — heuristics + tool as corroboration), `prefer`
+  (run the tool, map its findings to the schema, suppress overlapping heuristics — no
+  duplication), `report` (tool findings only), `off` (ignore tools). For a team that already
+  runs reek/rubocop/ruff/phpstan/eslint/credo, the architecture lens defers to it instead of
+  re-deriving the same smells. Honored by `ie-architecture-reviewer`; documented in
+  `config-resolution.md`; wired through `ie-review`/`ie-audit`.
+- **`/ie-init` opt-in for lenses + tool preference** — when scaffolding `ways-of-working.yaml`
+  interactively, `ie-init` now asks which lenses run (turn any agent off) and how the
+  architecture lens should treat an installed static-analysis tool, writing the answers into
+  `.intense/`. (Lens on/off/auto toggles already existed in the config; this surfaces them at
+  init and adds the tool preference.)
+
 ### Changed
 - **Rails pack tuned from a real-world dogfood** (read-only run on a mature OSS Rails 8 app,
   ~1244 app files, concern-heavy, 99 service objects) — the original stack, validated on a

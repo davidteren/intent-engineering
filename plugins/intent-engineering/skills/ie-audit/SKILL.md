@@ -47,7 +47,8 @@ Coverage. Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
   structure; Python: `pyproject.toml`/`setup.py` + `.py` sources). This is the lens that
   audits fat models/routers, God objects/modules, misused services, business logic in
   schemas, layer leaks, and classifies/raises patterns — usually the highest-value pass in
-  a codebase audit. Pass it the resolved `thresholds` + pattern policy.
+  a codebase audit. Pass it the resolved `thresholds` + pattern policy + the
+  `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`).
 
 Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENTS.md`
 + `.intense` conventions for the convention and architecture lenses. Announce the team.

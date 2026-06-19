@@ -82,7 +82,8 @@ lenses and synthesis. Note the config source in Coverage. Then read
   **Python:** a `pyproject.toml`/`setup.py`/`setup.cfg` + changes to `.py` sources
   (routers, services, models/schemas, dependencies, app factory). Skip when no supported
   framework, or the diff is config/docs/test-only with no structural change. Pass it the
-  resolved `thresholds` + pattern policy.
+  resolved `thresholds` + pattern policy + the `tools.architecture` preference
+  (`enrich`/`prefer`/`report`/`off`).
 
 Honor the config `lenses:` toggles over these defaults (`off` forces a lens off even if
 relevant; `on` forces it on; `auto` = the judgment above).

@@ -36,9 +36,11 @@ thresholds and `patterns/python.yaml`.
 
 1. **Resolved config** (the orchestrator passes it, or read it yourself per
    `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`): project `.intense/thresholds.yaml`
-   + `.intense/patterns.yaml` merged over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. The
-   thresholds and the allow/block/approved/unknown policy are **authoritative** — use the
-   resolved numbers, not the doc's example numbers.
+   + `.intense/patterns.yaml` + `.intense/ways-of-working.yaml` merged over
+   `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. The thresholds and the allow/block/approved/unknown
+   policy are **authoritative** — use the resolved numbers, not the doc's example numbers. Note
+   the resolved **`tools.architecture`** preference (`enrich`/`prefer`/`report`/`off`) — it
+   governs external-tool handling (see Method).
 2. **Smell heuristics:** `${CLAUDE_PLUGIN_ROOT}/resources/frameworks/<stack>-architecture.md`
    (e.g. `rails-architecture.md`).
 3. **Pattern catalog:** `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` — the
@@ -50,12 +52,24 @@ thresholds and `patterns/python.yaml`.
 - **Heuristic baseline (always):** use Read/Grep/Glob and small Bash to measure — LOC,
   public-method count, association/callback counts, distinct collaborators, method
   length, `a.b.c.d` chains. Works on any machine.
-- **Optional enrichment:** probe for the stack's smell tools named in its
-  `<stack>-architecture.md` "Tool enrichment" section (Ruby: `reek`/`flog`/`brakeman`;
-  Python: `ruff`/`radon`/`vulture`/`import-linter`) — e.g. `command -v reek`,
-  `command -v ruff`. If present, you MAY run them read-only and fold their output in as
-  corroboration. **Never required** — absence is not a failure; note in observations
-  which tools (if any) you used.
+- **External tools — honor the resolved `tools.architecture` preference** (default `enrich`;
+  see `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`). Probe for the stack's smell
+  tools named in its `<stack>-architecture.md` "Tool enrichment" section (Ruby:
+  `reek`/`flog`/`brakeman`; Python: `ruff`/`radon`/`vulture`/`import-linter`; Laravel:
+  `phpstan`/`phpmd`; Express/React: `eslint`/`madge`; Phoenix: `credo`/`boundary`) — e.g.
+  `command -v reek`. Then:
+  - **`enrich`** (default): run your heuristics; if a tool is present you MAY run it read-only
+    and fold its output in as *corroboration* (raising confidence). Never required.
+  - **`prefer`**: if the tool is present, run it read-only, map each finding to the findings
+    schema (`smell`/`principle`, `severity`, `confidence: 100`, `file`/`line`, `fix`), and
+    **suppress your own heuristic findings that overlap** (same file + unit + concern) — emit
+    the tool's, plus heuristics for everything the tool didn't cover. No duplication.
+  - **`report`**: if the tool is present, run it and emit **only its findings** (mapped to the
+    schema); skip your structural heuristics.
+  - **`off`**: never run external tools; heuristics only.
+  - If a `prefer`/`report` tool is **not installed**, fall back to heuristics and note in
+    `observations` that the configured tool was absent (do not silently behave as `enrich`).
+    Absence is not a failure; always note which tools (if any) you used.
 - **Count is a signal, not a verdict.** A class over a threshold gets a closer look at
   its *responsibilities*; a large-but-cohesive class with one clear job is not a finding.
   State, per finding, the responsibility problem — not just the number.
