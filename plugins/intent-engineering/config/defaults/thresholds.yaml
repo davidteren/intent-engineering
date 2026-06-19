@@ -93,7 +93,9 @@ express:
     max_loc: 400              # god-module signal (whole file)
     max_exports: 15           # dumping-ground module (public exports)
   middleware:
-    max_loc: 40               # a middleware should be small + cross-cutting
+    max_loc: 100              # a middleware should be cross-cutting; real auth/render middleware
+                              # runs long — lean on the BEHAVIORAL signal (domain queries, no
+                              # next(), shared mutable state), not LOC
   god_object:
     max_collaborators: 15     # distinct modules/classes referenced (fan-out)
     max_loc: 300

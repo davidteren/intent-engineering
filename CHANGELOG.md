@@ -8,6 +8,26 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Changed
+- **Express pack tuned from a real-world dogfood** (read-only run on a mature OSS Express
+  forum — CommonJS, ~611 src files, hand-rolled DB, `api/`-as-service layer). The smell
+  *definitions* and severities held, but the **recognition mechanics were tuned for ESM + ORM
+  + `services/` + named-lib conventions** and misfired on a real CommonJS app — producing both
+  false negatives (god-modules invisible to the export counter) and false positives (every
+  async handler + thin write controller flagged). Folded back:
+  - **CommonJS-aware export counting** — the public surface is every `module.exports.x =` /
+    `Obj.x =` assignment, including the mixin form `module.exports = function (Obj) { Obj.a = … }`;
+    a naive `grep export` returns 0 for a 600-line/30-fn module.
+  - **`api/`-named service recognition** — the service layer is often named for the transport it
+    fronts (`api/`) with a `(caller, data)` signature, not `services/` + `*Service`; without
+    this, thin REST controllers calling `api/` got false-flagged as layer-leaks.
+  - **Project-local async-wrapper carve-out** — look for a repo's own handler-wrapping helper
+    (try/catch→`next(err)`) before declaring an `async-error-gap`; many apps roll their own
+    instead of `express-async-errors`.
+  - **Tightened `layer-leak` grep** — key on `res.json`/`res.status`/`require('express')`, not a
+    bare `req`/`res`; a passed-in `data.req`/`caller` for `.uid`/`.ip` is data, not coupling.
+  - **`express.middleware.max_loc` 40 → 100** (real cross-cutting auth/render middleware runs
+    long; lean on the behavioral signal) + a render-controller vs REST-controller severity note
+    + hook-bus (`hooks.fire`) recognition in `event_subscriber`.
 - **Laravel pack tuned from a real-world dogfood** (read-only run on a mature open-source
   Laravel 12 app with a non-default *domain-organized* layout). The pack's prose held
   (confirm-don't-count prevented every false positive; the app came back structurally clean),
