@@ -38,9 +38,12 @@ when no architecture-supported stack is present.
 
 **Config overrides selection.** The `.intense/ways-of-working.yaml` `lenses:` block
 (merged over the plugin default per `config-resolution.md`) is authoritative: `on`
-forces a lens on, `off` forces it off, `auto` applies the judgment rules above
-(experience = user-facing surface present; architecture = supported framework present;
-convention = stack/standards/siblings present). Resolve config first, then select.
+forces a lens on, `off` forces it off (turn an agent off entirely), `auto` applies the
+judgment rules above (experience = user-facing surface present; architecture = supported
+framework present; convention = stack/standards/siblings present). The `tools.architecture`
+preference (`enrich`/`prefer`/`report`/`off`) further controls whether the architecture lens
+defers to an installed external static-analysis tool instead of duplicating it. Resolve config
+first, then select.
 
 This is agent judgment, not keyword matching. Announce the selected lenses (with the
 one-line reason for each conditional lens) before dispatching.

@@ -7,12 +7,28 @@ version: 1
 
 # --- Lens toggles -----------------------------------------------------------------
 # on   = always run.  off = never run.  auto = run only when relevant (see notes).
+# Turn a lens (agent) off entirely here — e.g. `architecture: off` if your team relies
+# solely on its own static-analysis pipeline.
 lenses:
   predictability: on
   convention: on
   simplicity: on
   experience: auto      # auto = on only when a user-facing surface is detected
   architecture: auto    # auto = on only when a supported framework (e.g. Rails) is detected
+
+# --- External tool preference -----------------------------------------------------
+# How a lens treats external static-analysis tools when they're installed. Only the
+# architecture lens uses external tools today (reek/flog/brakeman, ruff/radon, phpstan,
+# eslint/madge, credo). If your team already runs one of these, you don't want the plugin
+# duplicating it — set `prefer` or `report`. See references/config-resolution.md.
+tools:
+  architecture: enrich
+  # enrich = run the plugin's heuristics PLUS the tool as corroboration (default).
+  # prefer = run the tool, fold its findings (mapped to our findings schema), and SUPPRESS
+  #          the plugin's overlapping heuristic findings — no duplication.
+  # report = run the tool and report ITS findings (mapped to our schema) only; skip the
+  #          plugin's own structural heuristics entirely.
+  # off    = ignore external tools; plugin heuristics only.
 
 # --- Severity overrides -----------------------------------------------------------
 # Raise or lower the severity a lens assigns to a given principle/smell. Optional.

@@ -54,7 +54,8 @@ out of the box. (Mention in Coverage which config source was used.)
 
 | Config | Consumer | Effect |
 |--------|----------|--------|
-| `lenses.*` | skill lens-selection | `on`/`off`/`auto` decides which lenses run |
+| `lenses.*` | skill lens-selection | `on`/`off`/`auto` decides which lenses run (turn an agent off here) |
+| `tools.architecture` | `ie-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
 | `severity_overrides` | synthesis | remap a finding's severity by principle/smell id |
 | `conventions.notes` | `ie-convention-reviewer` | repo-authoritative conventions (alongside CLAUDE.md/AGENTS.md) |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
@@ -74,3 +75,24 @@ authority order is:
 
 A higher source overrides a lower one. A consistent repo-local choice is never a
 violation, even when it differs from the framework norm.
+
+## External tool preference (`tools.architecture`)
+
+Resolves like any scalar (project value replaces default; default `enrich`). It controls how
+`ie-architecture-reviewer` treats an **installed** external static-analysis tool (reek/flog/
+brakeman, ruff/radon, phpstan/phpmd, eslint/madge, credo) so a team that already runs one
+isn't given duplicate findings:
+
+| Mode | Behavior |
+|------|----------|
+| `enrich` *(default)* | Run the plugin's heuristics **and** the tool; fold the tool's output as corroboration that raises confidence. (Today's behavior.) |
+| `prefer` | Run the tool, map its findings to the findings schema, and **suppress the plugin's overlapping heuristic findings** (same file + unit + concern). No duplication; the tool wins where it speaks, heuristics cover the rest. |
+| `report` | Run the tool and report **only its findings** (mapped to the schema); skip the plugin's own structural heuristics entirely. |
+| `off` | Ignore external tools; plugin heuristics only. |
+
+**Mapping (prefer/report):** the lens parses the tool's output and emits each finding through
+`findings-schema.json` — deriving `smell`/`principle`, `severity`, a `confidence` of 100
+(machine-confirmed), `file`/`line`, and a `fix`. Dedup against heuristic findings by
+file+unit+concern. If the requested tool **isn't installed**, fall back to heuristics and note
+in `observations` that the configured tool was absent (don't silently behave as `enrich`).
+A lens set to `off` in `lenses.*` never runs regardless of `tools.*`.

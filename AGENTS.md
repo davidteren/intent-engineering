@@ -180,8 +180,9 @@ one should mirror the other.
 The plugin works out of the box with defaults; a repo tunes it via committable
 `.intense/*.yaml` at its root.
 
-- `ways-of-working.yaml` — lens toggles, severity overrides, local conventions, confidence
-  gate, report dir.
+- `ways-of-working.yaml` — lens toggles (turn an agent `off`), external-tool preference
+  (`tools.architecture`: `enrich`/`prefer`/`report`/`off` — defer to reek/eslint/phpstan/…
+  instead of duplicating), severity overrides, local conventions, confidence gate, report dir.
 - `patterns.yaml` — design-pattern policy: `allowed` / `blocked` (no new use) / `approved`
   (grandfathered paths). Keys reference **snake_case pattern ids** from
   `resources/patterns/<stack>.yaml`.
