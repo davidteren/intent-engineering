@@ -1,0 +1,39 @@
+plugins/intent-engineering/references/lens-catalog.md
+  s_de3e8900bd34bc::t_b96a1c05375896 41-46
+STATUS.md
+  s_de3e8900bd34bc::t_e01caec41080a8 33-36
+plugins/intent-engineering/skills/ie-review/SKILL.md
+  s_de3e8900bd34bc::t_208ced925b0089 85-86
+plugins/intent-engineering/references/config-resolution.md
+  s_de3e8900bd34bc::t_86bea02a0113f8 57-58
+  s_de3e8900bd34bc::t_41077d034171e9 78-98
+plugins/intent-engineering/skills/ie-audit/SKILL.md
+  s_de3e8900bd34bc::t_5de31d087ca357 50-51
+plugins/intent-engineering/agents/ie-architecture-reviewer.md
+  s_de3e8900bd34bc::t_c18210f366bf99 39-43
+  s_de3e8900bd34bc::t_dd87d8f28cd364 55-72
+plugins/intent-engineering/config/defaults/ways-of-working.yaml
+  s_de3e8900bd34bc::t_0ab71c5139928a 10-11,19-31
+AGENTS.md
+  s_de3e8900bd34bc::t_340df52c34dced 183-185
+CHANGELOG.md
+  s_de3e8900bd34bc::t_5c666caf68e8a3 10-23
+plugins/intent-engineering/skills/ie-init/SKILL.md
+  s_de3e8900bd34bc::t_7df42d43fdea95 47,54-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "20e0d3d79c74e2e41ce89db9fb40e04579a8bf1e",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
