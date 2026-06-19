@@ -8,6 +8,21 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Changed
+- **Phoenix pack tuned from a real-world dogfood** (read-only run on a mature OSS Phoenix app,
+  ~476 lib files). The prose discipline held — `business-logic-in-changeset`, `law-of-demeter`,
+  and `process-misuse` all reported **clean with zero false positives**, and it found real
+  `context-bypass` in controllers/LiveViews — but three signal-level detectors would have
+  spammed false P2s on idiomatic Phoenix unattended. Folded back:
+  - **Precise `context-bypass` matching** — grep the Ecto macro as `from(<binding> in <Schema>)`,
+    NOT a bare `from(`, because a context query-builder is often a *function literally named
+    `from`* (`Stats.Query.from(site, params)`); the bare grep produced ~37 false hits.
+  - **Tiered `Repo.` bypass** — query-building/writes in the web layer = P2; a lone
+    `Repo.preload`/`Repo.reload` on a context-provided struct = P3.
+  - **`phoenix.controller.max_actions` 12 → 15** + an API/RPC-controller caveat (dashboard
+    controllers have many thin RPC actions); **`phoenix.live_view.max_loc` 200 → 400** (colocated
+    `~H`/`attr` function-component markup inflates LOC; judge handler/domain LOC, not markup).
+  - Notes: Oban worker / mix-task data-access is a milder P3 placement nudge (not the web-layer
+    P2 bypass); count `with` legs as flat, not nested.
 - **Express pack tuned from a real-world dogfood** (read-only run on a mature OSS Express
   forum — CommonJS, ~611 src files, hand-rolled DB, `api/`-as-service layer). The smell
   *definitions* and severities held, but the **recognition mechanics were tuned for ESM + ORM

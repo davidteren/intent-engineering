@@ -108,12 +108,16 @@ phoenix:
   controller:
     max_loc: 150              # fat-controller signal (whole controller)
     max_action_loc: 25        # business logic leaking into an action
-    max_actions: 12           # beyond a cohesive resource's actions
+    max_actions: 15           # beyond a cohesive resource — but API/RPC dashboard controllers
+                              # (top_sources/referrers/pages/...) routinely have many thin
+                              # actions; judge action BODIES, not the count
   context:
     max_loc: 300              # god-context signal
     max_public_functions: 25  # a context grouping too much
   live_view:
-    max_loc: 200              # fat-liveview signal (whole module)
+    max_loc: 400              # fat-liveview signal — looser than a controller because colocated
+                              # ~H / attr function-component markup inflates LOC; the real smell
+                              # is handler/domain LOC (max_handler_loc), not markup
     max_handler_loc: 25       # logic leaking into handle_event/handle_info
   schema:
     max_loc: 150              # fat Ecto schema signal
