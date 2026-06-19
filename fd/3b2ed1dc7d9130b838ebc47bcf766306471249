@@ -1,0 +1,33 @@
+CHANGELOG.md
+  s_de3e8900bd34bc::t_b1711b18cfa4d6 11-30
+plugins/intent-engineering/resources/patterns/express.yaml
+  s_de3e8900bd34bc::t_055ab635635d3c 94-99,103
+  s_de3e8900bd34bc::t_13ba8865553b01 279-280
+STATUS.md
+  s_de3e8900bd34bc::t_55f5542ec76103 89
+  s_de3e8900bd34bc::t_eab5550ea5ce5e 76
+plugins/intent-engineering/resources/frameworks/express-architecture.md
+  s_de3e8900bd34bc::t_a8c4ee272f798b 87-93
+  s_de3e8900bd34bc::t_a88da25d2acb9c 196-201
+  s_de3e8900bd34bc::t_4152e6e644858b 141-147
+  s_de3e8900bd34bc::t_1544c384e0247e 23-35
+  s_de3e8900bd34bc::t_5cfbaa0498ee4d 70-75
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_300f5f92ec519a 96-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "fd3b2ed1dc7d9130b838ebc47bcf766306471249",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
