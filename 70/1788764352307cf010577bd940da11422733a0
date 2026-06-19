@@ -1,0 +1,31 @@
+plugins/intent-engineering/resources/frameworks/phoenix-architecture.md
+  s_de3e8900bd34bc::t_288f8aa9dda041 209-212
+  s_de3e8900bd34bc::t_578d4a1c8ec320 69-79
+  s_de3e8900bd34bc::t_b7abac3e11aa69 57-62
+  s_de3e8900bd34bc::t_74ca9403566ea0 124-129
+  s_de3e8900bd34bc::t_499fd62a34d66a 93-94
+  s_de3e8900bd34bc::t_f1475cdf35eded 87-90
+CHANGELOG.md
+  s_de3e8900bd34bc::t_decf34d252e230 11-25
+STATUS.md
+  s_de3e8900bd34bc::t_0e2d395f3d7a01 89-90
+  s_de3e8900bd34bc::t_c3a168d88b34fb 77
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_ccd95621cd0fd4 111-113,118-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "701788764352307cf010577bd940da11422733a0",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
