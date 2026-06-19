@@ -1,0 +1,39 @@
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_d59377017244de 61-63
+AGENTS.md
+  s_de3e8900bd34bc::t_1cf7419d225e25 219
+plugins/intent-engineering/resources/patterns/laravel.yaml
+  s_de3e8900bd34bc::t_f3b56cd842445e 291-337
+  s_de3e8900bd34bc::t_287be777c00cb8 142
+  s_de3e8900bd34bc::t_eac03c5089b215 49,72,120,164,187,209,231,254
+  s_de3e8900bd34bc::t_3961152b2d52ba 87,90-93,97-99
+README.md
+  s_de3e8900bd34bc::t_1cf7419d225e25 97
+CHANGELOG.md
+  s_de3e8900bd34bc::t_eeebf8e4df4bbb 11-24
+STATUS.md
+  s_de3e8900bd34bc::t_b0e547f2de04e4 75
+  s_de3e8900bd34bc::t_7934d368d3d8ad 89
+  s_de3e8900bd34bc::t_1cf7419d225e25 26
+plugins/intent-engineering/resources/frameworks/laravel-architecture.md
+  s_de3e8900bd34bc::t_de5a970294bc6a 147-150
+  s_de3e8900bd34bc::t_ec7d59f439ebee 24-30
+  s_de3e8900bd34bc::t_363b5e56add6a4 191-194
+  s_de3e8900bd34bc::t_00f40369d46d25 63-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "403f01803426cf845bb0e7e5527eaa92c1e316bd",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
