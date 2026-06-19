@@ -70,7 +70,7 @@ Sources** (same bar as the rest of the KB), then dogfooded on a real repo.
 
 | Stack | Convention doc | Arch pack | Status / next step |
 |-------|:--------------:|:---------:|--------------------|
-| `rails` | ✅ | ✅ | Done. Dogfood on a real Rails repo still pending. |
+| `rails` | ✅ | ✅ | **Done + dogfooded.** The original stack, now validated on a mature OSS Rails 8 app (~1244 app files, concern-heavy, 99 service objects). Prose judgment matched reality (fat-controller/misused-service/job/serializer/policy all correctly clean) + found real fat-models and queries-in-views; folded back the measurement gaps a large app exposes — **concern-tree resolution** for fat-model (a god model whose 68 associations live in concerns grepped as "0"), `service_object.max_loc` 120→250 with LOC demoted to P3 (method-count is the real axis; inner-class-decomposed services aren't God services), public-action vs raw-`def` counting, `app/models/form/**` form path, and a heuristic god-object fan-out recipe. |
 | `python` | ✅ | ✅ | Done (FastAPI-first). Dogfooded on a real FastAPI service. |
 | `laravel` | ✅ | ✅ | **Done + dogfooded.** 8 smells (fat-controller, fat-model, god-class, misused-service, query-in-view/N+1, logic-in-routes, fat-job, law-of-demeter) + 15-pattern catalog, research-backed (alexeymezenin, Laravel docs, laravel-actions, PSR-12). Dogfooded read-only on a mature OSS Laravel 12 app (domain-organized layout, ~471 app files): prose held (app came back clean, no false positives); surfaced that structured signals were vanilla-Laravel-shaped — folded back layout-agnostic path globs, `query_object`/`notification` patterns + broadened `action`, `max_actions` 10→15, and grep caveats (static-method N+1, low-signal Demeter). |
 | `express` | ✅ | ✅ | **Done + dogfooded.** 8 smells (fat-route-handler, god-module, god-object, misused-service, layer-leak, fat-middleware, async-error-gap, law-of-demeter) + 12-pattern catalog, research-backed (bulletproof-nodejs 3-layer, goldbergyoni nodebestpractices, Express docs, 12-factor). Dogfooded read-only on a mature OSS Express forum (CommonJS, ~611 src files): smell *definitions* held, but recognition was ESM/ORM/`services/`-shaped — folded back CommonJS export-counting (mixin `Obj.x=` surface), `api/`-named service recognition, project-local async-wrapper carve-out, tightened layer-leak grep (passed-`req` idiom), `middleware.max_loc` 40→100, render-vs-REST controller nuance. |
@@ -86,8 +86,7 @@ registry row, run `check-contracts.rb`, then dogfood on a real repo and fold fin
 - [ ] **Install & use it** — now installable from the published repo (above); run the
       `/ie-*` skills as installed skills (so far orchestrated by hand / via the audit run).
 - [ ] **Run on a real Rails repo**; fold learnings back into `resources/`.
-- [x] **Dogfood all six arch packs** on real repos — done (Python, React, Laravel, Express, Phoenix dogfooded; Rails pending a target).
-- [ ] **Dogfood the Rails pack** on a real Rails repo (the original stack — never dogfooded on a real app).
+- [x] **Dogfood all six arch packs** on real repos — **done** (Rails, Python, Laravel, Express, Phoenix, React all dogfooded read-only on real apps; each find→fix→fold).
 - [ ] **More architecture stacks** as real dogfood targets appear (e.g. Go, Spring, Django,
       Vue). Research-first, drop into the registry — `ruby`/`typescript`/`swift-ios` stay
       convention-only unless a consumer needs them.

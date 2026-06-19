@@ -41,6 +41,16 @@ is obvious at a glance.
   association and callback macros; count public methods between `class` and any
   `private`/`protected`. Beyond counts, look for *multiple reasons to change* in one
   file: persistence + business rules + formatting + external API calls + state machine.
+  **Resolve concerns before measuring (critical on mature apps).** A model that `include`s
+  `Account::Interactions`, `Account::Associations`, … carries its real surface in
+  `app/models/concerns/<model>/<topic>.rb` (or `app/models/concerns/`). A grep of the model
+  *file* returns `associations=0, callbacks=3` while the true aggregate is 1000+ LOC and 60+
+  associations — so **follow each `include <Model>::<Topic>` to its concern file and sum LOC /
+  associations / callbacks / public methods across the tree.** Without this, the lens
+  systematically *under*-reports God models (the file looks small) and *over*-reports the leaf
+  concerns in isolation. A model decomposed into cohesive single-topic concerns is the
+  idiomatic fix, not a smell — judge the *aggregate's* cohesion, and treat a well-decomposed
+  large model as P3/informational, not P2.
 - **Why it matters:** Every collaborator of the model is coupled to all of it. Tests
   get slow and wide, merge conflicts cluster, and a change for one concern risks
   breaking unrelated ones. This is the classic Single Responsibility violation.
@@ -63,7 +73,12 @@ is obvious at a glance.
   classes than `rails.god_object.max_collaborators`, or exceeds `rails.god_object.max_loc`.
   Count distinct constant references / `.new` targets / injected dependencies (fan-out).
   Reek's *Large Class* (Too Many Methods, Too Many Instance Variables) and *Feature Envy*
-  map directly to this.
+  map directly to this. **Heuristic-only recipe (when reek is absent — the default path):**
+  count distinct capitalised constants the class drives, e.g.
+  `grep -oE '[A-Z][A-Za-z0-9_]+\.(new|call|find|create|perform)' <file> | sort -u | wc -l`,
+  and distinct constant references overall; treat the count as a *signal* and confirm it's
+  *logic* fan-out, not wiring. Fan-out measurement is low-precision via grep — when reek/flog
+  are available prefer them; when absent, say in the finding that it wasn't machine-confirmed.
 - **Why it matters:** A high-fan-out class is a coordination hub — it knows about the
   whole system, so the whole system depends on it. It cannot be understood, tested, or
   reused in isolation, and it attracts more responsibility over time.
@@ -91,7 +106,11 @@ is obvious at a glance.
   one line to a service is not fat — count action *bodies*, not action *names*. Strong
   params, response negotiation, and redirects are legitimate controller work. A long
   action that is purely a sequence of `render`/`respond_to` branches is presentation, not
-  business logic.
+  business logic. **Count public *actions*, not every `def`** — count public method
+  definitions **above the first `private`/`protected`** and exclude `before_action`/
+  callback declarations; a raw `def` count includes private helpers and over-counts an
+  otherwise-thin controller (e.g. 22 `def`s where only 5 are REST actions). Use
+  `rails.controller.max_actions` against that public-action count.
 - **Fix direction:** Extra non-RESTful actions usually mean a missing resource — extract
   a new controller (convention over configuration: [[../principles/convention-over-configuration]]).
   In-action business logic -> service/interactor; param shaping -> form object; query
@@ -114,7 +133,14 @@ is obvious at a glance.
 - **Confirm (not just count):** Private helper methods are fine and expected — only count
   *public* entry points. A service with one public `call` and several privates is healthy.
   For pass-through suspicion, check whether the service adds validation, orchestration,
-  transaction boundaries, or error handling; if it does, it earns its place.
+  transaction boundaries, or error handling; if it does, it earns its place. **Method count
+  and responsibility are the real axes, not LOC** — a long single-`call` service that
+  **decomposes into inner strategy/builder classes** (nested `*Condition`/`*QueryBuilder`
+  classes, or collaborators it delegates to) is *well-decomposed*, not a God service; look
+  inside before flagging. So: a service over `rails.service_object.max_loc` with one clean
+  `call` and internal decomposition is **P3 at most**; reserve **P2** for the genuine failure
+  modes — multiple public methods, or one `call` that does everything inline with no
+  decomposition.
 - **Fix direction:** Multiple public methods -> split into one service per operation, or
   promote to a properly-modelled object. God service -> decompose into composed
   interactors/steps. Pass-through -> inline it and delete the layer. See

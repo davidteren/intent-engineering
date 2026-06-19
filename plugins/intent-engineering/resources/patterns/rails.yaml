@@ -64,7 +64,7 @@ patterns:
     recognition:
       gems: []
       includes: ["ActiveModel::Model", "ActiveModel::Attributes", "ActiveModel::Validations"]
-      paths: ["app/forms/**"]
+      paths: ["app/forms/**", "app/models/form/**", "app/models/forms/**"]
       name_suffix: [Form]
       methods: [save, "valid?", attributes]
     good_use:

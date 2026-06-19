@@ -8,6 +8,22 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Changed
+- **Rails pack tuned from a real-world dogfood** (read-only run on a mature OSS Rails 8 app,
+  ~1244 app files, concern-heavy, 99 service objects) — the original stack, validated on a
+  real app for the first time. The prose judgment matched reality (fat-controller,
+  misused-service multi-method, job, serializer, policy all reported **clean**) and found real
+  fat-models + queries-in-views, but the *measurement instructions* were calibrated for small
+  un-decomposed apps. Folded back:
+  - **Concern-tree resolution for `fat-model`** (highest value) — follow `include Model::Topic`
+    to `app/models/concerns/model/topic.rb` and sum LOC/associations/callbacks/methods across
+    the tree; a grep of the model *file* returned `associations=0` on a 1685-LOC god model.
+  - **`rails.service_object.max_loc` 120 → 250, LOC demoted to P3** — method count is the real
+    axis; a long single-`call` service decomposed into inner strategy/builder classes is
+    healthy, not a God service.
+  - **Public-action vs raw-`def` counting** for `fat-controller` (count public actions above
+    the first `private`/`protected`, minus callbacks — a raw `def` count flagged thin
+    controllers), `app/models/form/**` added to the `form_object` pattern path, and a concrete
+    heuristic god-object fan-out grep recipe for the reek-less default path.
 - **Phoenix pack tuned from a real-world dogfood** (read-only run on a mature OSS Phoenix app,
   ~476 lib files). The prose discipline held — `business-logic-in-changeset`, `law-of-demeter`,
   and `process-misuse` all reported **clean with zero false positives**, and it found real
