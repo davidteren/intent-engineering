@@ -58,7 +58,9 @@ laravel:
   controller:
     max_loc: 150              # fat-controller signal (whole controller)
     max_action_loc: 25        # business logic leaking into an action body
-    max_actions: 10           # well beyond the resourceful 7
+    max_actions: 15           # beyond resourceful 7 — but GET form-render twins
+                              # (create/store, edit/update, showDelete/destroy) legitimately
+                              # double the count, so judge action BODIES, not names
   model:
     max_loc: 200              # fat Eloquent model signal
     max_public_methods: 20

@@ -46,7 +46,7 @@ patterns:
     recognition:
       base_classes: ["Controller", "App\\Http\\Controllers\\Controller"]
       traits: []
-      paths: ["app/Http/Controllers/**"]
+      paths: ["app/Http/Controllers/**", "app/**/Controllers/**"]
       name_suffix: [Controller]
       methods: [index, show, store, update, destroy, "__invoke"]
     good_use:
@@ -69,7 +69,7 @@ patterns:
     recognition:
       base_classes: ["Illuminate\\Foundation\\Http\\FormRequest", "FormRequest"]
       traits: []
-      paths: ["app/Http/Requests/**"]
+      paths: ["app/Http/Requests/**", "app/**/Requests/**"]
       name_suffix: [Request]
       methods: [rules, authorize]
     good_use:
@@ -84,17 +84,19 @@ patterns:
       - "one God request reused across unrelated endpoints"
 
   - id: action
-    name: Action (single-purpose command)
+    name: Action / domain-operation object (single-purpose command)
     intent: >
       A single business action as an invokable command object — one public entry
-      (handle/execute/__invoke). Often via lorisleiva/laravel-actions (AsAction).
-      Distinct from a service (a service groups related operations; an action is one).
+      (handle/execute/__invoke/run). Often via lorisleiva/laravel-actions (AsAction),
+      but also hand-rolled "operation" objects an app names in its own vocabulary
+      (e.g. a `Tools/` domain object). Distinct from a service (a service groups
+      related operations; an action is one).
     recognition:
       base_classes: []
       traits: ["AsAction", "Lorisleiva\\Actions\\Concerns\\AsAction"]
-      paths: ["app/Actions/**"]
-      name_suffix: [Action]
-      methods: [handle, execute, "__invoke"]
+      paths: ["app/Actions/**", "app/**/Actions/**", "app/**/Tools/**", "app/**/Operations/**"]
+      name_suffix: [Action, Operation]
+      methods: [handle, execute, run, "__invoke"]
     good_use:
       - "one business action per class; a single public entry (handle/execute/__invoke)"
       - "named after the action (CreateInvoice, PublishPost)"
@@ -115,7 +117,7 @@ patterns:
     recognition:
       base_classes: []
       traits: []
-      paths: ["app/Services/**"]
+      paths: ["app/Services/**", "app/**/Services/**"]
       name_suffix: [Service]
       methods: []
     good_use:
@@ -137,7 +139,7 @@ patterns:
     recognition:
       base_classes: ["Illuminate\\Http\\Resources\\Json\\JsonResource", "JsonResource", "ResourceCollection"]
       traits: []
-      paths: ["app/Http/Resources/**"]
+      paths: ["app/Http/Resources/**", "app/**/Resources/**"]
       name_suffix: [Resource, Collection]
       methods: [toArray]
     good_use:
@@ -159,7 +161,7 @@ patterns:
     recognition:
       base_classes: ["ShouldQueue"]
       traits: ["Dispatchable", "InteractsWithQueue", "Queueable", "SerializesModels"]
-      paths: ["app/Jobs/**"]
+      paths: ["app/Jobs/**", "app/**/Jobs/**"]
       name_suffix: [Job]
       methods: [handle]
     good_use:
@@ -182,7 +184,7 @@ patterns:
     recognition:
       base_classes: ["ShouldQueue"]
       traits: []
-      paths: ["app/Events/**", "app/Listeners/**"]
+      paths: ["app/Events/**", "app/Listeners/**", "app/**/Events/**", "app/**/Listeners/**"]
       name_suffix: [Event, Listener]
       methods: [handle]
     good_use:
@@ -204,7 +206,7 @@ patterns:
     recognition:
       base_classes: []
       traits: ["HandlesAuthorization"]
-      paths: ["app/Policies/**"]
+      paths: ["app/Policies/**", "app/**/Policies/**"]
       name_suffix: [Policy]
       methods: [view, create, update, delete, before]
     good_use:
@@ -226,7 +228,7 @@ patterns:
     recognition:
       base_classes: []
       traits: []
-      paths: ["app/Http/Middleware/**"]
+      paths: ["app/Http/Middleware/**", "app/**/Middleware/**"]
       name_suffix: [Middleware]
       methods: [handle]
     good_use:
@@ -249,7 +251,7 @@ patterns:
     recognition:
       base_classes: []
       traits: []
-      paths: ["app/Repositories/**"]
+      paths: ["app/Repositories/**", "app/**/Repositories/**", "app/**/Repos/**"]
       name_suffix: [Repository, Repo]
       methods: [find, all, save, delete, "findBy"]
     good_use:
@@ -285,6 +287,53 @@ patterns:
       - "heavy work (network, DB) at register/boot time slowing every request"
       - "resolving services out of the container during register()"
       - "one provider doing many unrelated bootstrapping jobs"
+
+  - id: query_object
+    name: Query Object
+    intent: >
+      A class that encapsulates a complex read / query composition behind one object
+      so models stay free of sprawling scopes. Read-only. A deliberate alternative to
+      scopes-everywhere in larger apps. Distinct from a repository (which also writes)
+      and a service (which mutates / orchestrates).
+    recognition:
+      base_classes: []
+      traits: []
+      paths: ["app/Queries/**", "app/**/Queries/**", "app/**/Query/**"]
+      name_suffix: [Query, Queries]
+      methods: [query, builder, get, paginate, visible]
+    good_use:
+      - "encapsulates one read concern; returns a Builder or a Collection"
+      - "keeps complex query logic out of controllers and models"
+      - "composable / accepts a base query so it can be scoped and reused"
+      - "read-only — no writes or side effects"
+    misuse:
+      - "performs writes or side effects (should be a repository/service)"
+      - "one god query object covering many unrelated reports"
+      - "business rules beyond data selection living in the query object"
+      - "returns loaded arrays prematurely, breaking further composition"
+
+  - id: notification
+    name: Notification
+    intent: >
+      A Laravel Notification class delivering a message over channels (mail,
+      database, broadcast, Slack). Presentation/delivery of an event — not where
+      the business decision to notify is made.
+    recognition:
+      base_classes: ["Illuminate\\Notifications\\Notification", "Notification"]
+      traits: ["Queueable"]
+      paths: ["app/Notifications/**", "app/**/Notifications/**"]
+      name_suffix: [Notification]
+      methods: [via, toMail, toArray, toDatabase]
+    good_use:
+      - "declares channels (via) and per-channel formatting (toMail/toArray)"
+      - "one notification per event/message type"
+      - "ShouldQueue for slow channels; small serializable constructor args"
+      - "formatting/delivery only; the decision to notify is made upstream"
+    misuse:
+      - "business logic or DB writes inside via()/toMail()"
+      - "deciding whether to notify (business rule) inside the notification"
+      - "passing whole models where ids/fields suffice"
+      - "one god notification branching across many unrelated message types"
 
   - id: data_object
     name: Data Object / DTO
