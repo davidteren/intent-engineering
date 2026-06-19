@@ -1,0 +1,31 @@
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_237a24ef8ca472 140-143
+plugins/intent-engineering/resources/frameworks/react-architecture.md
+  s_de3e8900bd34bc::t_0ca6c230df84ac 19-32
+  s_de3e8900bd34bc::t_1170c752f12993 150,154-161,163-165,167-171,173-176
+  s_de3e8900bd34bc::t_5ed3a4a7ba0b3d 224
+plugins/intent-engineering/resources/patterns/react.yaml
+  s_de3e8900bd34bc::t_b9e007bd595da0 129,131-134,136-138,142-145,147,150
+  s_de3e8900bd34bc::t_6db835a4b5b500 156-158,160-161,166,171-172
+CHANGELOG.md
+  s_de3e8900bd34bc::t_7f16f7c5abebb3 8-23
+STATUS.md
+  s_de3e8900bd34bc::t_f737a18b814320 89
+  s_de3e8900bd34bc::t_7adb777f02a4dd 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "f264595a9f6e692fa361005fc2a63163ce2281b9",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
