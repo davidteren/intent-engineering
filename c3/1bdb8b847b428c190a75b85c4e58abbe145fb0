@@ -1,0 +1,31 @@
+plugins/intent-engineering/config/defaults/thresholds.yaml
+  s_de3e8900bd34bc::t_a2549685c6fe7e 21-24
+STATUS.md
+  s_de3e8900bd34bc::t_d076ae6e10631c 89
+  s_de3e8900bd34bc::t_6a9f31d7c0d071 73
+plugins/intent-engineering/resources/frameworks/rails-architecture.md
+  s_de3e8900bd34bc::t_730ddc829e3d03 44-53
+  s_de3e8900bd34bc::t_0873069291d434 109-113
+  s_de3e8900bd34bc::t_15bd7628a0e6da 136-143
+  s_de3e8900bd34bc::t_eadecb7e3912a7 76-81
+CHANGELOG.md
+  s_de3e8900bd34bc::t_64fb15f96060bd 11-26
+plugins/intent-engineering/resources/patterns/rails.yaml
+  s_de3e8900bd34bc::t_a9bb2beeb6b94e 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "c31bdb8b847b428c190a75b85c4e58abbe145fb0",
+  "prompts": {},
+  "sessions": {
+    "s_de3e8900bd34bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2502a2c3-9f92-45bb-bcd7-02e8345111f4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
