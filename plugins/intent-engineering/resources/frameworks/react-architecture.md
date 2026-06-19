@@ -16,10 +16,20 @@ in **custom hooks**, *data fetching* lives in a data layer (a query hook / servi
 flows down by **composition** rather than being threaded through every layer. The failure
 mode at scale is the "500-line component that mixes data fetching, business logic, and UI
 rendering" — plus its cousins: prop drilling, effects standing in for derived state, and a
-Context that has quietly become global state. This pack covers those *structural* smells; it
-complements the **convention** lens (React idiom, keys, stale closures) and the **experience**
-lens (UX, interaction states, a11y), which own their own concerns. When a repo states its own
-structure in `CLAUDE.md`/`AGENTS.md`, that wins.
+Context (or a **state store**) that has quietly become a god object. This pack covers those
+*structural* smells; it complements the **convention** lens (React idiom, keys, stale
+closures) and the **experience** lens (UX, interaction states, a11y), which own their own
+concerns. When a repo states its own structure in `CLAUDE.md`/`AGENTS.md`, that wins.
+
+**Real apps layer frameworks on top of React — recognize them.** Most production React runs a
+**state library** (Redux/Zustand/Jotai, or a class-store library like **MobX**) and often a
+meta-framework (**Next.js**, Remix). Two consequences for this lens: (1) the worst structural
+debt frequently lives in a **god store**, not a component — judge stores by responsibility
+(see `god-module` below), not just LOC. (2) Some framework idioms look like smells but are
+**not**: a MobX `observer(Component)` wrapper is mandatory, not "wrapper hell"; a Next.js
+`page`/`layout`/`getServerSideProps` file and a route-manifest table are *expected* to be long
+and wire many children — do not flag these as god components/modules. When in doubt, read the
+repo's `AGENTS.md`/`CLAUDE.md` for the declared state/UI conventions.
 
 ## Smells (detectable)
 
@@ -137,19 +147,33 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/react.yaml`) are
 - **Default severity:** P2 when one context bundles many concerns or re-renders broadly; P3 for
   an oversized but single-concern context.
 
-### 7. God module / barrel-file hub — `god-module`
+### 7. God module / barrel-file hub / god store — `god-module`
 - **Signal:** A module over `react.module.max_loc`, or a barrel (`index.ts` re-exporting more
   than `react.module.max_exports`) that everything imports, or a `utils.ts`/`helpers.ts`
   grab-bag. Barrel files that re-export a whole directory are a known scale problem (circular
-  deps, bloated bundles, slow builds).
+  deps, bloated bundles, slow builds). **State stores get a looser budget but their own
+  signals:** a state-management module (Redux slice, Zustand/Jotai store, or a **MobX** class
+  store — recognise `makeAutoObservable`/`makeObservable`/`@observable`/`@action`/`mobx-react`,
+  or a `*.store.ts` / `store/` path) over `react.store.max_loc`, or holding more than
+  `react.store.max_observables` observable/state fields, or more than `react.store.max_actions`
+  actions, **spanning unrelated domains** is a *god store* — often the single worst structural
+  problem in a large app (e.g. one `PaymentStore` bundling payment + tickets + upsells +
+  tracking, imported by dozens of components).
 - **Why it matters:** A hub module couples the codebase (everyone imports it), invites circular
-  dependencies, and defeats tree-shaking when it re-exports everything.
+  dependencies, and defeats tree-shaking when it re-exports everything. A god store is a
+  high-fan-out coordination point every feature depends on — the state-layer equivalent of a
+  god object.
 - **Confirm (not just count):** A small, intentional barrel for a public package API is fine.
-  Flag the everything-barrel and the unrelated-grab-bag util module.
+  A cohesive **data-layer module** (one HTTP client) or a **single-resource store** is fine
+  even at 600–900 LOC — that's why stores use `react.store.max_loc`, not the UI budget. **Do
+  NOT flag** route-manifest tables (`routes.tsx`), Next.js `page`/`layout` files, or other
+  config/wiring files for size — they are expected to be long. Flag the everything-barrel, the
+  unrelated-grab-bag util module, and the store that spans **unrelated domains**.
 - **Fix direction:** Import from specific modules; split grab-bag utils into intention-named
-  modules; keep barrels small and deliberate.
-- **Default severity:** P2 when it creates circular deps or broad coupling; P3 for a cohesive
-  oversized module.
+  modules; keep barrels small and deliberate; split a god store by domain into composed stores
+  (`StripeStore` / `TicketStore` / `TrackingStore`) under a root store.
+- **Default severity:** P2 when it creates circular deps, broad coupling, or a god store
+  spanning domains; P3 for a cohesive oversized module/store.
 
 ### 8. Law of Demeter violations (`a.b.c.d` chains) — `law-of-demeter`
 - **Signal:** "Train wreck" navigation through props/objects — `props.user.account.plan.name`,
@@ -197,3 +221,4 @@ the experience lens, not here.
 - Modularizing React Applications with Established UI Patterns — Martin Fowler / Juntao Qiu — https://martinfowler.com/articles/modularizing-react-apps.html
 - Container/Presentational Pattern (separating logic from view) — https://www.patterns.dev/react/presentational-container-pattern/
 - Prop Drilling — Kent C. Dodds — https://kentcdodds.com/blog/prop-drilling
+- MobX — observer / state management idioms (observer wrapping is mandatory, not "wrapper hell") — https://mobx.js.org/react-integration.html
