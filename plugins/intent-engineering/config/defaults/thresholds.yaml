@@ -137,6 +137,10 @@ react:
   module:
     max_loc: 300              # god-module signal (whole file)
     max_exports: 15           # barrel-file / dumping-ground module
+  store:
+    max_loc: 800              # god-store signal (state-mgmt module / MobX class) — looser than a UI module
+    max_observables: 15       # scattered MobX @observable fields across unrelated slices (analog of max_use_state)
+    max_actions: 25           # a store class fronting too many operations
   general:
     max_function_loc: 50      # long function/handler signal
     max_function_params: 5    # long parameter list -> props object

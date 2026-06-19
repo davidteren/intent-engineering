@@ -75,7 +75,7 @@ Sources** (same bar as the rest of the KB), then dogfooded on a real repo.
 | `laravel` | ✅ | ✅ | **Done.** 8 smells (fat-controller, fat-model, god-class, misused-service, query-in-view/N+1, logic-in-routes, fat-job, law-of-demeter) + 14-pattern catalog, research-backed (alexeymezenin, Laravel docs, laravel-actions, PSR-12). **Dogfood on a real Laravel repo pending** (none available locally). |
 | `express` | ✅ | ✅ | **Done.** 8 smells (fat-route-handler, god-module, god-object, misused-service, layer-leak, fat-middleware, async-error-gap, law-of-demeter) + 12-pattern catalog, research-backed (bulletproof-nodejs 3-layer, goldbergyoni nodebestpractices, Express docs, 12-factor). **Dogfood on a real Express repo pending.** |
 | `phoenix` | ✅ | ✅ | **Done.** 8 smells (fat-controller, context-bypass, god-context, fat-liveview, business-logic-in-changeset, god-module, process-misuse, law-of-demeter) + 11-pattern catalog, research-backed (Phoenix Contexts guide, Elixir process anti-patterns, Ecto docs). Resolved via a **data pack** (structural/layering + OTP placement); deep supervision-tree/OTP correctness left to a future reliability review or dedicated agent. **Dogfood on a real Phoenix repo pending.** |
-| `react` | ✅ | ✅ | **Done.** 8 smells (god-component, logic-in-component, fat-hook, prop-drilling, effect-overuse, god-context, god-module, law-of-demeter) + 11-pattern catalog, research-backed (React docs "You Might Not Need an Effect" / custom hooks / context, patterns.dev, Martin Fowler). Architecture pack complements the existing react convention doc + the experience lens (UX/a11y stay there). **Dogfood on a real React repo pending.** |
+| `react` | ✅ | ✅ | **Done + dogfooded.** 8 smells (god-component, logic-in-component, fat-hook, prop-drilling, effect-overuse, god-context, god-module, law-of-demeter) + 11-pattern catalog, research-backed (React docs "You Might Not Need an Effect" / custom hooks / context, patterns.dev, Martin Fowler). Dogfooded read-only on a large production React app (React 18 + Next + **MobX**, ~429 components): React-core heuristics calibrated well (found real god-components + a derived-state-in-effect); surfaced two pack gaps — no **MobX** awareness (the worst smell was a 4117-LOC god-store) and no Next/route-manifest exemption — both folded back (MobX recognition in `state_store`/`observer()`, a `react.store.*` threshold block, store/route-manifest exemptions). |
 | `ruby`, `typescript`, `swift-ios` | ✅ | ⬜ | Convention-only by design; no arch pack planned unless a real consumer appears. |
 
 Research uses Exa + Firecrawl; author the two data files + threshold namespace, flip the
@@ -86,7 +86,7 @@ registry row, run `check-contracts.rb`, then dogfood on a real repo and fold fin
 - [ ] **Install & use it** — now installable from the published repo (above); run the
       `/ie-*` skills as installed skills (so far orchestrated by hand / via the audit run).
 - [ ] **Run on a real Rails repo**; fold learnings back into `resources/`.
-- [ ] **Dogfood the Laravel + Express + Phoenix + React packs** on real repos; fold findings back into the docs/catalogs.
+- [ ] **Dogfood the Laravel + Express + Phoenix packs** on real repos; fold findings back into the docs/catalogs. (React done.)
 - [ ] **More architecture stacks** as real dogfood targets appear (e.g. Go, Spring, Django,
       Vue). Research-first, drop into the registry — `ruby`/`typescript`/`swift-ios` stay
       convention-only unless a consumer needs them.

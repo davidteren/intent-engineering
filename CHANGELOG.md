@@ -5,6 +5,22 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
+## [Unreleased]
+
+### Changed
+- **React pack tuned from a real-world dogfood** (read-only run on a large production React 18
+  + Next + MobX app, ~429 components). The React-core heuristics held (real god-components and
+  a derived-state-in-effect found); two gaps were folded back:
+  - **MobX awareness** — `state_store` and `higher_order_component` now recognise MobX
+    (`makeAutoObservable`/`@observable`/`@action`/`mobx-react`, `observer()`); a `react.store.*`
+    threshold block (`max_loc` 800, `max_observables` 15, `max_actions` 25) gives stores a
+    looser, responsibility-based budget, and `god-module` now names the **god store**. The
+    dogfood's worst finding — a 4117-LOC MobX god-store — previously only matched a weak path
+    signal.
+  - **Framework-idiom carve-outs** — `observer()`/`connect()` wrapping is flagged as idiomatic
+    (not "wrapper hell"); Next.js `page`/`layout`/`getServerSideProps` and route-manifest tables
+    are named as expected-long, not god components/modules.
+
 ## [0.4.0] — 2026-06-15
 
 Third feature release: four new architecture stacks — **Laravel, Express/Node, Phoenix/Elixir,
