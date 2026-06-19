@@ -18,8 +18,10 @@ rails:
     max_action_loc: 20        # business logic leaking into actions
     max_actions: 12           # well beyond RESTful 7
   service_object:
-    max_public_methods: 1     # a service should expose ONE call (`call`/`perform`)
-    max_loc: 120              # a service this big is a God object in disguise
+    max_public_methods: 1     # a service should expose ONE call (`call`/`perform`) — the REAL axis
+    max_loc: 250              # LOC alone is weak: a long single-`call` service decomposed into
+                              # inner strategy/builder classes is healthy. Reserve P2 for the
+                              # multi-public-method / God-by-collaborator signal; LOC-only = P3
   god_object:
     max_collaborators: 15     # distinct classes referenced/instantiated
     max_loc: 300
