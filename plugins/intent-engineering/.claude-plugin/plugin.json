@@ -5,6 +5,8 @@
   "author": {
     "name": "David Teren"
   },
+  "homepage": "https://davidteren.github.io/intent-engineering/",
+  "repository": "https://github.com/davidteren/intent-engineering",
   "keywords": [
     "code-review",
     "audit",
