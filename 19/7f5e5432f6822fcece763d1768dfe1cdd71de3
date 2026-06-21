@@ -1,0 +1,23 @@
+plugins/intent-engineering/LICENSE
+  s_0441507f7be5d2::t_fc947976e44d4d 1-21
+.claude-plugin/marketplace.json
+  s_0441507f7be5d2::t_2e886e9a68d0a1 13
+plugins/intent-engineering/.claude-plugin/plugin.json
+  s_0441507f7be5d2::t_34415fb5563c06 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "197f5e5432f6822fcece763d1768dfe1cdd71de3",
+  "prompts": {},
+  "sessions": {
+    "s_0441507f7be5d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e92fa03-7e8d-4e11-a795-28705696c6fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
