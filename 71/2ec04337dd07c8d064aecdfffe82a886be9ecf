@@ -1,0 +1,53 @@
+.claude-plugin/marketplace.json
+  s_a6c704b0a8cf11::t_b38328c3edae6d 8
+.gitignore
+  s_a6c704b0a8cf11::t_e076d5f988e41b 1-4
+AGENTS.md
+  s_a6c704b0a8cf11::t_940eaeb87fda98 48-57,72-73,100-101,105-106,109-110,113-117
+CHANGELOG.md
+  s_a6c704b0a8cf11::t_608e927702664f 8-32
+CLAUDE.md
+  s_a6c704b0a8cf11::t_05316e0157775c 7-8
+PLAN.md
+  s_a6c704b0a8cf11::t_09aa85c23d5e6f 22,94-98,124-125
+README.md
+  s_a6c704b0a8cf11::t_98bffe92b1aa8d 5,32,130-134
+STATUS.md
+  s_a6c704b0a8cf11::t_f2be644d6a8622 7,37-38,44-46,136-138
+plugins/intent-engineering/.claude-plugin/plugin.json
+  s_a6c704b0a8cf11::t_36691000b152ea 3
+plugins/intent-engineering/README.md
+  s_a6c704b0a8cf11::t_86ee45701b19aa 89-99,114-118
+plugins/intent-engineering/config/defaults/ways-of-working.yaml
+  s_a6c704b0a8cf11::t_4d3a0370516f7c 53-63
+plugins/intent-engineering/references/config-resolution.md
+  s_a6c704b0a8cf11::t_66bc99e3a3bdef 62-65,69-117
+plugins/intent-engineering/references/report-template.md
+  s_a6c704b0a8cf11::t_09997e84d0f445 3-5,7-16,85
+plugins/intent-engineering/references/subagent-template.md
+  s_a6c704b0a8cf11::t_65f5835df5d332 36-38,53-55
+plugins/intent-engineering/skills/ie-audit/SKILL.md
+  s_a6c704b0a8cf11::t_6e144d285282c8 19,28-29,59-61,63-76,80,85,104-106,111-112
+plugins/intent-engineering/skills/ie-init/SKILL.md
+  s_a6c704b0a8cf11::t_86b1725a55dd17 47,57,68-71,119-134,139-142,147-148
+plugins/intent-engineering/skills/ie-review/SKILL.md
+  s_a6c704b0a8cf11::t_e39a29cac6a191 24,100-101,104-116,120-121,124,155-157,162-163
+plugins/intent-engineering/skills/ie-validate-plan/SKILL.md
+  s_a6c704b0a8cf11::t_5c64b239b88795 19-20,57-59,61-73,77,83,96-98,104-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "712ec04337dd07c8d064aecdfffe82a886be9ecf",
+  "prompts": {},
+  "sessions": {
+    "s_a6c704b0a8cf11": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "796a6e36-5f07-49c2-a23a-5dc32d5c7bc9",
+        "model": "claude-fable-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
