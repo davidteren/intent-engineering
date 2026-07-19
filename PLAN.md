@@ -19,7 +19,7 @@ parallel agents that produce structured findings and reports.
 >
 > **How:** A small set of "lenses" (each grounded in a researched principle) run as
 > parallel agents. They return scored, deduplicated findings with concrete fixes,
-> written to a report in `wip/`. The same lenses work in four contexts: planning,
+> written to a report under `docs/intent-engineering/`. The same lenses work in four contexts: planning,
 > plan validation, code review, and codebase audit.
 
 ---
@@ -91,9 +91,11 @@ matching the findings schema.
 | `ie-plan-assist` | during planning | (light) | Advisory: surface the principle considerations relevant to the work being planned; emit a checklist, no blocking. |
 
 All skills:
-- Default report location: `wip/intent-engineering/<run-id>/` in the target repo
-  (`report.md`, per-lens JSON, `metadata.json`). Override via an output-path arg;
-  outside-repo only when explicitly requested.
+- **Two-layer artifacts:** run scratch `.intense/runs/<run-id>/` (per-lens JSON;
+  cleaned up after publish) and published report
+  `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Override publish path via
+  `out:<path>`; permanent defaults via `artifacts.*` in ways-of-working. Outside-repo
+  only when explicitly requested.
 - Never push / open PRs / file tickets. Read-only lenses; `ie-review` (interactive only)
   applies safe verified fixes and commits on a clean tree — never pushes. `ie-audit` and
   `ie-validate-plan` are report-only.
@@ -119,7 +121,8 @@ intent-engineering/                      (repo / dev + marketplace)
                  scoring-rubric, principle-index, config-resolution
     config/defaults/  ways-of-working.yaml, patterns.yaml, thresholds.yaml
     resources/   principles/  frameworks/  agnostic/  patterns/
-  wip/         task.md, future-ideas.md, fixtures/ (gitignored scratch)
+  docs/intent-engineering/   published ie-* reports
+  .intense/runs/             ephemeral lens scratch (gitignored; cleaned up after publish)
 ```
 
 (Resources live inside the plugin for install self-containment — see the root README.)

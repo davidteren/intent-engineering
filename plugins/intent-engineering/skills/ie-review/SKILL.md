@@ -21,7 +21,7 @@ number/URL or branch.
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
-| `out:<path>` | Override report dir. Default `wip/intent-engineering/<run-id>/` in the repo. Outside-repo only when explicitly given. |
+| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
 
@@ -97,24 +97,31 @@ dispatching. This is progress reporting, not a confirmation prompt.
 
 ## Stage 4 — Dispatch
 
-Generate a run id and artifact dir:
+Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(Artifact paths). Shared procedure (skill slug `review`):
 
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
-# OUT precedence: out: arg > resolved ways-of-working.report_dir > built-in default.
-# Bind these two from earlier stages so the precedence below is executable:
-OUT_ARG="<the out: value parsed in Argument parsing, or empty>"
-REPORT_DIR="<resolved ways-of-working.report_dir from the Stage 3 config, or empty>"
-OUT="${OUT_ARG:-${REPORT_DIR:-wip/intent-engineering}/$RUN_ID}"
-mkdir -p "$OUT"
+STAMP=$(date +%Y%m%d-%H%M%S)
+RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
+OUT_ARG="<out: value or empty>"
+RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
+REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
+CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
+SKILL_SLUG="review"
+SCOPE_SLUG="<sanitized branch/PR slug or empty>"
+EXT="md"   # json when mode:agent
+RUN="${RUN_DIR}/${RUN_ID}"
+mkdir -p "$RUN"
+# REPORT_PATH: out: file/dir override, else ${REPORT_DIR}/${STAMP}-review[-scope].${EXT}
+mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
-with `Context: review`. **Bind `run_artifact_dir = $OUT`** when filling the template
-(the template's `{run_artifact_dir}` is this skill's `$OUT`). Pass model `sonnet` to
+with `Context: review`. **Bind `run_artifact_dir = $RUN`** (Layer A only — not the
+published path). Pass model `sonnet` to
 convention and experience; let predictability and simplicity inherit the session model
 (highest-stakes reasoning). Respect the harness active-subagent cap (queue and backfill;
-capacity errors are backpressure, not failure). Each lens writes `$OUT/{lens}.json`
+capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.json`
 (via the Write tool) and returns compact JSON.
 
 ## Stage 5 — Merge, gate, act
@@ -145,11 +152,14 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 
 ## Stage 6 — Report
 
-Write `$OUT/report.md` (or `$OUT/report.json` in `mode:agent`) per the report template, and
-`$OUT/metadata.json` (run_id, branch, head_sha, verdict, completed_at). Sections:
+Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
+the report template. Include run_id, branch, head_sha, verdict, completed_at in the
+Header (and in the JSON object when `mode:agent`). Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage, Verdict
 (Ready / Ready with fixes / Not ready). No time estimates. Every finding actionable.
+
+Then: if `CLEANUP` is true, `rm -rf "$RUN"`. Always tell the user `Report: $REPORT_PATH`.
 
 ## Quality gates
 

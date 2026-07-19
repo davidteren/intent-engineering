@@ -33,9 +33,9 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
 </scope>
 
 <output-contract>
-{run_artifact_dir} = the orchestrator's resolved run-artifact dir (its $OUT, e.g.
-wip/intent-engineering/<run-id>/). The skill MUST bind run_artifact_dir = $OUT when
-it fills this template — the two names are the same path.
+{run_artifact_dir} = the orchestrator's resolved **run scratch** dir (Layer A — its $RUN,
+e.g. .intense/runs/<run-id>/). The skill MUST bind run_artifact_dir = $RUN when it fills
+this template. This is NOT the published report path (Layer B).
 
 Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
@@ -50,9 +50,9 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 
 ## Slot bindings (orchestrator)
 
-- `{run_artifact_dir}` — bind to the skill's resolved `$OUT` (same path the skill tells
-  lenses to write to). Never leave the two names unbound — a literal executor cannot
-  reconcile `$OUT` and `{run_artifact_dir}` on its own.
+- `{run_artifact_dir}` — bind to the skill's resolved `$RUN` (Layer A scratch only).
+  Never leave it unbound — a literal executor cannot invent the path. Do **not** bind
+  this to the published report path.
 - `{lens}`, `{standards_paths}`, intent, scope — as shown in the template.
 
 ## Shared confidence rubric (all lenses)

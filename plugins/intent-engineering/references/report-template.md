@@ -1,12 +1,19 @@
 # Report Template
 
-Canonical shape for the synthesized report written to the run-artifact dir and shown
-to the user. ASCII-safe (pipe tables, `->` not arrows, no box-drawing) so it degrades
-gracefully across terminals.
+Canonical shape for the synthesized **published** report and the in-chat summary.
+ASCII-safe (pipe tables, `->` not arrows, no box-drawing) so it degrades gracefully
+across terminals.
 
-Default report location: `wip/intent-engineering/<run-id>/report.md` in the target
-repo (override via output-path arg). Also write per-lens `<lens>.json` and
-`metadata.json` alongside.
+**Two layers** (see `config-resolution.md` → Artifact paths):
+
+| Layer | Default path | Contents |
+|-------|--------------|----------|
+| A — run scratch | `.intense/runs/<run-id>/` | per-lens `{lens}.json` while the run is open |
+| B — published | `docs/intent-engineering/<stamp>-<skill>[-scope].md` | this report (or `.json` in `mode:agent`) |
+
+Override Layer B with `out:<path>`. After a successful publish, Layer A is deleted when
+`artifacts.cleanup_runs` is true (default). Include `run_id` in the Header so the run
+is still identifiable after cleanup.
 
 ## Findings table (review & audit)
 
@@ -75,7 +82,7 @@ instead of markdown, AND write that same object to `report.json` in the artifact
   "posture": null,
   "observations": [],
   "coverage": {},
-  "artifact_path": "wip/intent-engineering/<run-id>/",
+  "artifact_path": "docs/intent-engineering/<stamp>-<skill>[-scope].json",
   "run_id": "<run-id>"
 }
 ```

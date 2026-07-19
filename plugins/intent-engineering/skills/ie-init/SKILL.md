@@ -44,7 +44,7 @@ present the menu (multi-select):
 
 | Option | File created | What it controls |
 |--------|--------------|------------------|
-| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, **external-tool preference**, severity overrides, local conventions, confidence gate, report dir |
+| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, **external-tool preference**, severity overrides, local conventions, confidence gate, **artifact paths** (run scratch + published report) |
 | Pattern policy | `.intense/patterns.yaml` | allowed / blocked / pre-approved design patterns, unknown-pattern handling |
 | Thresholds | `.intense/thresholds.yaml` | architecture metric limits (fat model/controller, God object, service object, …) |
 | All | all three | full config set |
@@ -54,7 +54,7 @@ Recommend **All** for a first run.
 ### 2b. Opt in/out of lenses + external tools (when scaffolding ways-of-working)
 
 If `ways-of-working.yaml` is being scaffolded **and** the menu is interactive (AskUserQuestion
-available), present two short opt-in questions and write the answers into the file (Step 3),
+available), present short opt-in questions and write the answers into the file (Step 3),
 so the team configures which modules run at init rather than editing YAML afterward:
 
 1. **Which lenses run?** Default `predictability`, `convention`, `simplicity` on;
@@ -65,6 +65,10 @@ so the team configures which modules run at init rather than editing YAML afterw
    should the architecture lens treat it?" → `enrich` (default — heuristics + tool),
    `prefer` (run the tool, suppress overlapping heuristics — no duplication), `report`
    (tool findings only), `off` (ignore tools). Write to `tools.architecture`.
+3. **Where do reports go?** Confirm or override defaults: run scratch → `.intense/runs/`
+   (deleted after publish when `cleanup_runs: true`); published report →
+   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Write overrides into `artifacts.*`.
+   Always restate the defaults in the Step 5 summary even when the user accepts them.
 
 Non-interactive / `$ARGUMENTS`-driven runs: skip the prompts and scaffold the documented
 defaults verbatim (the file's comments explain every option for later editing).
@@ -112,19 +116,36 @@ overwrite, diff, or skip; default to **skip**.
 
 The copied/emitted files keep their explanatory comments so the team can edit in place.
 
-### 4. Report
+### 4. Gitignore for run scratch (optional, one-shot)
+
+Run scratch lives under `.intense/runs/` by default and is **not** team config. After
+scaffolding ways-of-working (or on any init that mentions artifacts), if the project
+`.gitignore` does **not** already ignore `.intense/runs/`, **offer** to append:
+
+```
+# Intent Engineering — ephemeral lens run scratch (published reports live under docs/)
+.intense/runs/
+```
+
+Never force; never add `.intense/` itself (config YAML must stay committable). If the
+team set `artifacts.run_dir` to something else, offer that path instead. Do not invent
+a `wip/` ignore for the plugin default — `wip/` is no longer the plugin report home.
+
+### 5. Report
 
 List what was created vs skipped. Then tell the user:
 
 - The files are **meant to be committed** (they're project config, not artifacts) — do
-  NOT add `.intense/` to `.gitignore`.
-- Edit them to taste; every `ie-*` run in this repo now merges them over the plugin
+  NOT add `.intense/` to `.gitignore` (only `.intense/runs/` if they accepted Step 4).
+- Published reports land under `docs/intent-engineering/` by default (committable if
+  the team wants a history); run scratch is cleaned up after each successful publish.
+- Edit config to taste; every `ie-*` run in this repo now merges it over the plugin
   defaults (project wins; lists replace unless `extends: true`).
 - Suggest the natural next step: run `/ie-audit` to see the current posture under the
   new config.
 
-This skill only writes under `.intense/`. It never edits other project files, commits,
-or pushes.
+This skill only writes under `.intense/` (and optionally one `.gitignore` append the
+user accepted). It never commits or pushes.
 
 ---
 
