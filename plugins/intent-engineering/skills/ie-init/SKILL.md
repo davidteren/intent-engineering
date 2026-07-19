@@ -116,20 +116,34 @@ overwrite, diff, or skip; default to **skip**.
 
 The copied/emitted files keep their explanatory comments so the team can edit in place.
 
-### 4. Gitignore for run scratch (optional, one-shot)
+### 4. Gitignore for run scratch (optional; re-offered until the path is ignored)
 
-Run scratch lives under `.intense/runs/` by default and is **not** team config. After
-scaffolding ways-of-working (or on any init that mentions artifacts), if the project
-`.gitignore` does **not** already ignore `.intense/runs/`, **offer** to append:
+Resolve the **active** run-scratch path first (same rules as
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`):
+
+- If project `.intense/ways-of-working.yaml` has `artifacts.run_dir` → use that.
+- Else if it has top-level `report_dir:` and **no** `artifacts:` block (**legacy
+  single-bucket**) → scratch is under `report_dir/<run-id>/`. Offer to ignore
+  `report_dir/` only when that path is clearly ephemeral (e.g. still
+  `wip/intent-engineering`); if `report_dir` looks like a docs/publish path, **skip**
+  the gitignore offer and explain that legacy mode keeps scratch next to published
+  reports without auto-cleanup.
+- Else → default `.intense/runs/`.
+
+After scaffolding ways-of-working (or on any init that mentions artifacts), if the
+project `.gitignore` does **not** already ignore the resolved scratch root, **offer**
+to append it (example for the default):
 
 ```
 # Intent Engineering — ephemeral lens run scratch (published reports live under docs/)
 .intense/runs/
 ```
 
-Never force; never add `.intense/` itself (config YAML must stay committable). If the
-team set `artifacts.run_dir` to something else, offer that path instead. Do not invent
-a `wip/` ignore for the plugin default — `wip/` is no longer the plugin report home.
+This is **not** remembered across declines — if the line is still missing, the offer
+reappears on the next `/ie-init`. That is intentional (least surprise: no hidden
+"don't ask again" flag). Never force; never add `.intense/` itself (config YAML must
+stay committable). Do not invent a `wip/` ignore for the plugin default — `wip/` is no
+longer the plugin report home.
 
 ### 5. Report
 

@@ -62,7 +62,7 @@ out of the box. (Mention in Coverage which config source was used.)
 | `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.intense/runs`) |
 | `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/intent-engineering`) |
 | `artifacts.cleanup_runs` | skills | delete the run dir after a successful publish (default `true`) |
-| `report_dir` *(legacy)* | skills | if set **without** `artifacts:`, single-bucket mode (both layers under this path, `cleanup_runs: false`) |
+| `report_dir` *(legacy)* | skills | if set **without** `artifacts:`, run scratch under `report_dir/<run-id>/` and published report under `report_dir/<stamp>-…` (sibling of the run dir); `cleanup_runs: false` |
 | `patterns.allowed/blocked/approved/unknown_pattern` | `ie-architecture-reviewer` | classify, flag blocked-in-changed-code, suppress approved, raise unknown |
 | `thresholds.*` | `ie-architecture-reviewer` | metric limits for structural smells |
 
@@ -85,7 +85,10 @@ Every `ie-review` / `ie-audit` / `ie-validate-plan` run uses **two layers**:
 
 1. Resolved `artifacts.run_dir` (project over defaults).
 2. Else built-in `.intense/runs`.
-3. **Legacy single-bucket:** if the project has top-level `report_dir:` and **no** `artifacts:` block, both layers use `report_dir/<run-id>/` and `cleanup_runs` is forced `false` (preserves pre-0.6 behavior for existing configs).
+3. **Legacy single-bucket:** if the project has top-level `report_dir:` and **no**
+   `artifacts:` block, run scratch uses `report_dir/<run-id>/` and the published report
+   lands at `report_dir/<stamp>-<skill>[-scope].{md,json}` (a **sibling** of the run dir,
+   not nested inside it). `cleanup_runs` is forced `false` (preserves pre-0.6 configs).
 
 **Run id + published filename** (keep identical across the three orchestrators):
 
@@ -94,9 +97,9 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
 # skill slug: audit | review | validate-plan
 # SCOPE_SLUG: optional, sanitized path/branch fragment, or empty
+# EXT=md normally; json when mode:agent
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
-mkdir -p "$REPORT_DIR"
 if [ -n "$OUT_ARG" ]; then
   case "$OUT_ARG" in
     *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
@@ -105,13 +108,26 @@ if [ -n "$OUT_ARG" ]; then
 else
   REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
 fi
-# EXT=md normally; json when mode:agent
 mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
 Bind **`run_artifact_dir = $RUN`** (not the published path) when filling `subagent-template.md`. Lenses write only under `$RUN`.
 
-**After a successful write of `$REPORT_PATH`:** if `artifacts.cleanup_runs` is true (default), `rm -rf "$RUN"`. Always print the published path to the user: `Report: <path>`. Do not leave orphan lens JSON in the project tree when cleanup is on.
+**After a successful write of `$REPORT_PATH`:** if `artifacts.cleanup_runs` is true
+(default), delete the run scratch **only after a safety check**:
+
+```bash
+# Only remove a path that is clearly a per-run scratch dir under the configured root.
+# Require: non-empty, not repo root / ".", and under RUN_DIR with the expected RUN_ID suffix.
+case "$RUN" in
+  ""|"."|"/"|"$RUN_DIR"|"$RUN_DIR/") echo "cleanup skipped: unsafe RUN='$RUN'" ;;
+  "$RUN_DIR"/"$RUN_ID") rm -rf "$RUN" ;;
+  *) echo "cleanup skipped: RUN='$RUN' is not under RUN_DIR/RUN_ID" ;;
+esac
+```
+
+Never `rm -rf` an unbound or mis-bound path. Always print the published path to the user:
+`Report: <path>`. Do not leave orphan lens JSON when cleanup succeeds.
 
 **Scope exclusions:** never audit/review files under the resolved `artifacts.run_dir`, `artifacts.report_dir`, or legacy `report_dir` / `wip/` paths.
 

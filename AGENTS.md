@@ -187,7 +187,9 @@ The plugin works out of the box with defaults; a repo tunes it via committable
 
 - `ways-of-working.yaml` — lens toggles (turn an agent `off`), external-tool preference
   (`tools.architecture`: `enrich`/`prefer`/`report`/`off` — defer to reek/eslint/phpstan/…
-  instead of duplicating), severity overrides, local conventions, confidence gate, report dir.
+  instead of duplicating), severity overrides, local conventions, confidence gate, and
+  **`artifacts.*`** (`run_dir`, `report_dir`, `cleanup_runs` — two-layer report layout;
+  see rule 5 and `references/config-resolution.md`).
 - `patterns.yaml` — design-pattern policy: `allowed` / `blocked` (no new use) / `approved`
   (grandfathered paths). Keys reference **snake_case pattern ids** from
   `resources/patterns/<stack>.yaml`.
@@ -280,6 +282,12 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   pattern catalog exists without a registered ✅ row). Exits non-zero on any breakage. Add new invariants there as the plugin grows — it is the
   plugin's one automated check. It also runs in **CI on every PR**
   (`.github/workflows/contracts.yml`), so a contract break fails before merge.
+- **PR review feedback is a learning loop.** On every open PR with review comments
+  (cubic, Devin, Qodo, human, or other bots): address real issues with code; for every
+  thread, post a short reply stating what changed (with commit) **or** why no change
+  (false positive / intentional / already fixed), then resolve the thread. Never resolve
+  silently — reviewers (and their self-learning) need the reply. Prefer a PR + required
+  checks over direct pushes to `main` when branch protection expects CI.
 - **Dogfood as you go.** Run the lenses' logic against your change (or `/ie-audit` once
   installed), fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
 - Clean git history is preferred; the owner may ask to squash to a single commit.

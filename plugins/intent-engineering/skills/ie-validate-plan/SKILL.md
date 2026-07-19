@@ -69,7 +69,14 @@ SCOPE_SLUG="<sanitized plan basename or empty>"
 EXT="md"   # json when mode:agent
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
-# REPORT_PATH: out: file/dir override, else ${REPORT_DIR}/${STAMP}-validate-plan[-scope].${EXT}
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
 mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
@@ -94,14 +101,16 @@ tool).
 ## Stage 5 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
 type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
 with `Principle` + `Lens`, Tensions, Observations, Coverage, Verdict = **Ready to
 implement / Revise first**, listing the blocking gaps to resolve before coding. The
 verdict blocks on `requirements`-level or design-blocking gaps; advisory gaps are noted
 but don't block. No time estimates.
 
-Then: if `CLEANUP` is true, `rm -rf "$RUN"`. Always tell the user `Report: $REPORT_PATH`.
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)

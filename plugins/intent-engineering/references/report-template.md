@@ -65,8 +65,10 @@ No time estimates. No praise. Every finding actionable.
 ## mode:agent (JSON)
 
 When a skill runs `mode:agent`, emit one raw JSON object (no code fence) as the reply
-instead of markdown, AND write that same object to `report.json` in the artifact dir (the
-`mode:agent` counterpart of `report.md`). The skills name this file `report.json`:
+instead of markdown, AND write that same object to the **published** path `$REPORT_PATH`
+(Layer B — typically `docs/intent-engineering/<stamp>-<skill>[-scope].json`). Do **not**
+write the mode:agent report into the run-scratch dir (`$RUN`); that dir is deleted when
+`cleanup_runs` is true. Set `artifact_path` in the JSON to the same published path:
 
 ```json
 {

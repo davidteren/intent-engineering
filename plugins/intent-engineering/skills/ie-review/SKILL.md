@@ -112,7 +112,14 @@ SCOPE_SLUG="<sanitized branch/PR slug or empty>"
 EXT="md"   # json when mode:agent
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
-# REPORT_PATH: out: file/dir override, else ${REPORT_DIR}/${STAMP}-review[-scope].${EXT}
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
 mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
@@ -127,7 +134,7 @@ capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.js
 ## Stage 5 — Merge, gate, act
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
-`report-template.md` for output shape.
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape.
 
 1. **Validate** each return; drop malformed findings (record the count).
 2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
@@ -153,13 +160,16 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 ## Stage 6 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-the report template. Include run_id, branch, head_sha, verdict, completed_at in the
-Header (and in the JSON object when `mode:agent`). Sections:
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — including the mode:agent section
+there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
+verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage, Verdict
 (Ready / Ready with fixes / Not ready). No time estimates. Every finding actionable.
 
-Then: if `CLEANUP` is true, `rm -rf "$RUN"`. Always tell the user `Report: $REPORT_PATH`.
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
 
 ## Quality gates
 

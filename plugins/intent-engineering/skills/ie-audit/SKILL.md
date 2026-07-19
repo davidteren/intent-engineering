@@ -72,7 +72,14 @@ SCOPE_SLUG="<sanitized target slug or empty>"
 EXT="md"   # json when mode:agent
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
-# REPORT_PATH: out: file/dir override, else ${REPORT_DIR}/${STAMP}-audit[-scope].${EXT}
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
 mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
@@ -102,13 +109,15 @@ just needs the merged per-lens return.
 ## Stage 5 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`report-template.md`. Put `run_id` in the Header. Sections: Header (target,
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
 stack, sampling note, run_id), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations, Coverage (sampling bounds, suppressions,
 failed lenses), Verdict = the **top 3 posture gaps to fix first** with why. No apply,
 no push, no time estimates.
 
-Then: if `CLEANUP` is true, `rm -rf "$RUN"`. Always tell the user `Report: $REPORT_PATH`.
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
 
 ---
 

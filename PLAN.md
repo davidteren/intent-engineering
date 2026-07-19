@@ -212,5 +212,6 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 ### Dogfood
 
 The plugin repo isn't Rails, so the architecture lens is dogfooded against a small
-synthetic Rails fixture under `wip/fixtures/` (gitignored) with deliberate smells +
+synthetic Rails fixture under optional personal `wip/fixtures/` (gitignored dev scratch —
+not the plugin report home; reports use `docs/intent-engineering/`) with deliberate smells +
 recognizable + unknown patterns. Real-repo runs are left for the user to trigger.
