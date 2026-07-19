@@ -59,9 +59,77 @@ out of the box. (Mention in Coverage which config source was used.)
 | `severity_overrides` | synthesis | remap a finding's severity by principle/smell id |
 | `conventions.notes` | `ie-convention-reviewer` | repo-authoritative conventions (alongside CLAUDE.md/AGENTS.md) |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
-| `report_dir` | skills | default run-artifact dir (still overridable with `out:`) |
+| `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.intense/runs`) |
+| `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/intent-engineering`) |
+| `artifacts.cleanup_runs` | skills | delete the run dir after a successful publish (default `true`) |
+| `report_dir` *(legacy)* | skills | if set **without** `artifacts:`, run scratch under `report_dir/<run-id>/` and published report under `report_dir/<stamp>-…` (sibling of the run dir); `cleanup_runs: false` |
 | `patterns.allowed/blocked/approved/unknown_pattern` | `ie-architecture-reviewer` | classify, flag blocked-in-changed-code, suppress approved, raise unknown |
 | `thresholds.*` | `ie-architecture-reviewer` | metric limits for structural smells |
+
+## Artifact paths (orchestrators — shared)
+
+Every `ie-review` / `ie-audit` / `ie-validate-plan` run uses **two layers**:
+
+| Layer | What | Default |
+|-------|------|---------|
+| **A — run scratch** | `{lens}.json` while lenses run; ephemeral merge helpers | `.intense/runs/<run-id>/` |
+| **B — published report** | one human-facing file (`*.md`, or `*.json` in `mode:agent`) | `docs/intent-engineering/<stamp>-<skill>[-scope].md` |
+
+**Resolution order for the published path (Layer B):**
+
+1. `out:<path>` on the skill invocation — if it ends in `.md` / `.json`, use as the file path; otherwise treat as a directory and place the default filename inside it. Outside-repo only when explicitly given.
+2. Else resolved `artifacts.report_dir` (project `.intense/` over defaults).
+3. Else built-in `docs/intent-engineering`.
+
+**Resolution order for the run dir (Layer A):**
+
+1. Resolved `artifacts.run_dir` (project over defaults).
+2. Else built-in `.intense/runs`.
+3. **Legacy single-bucket:** if the project has top-level `report_dir:` and **no**
+   `artifacts:` block, run scratch uses `report_dir/<run-id>/` and the published report
+   lands at `report_dir/<stamp>-<skill>[-scope].{md,json}` (a **sibling** of the run dir,
+   not nested inside it). `cleanup_runs` is forced `false` (preserves pre-0.6 configs).
+
+**Run id + published filename** (keep identical across the three orchestrators):
+
+```bash
+STAMP=$(date +%Y%m%d-%H%M%S)
+RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
+# skill slug: audit | review | validate-plan
+# SCOPE_SLUG: optional, sanitized path/branch fragment, or empty
+# EXT=md normally; json when mode:agent
+RUN="${RUN_DIR}/${RUN_ID}"
+mkdir -p "$RUN"
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
+mkdir -p "$(dirname "$REPORT_PATH")"
+```
+
+Bind **`run_artifact_dir = $RUN`** (not the published path) when filling `subagent-template.md`. Lenses write only under `$RUN`.
+
+**After a successful write of `$REPORT_PATH`:** if `artifacts.cleanup_runs` is true
+(default), delete the run scratch **only after a safety check**:
+
+```bash
+# Only remove a path that is clearly a per-run scratch dir under the configured root.
+# Require: non-empty, not repo root / ".", and under RUN_DIR with the expected RUN_ID suffix.
+case "$RUN" in
+  ""|"."|"/"|"$RUN_DIR"|"$RUN_DIR/") echo "cleanup skipped: unsafe RUN='$RUN'" ;;
+  "$RUN_DIR"/"$RUN_ID") rm -rf "$RUN" ;;
+  *) echo "cleanup skipped: RUN='$RUN' is not under RUN_DIR/RUN_ID" ;;
+esac
+```
+
+Never `rm -rf` an unbound or mis-bound path. Always print the published path to the user:
+`Report: <path>`. Do not leave orphan lens JSON when cleanup succeeds.
+
+**Scope exclusions:** never audit/review files under the resolved `artifacts.run_dir`, `artifacts.report_dir`, or legacy `report_dir` / `wip/` paths.
 
 ## Authority order for conventions
 

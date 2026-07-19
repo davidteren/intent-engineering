@@ -16,8 +16,8 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON; no interactive routing. |
-| `out:<path>` | Override report dir. Default `wip/intent-engineering/<run-id>/`. |
-| remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`, or `wip/`; if none, ask once which file. |
+| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-validate-plan[-scope].md`. |
+| remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
 ## Stage 1 — Read & classify
 
@@ -54,24 +54,40 @@ Announce the team.
 
 ## Stage 3 — Dispatch
 
+Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(Artifact paths). Shared procedure (skill slug `validate-plan`):
+
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
-# OUT precedence: out: arg > resolved ways-of-working.report_dir > built-in default.
-# Bind these two from earlier stages so the precedence below is executable:
-OUT_ARG="<the out: value parsed in Argument parsing, or empty>"
-REPORT_DIR="<resolved ways-of-working.report_dir from the Stage 2 config, or empty>"
-OUT="${OUT_ARG:-${REPORT_DIR:-wip/intent-engineering}/$RUN_ID}"
-mkdir -p "$OUT"
+STAMP=$(date +%Y%m%d-%H%M%S)
+RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
+OUT_ARG="<out: value or empty>"
+RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
+REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
+CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
+SKILL_SLUG="validate-plan"
+SCOPE_SLUG="<sanitized plan basename or empty>"
+EXT="md"   # json when mode:agent
+RUN="${RUN_DIR}/${RUN_ID}"
+mkdir -p "$RUN"
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
+mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
 Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Bind
-`run_artifact_dir = $OUT`** when filling the template. Pass `model: sonnet` to convention
+`run_artifact_dir = $RUN`** (Layer A only). Pass `model: sonnet` to convention
 and experience; let predictability and simplicity inherit the session model (their
 frontmatter default) — don't spawn the always-on lenses as `sonnet`. Plan mode requires
 `scores`
 (dimensional rating per the scoring rubric) plus findings that cite the doc location
 (`line` = the relevant section's start line, or 0 when none applies) and describe the
-gap a planner/implementer would hit. Lenses write `$OUT/{lens}.json` (via the Write
+gap a planner/implementer would hit. Lenses write `$RUN/{lens}.json` (via the Write
 tool).
 
 ## Stage 4 — Merge & rate
@@ -84,12 +100,17 @@ tool).
 
 ## Stage 5 — Report
 
-Write `$OUT/report.md` (or `$OUT/report.json` in `mode:agent`) + `$OUT/metadata.json`. Sections: Header (doc,
-type, lens team), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
+Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
+type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
 with `Principle` + `Lens`, Tensions, Observations, Coverage, Verdict = **Ready to
 implement / Revise first**, listing the blocking gaps to resolve before coding. The
 verdict blocks on `requirements`-level or design-blocking gaps; advisory gaps are noted
 but don't block. No time estimates.
+
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)

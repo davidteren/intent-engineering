@@ -16,7 +16,7 @@ surfaced first. This is a read-only assessment — it never edits code.
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON instead of markdown. |
-| `out:<path>` | Override report dir. Default `wip/intent-engineering/<run-id>/`. |
+| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-audit[-scope].md`. |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
@@ -25,7 +25,8 @@ Resolve the audit set. Be explicit and bounded:
 
 1. Determine the file set: the given path/glob, or the repo's source dirs. Exclude
    `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and
-   `wip/`.
+   artifact dirs (resolved `artifacts.run_dir`, `artifacts.report_dir`, legacy
+   `wip/`, `.intense/runs/`, `docs/intent-engineering/`).
 2. Detect the stack(s) by extension/manifest to pick `frameworks/<stack>.md` docs.
 3. **Sampling rule (large targets).** If the set exceeds what lenses can read closely
    (rough guide: > ~40 files or very large files), select a representative sample:
@@ -55,23 +56,40 @@ Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENT
 
 ## Stage 3 — Dispatch
 
+Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(Artifact paths). Shared procedure (skill slug `audit`):
+
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
-# OUT precedence: out: arg > resolved ways-of-working.report_dir > built-in default.
-# Bind these two from earlier stages so the precedence below is executable:
-OUT_ARG="<the out: value parsed in Argument parsing, or empty>"
-REPORT_DIR="<resolved ways-of-working.report_dir from the Stage 2 config, or empty>"
-OUT="${OUT_ARG:-${REPORT_DIR:-wip/intent-engineering}/$RUN_ID}"
-mkdir -p "$OUT"
+STAMP=$(date +%Y%m%d-%H%M%S)
+RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
+# From Stage 2 config + Argument parsing (see config-resolution.md):
+OUT_ARG="<out: value or empty>"
+RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
+REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
+CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
+SKILL_SLUG="audit"
+SCOPE_SLUG="<sanitized target slug or empty>"
+EXT="md"   # json when mode:agent
+RUN="${RUN_DIR}/${RUN_ID}"
+mkdir -p "$RUN"
+if [ -n "$OUT_ARG" ]; then
+  case "$OUT_ARG" in
+    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
+    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
+  esac
+else
+  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
+fi
+mkdir -p "$(dirname "$REPORT_PATH")"
 ```
 
 Spawn lenses in parallel with `Context: audit` (subagent template). **Bind
-`run_artifact_dir = $OUT`** when filling the template. Pass `model: sonnet` to convention,
+`run_artifact_dir = $RUN`** (Layer A only). Pass `model: sonnet` to convention,
 experience, and architecture; let predictability and simplicity inherit the session model
 (their frontmatter default) — don't spawn the always-on lenses as `sonnet`. Pass the file
 set (or sample) and the stack docs to read. **Audit mode requires `scores`** — each lens returns 0-10 per
 dimension it owns (scoring rubric) plus findings citing `file:line`. Respect the
-concurrency cap. Lenses write `$OUT/{lens}.json` (via the Write tool).
+concurrency cap. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 For very large audits, a lens may itself fan out across file groups; the orchestrator
 just needs the merged per-lens return.
@@ -90,11 +108,16 @@ just needs the merged per-lens return.
 
 ## Stage 5 — Report
 
-Write `$OUT/report.md` (or `$OUT/report.json` in `mode:agent`) + `$OUT/metadata.json`. Sections: Header (target,
-stack, sampling note), Posture table (worst first), Findings (P0..P3, grouped, with
+Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
+stack, sampling note, run_id), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations, Coverage (sampling bounds, suppressions,
 failed lenses), Verdict = the **top 3 posture gaps to fix first** with why. No apply,
 no push, no time estimates.
+
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
 
 ---
 
