@@ -50,14 +50,6 @@ conventions:
 # Findings below this anchor are suppressed (P0 survives at 50+). Lower to surface more.
 confidence_gate: 75
 
-# --- Artifacts (two layers) -------------------------------------------------------
-# Layer A — run scratch: per-lens JSON while the run is in progress.
-# Layer B — published report: the human-facing markdown (or JSON in mode:agent).
-# After a successful publish, run scratch is deleted when cleanup_runs is true.
-# Override the published path per run with `out:<path>`.
-# Legacy: a top-level `report_dir:` (no `artifacts:`) still means single-bucket mode
-# (both layers under that dir, no cleanup) — see config-resolution.md.
-artifacts:
-  run_dir: .intense/runs
-  report_dir: docs/intent-engineering
-  cleanup_runs: true
+# --- Report output ----------------------------------------------------------------
+# Default run-artifact dir (relative to repo root). Override per run with `out:<path>`.
+report_dir: wip/intent-engineering

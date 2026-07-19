@@ -1,7 +1,6 @@
-# Intent Engineering — ephemeral lens run scratch (published reports: docs/intent-engineering/)
-.intense/runs/
-
-# Optional personal scratch (not the plugin default). Legacy .wip/ — do not reintroduce as default.
+# Working scratch + run artifacts/reports — not committed.
+# Default report dir is wip/intent-engineering/<run-id>/; scratch (task brief,
+# future-ideas, fixtures) also lives under wip/. (.wip/ = legacy report dir.)
 wip/
 .wip/
 

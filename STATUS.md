@@ -4,7 +4,7 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (v0.6.0) · **Updated:** 2026-07-19
+**State:** ✅ feature-complete · 🚀 published & released (v0.5.0) · **Updated:** 2026-06-19
 
 ---
 
@@ -34,16 +34,14 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
   (agent) `off`, and `tools.architecture` (`enrich`/`prefer`/`report`/`off`) makes the
   architecture lens defer to an installed static-analysis tool (reek/eslint/phpstan/…) instead
   of duplicating it. `/ie-init` surfaces both as opt-in at setup.
-- **Two-layer artifacts** — run scratch under `.intense/runs/` (cleaned up after publish);
-  published reports under `docs/intent-engineering/`. No `wip/` default.
 
 ## Published
 
 - **Repo (public, MIT):** https://github.com/davidteren/intent-engineering
 - **Landing site:** https://davidteren.github.io/intent-engineering/ (GitHub Pages, `docs/`)
-- **Release:** `v0.6.0` (Latest) — two-layer artifacts (`.intense/runs` +
-  `docs/intent-engineering/`, no `wip/` default); `v0.5.0` dogfood + external-tool
-  deferral; `v0.4.0`–`v0.2.0` prior.
+- **Release:** `v0.5.0` (Latest) — all six packs dogfooded on real apps + external-tool
+  deferral config; `v0.4.0` (Laravel/Express/Phoenix/React stacks), `v0.3.0` (Python + stack
+  registry), `v0.2.0` prior.
 - **CI:** `contracts` workflow runs `check-contracts.rb` on every PR + pushes to `main`;
   `contract-integrity check` is a required status check (branch protection on `main`).
 - Announced on X (2026-06-14).
@@ -133,6 +131,4 @@ Detail in **CHANGELOG.md** (what shipped) and **PLAN.md** (design).
 - **CHANGELOG.md** — dated change history + decisions.
 - **PLAN.md** — design + per-phase detail.
 - **AGENTS.md** — contributor/agent guide · **plugins/intent-engineering/README.md** — end-user usage.
-- **docs/intent-engineering/** — published ie-* reports (date-stamped markdown).
-- **.intense/runs/** (gitignored) — ephemeral lens scratch; cleaned up after publish.
-- **wip/** (gitignored, optional) — personal scratch only; no longer the plugin report home.
+- **wip/** (gitignored) — scratch, run reports, `improvements.md` backlog, `future-ideas.md`.

@@ -1,6 +1,6 @@
 {
   "name": "intent-engineering",
-  "version": "0.6.0",
+  "version": "0.5.0",
   "description": "Enforce intent engineering: software that behaves the way a reasonable developer or user expects. Principle- and architecture-grounded lenses for planning, plan validation, code review, and codebase audit, with project-level .intense config.",
   "author": {
     "name": "David Teren"

@@ -86,17 +86,10 @@ Merge rule: project overrides global key-by-key; lists replace unless the block 
 
 ## Reports
 
-Two layers (see `references/config-resolution.md`):
-
-| Layer | Default | Purpose |
-|-------|---------|---------|
-| Run scratch | `.intense/runs/<run-id>/` | per-lens JSON while the run is open |
-| Published report | `docs/intent-engineering/<stamp>-<skill>[-scope].md` | human-facing result |
-
-After a successful publish, run scratch is deleted (`artifacts.cleanup_runs: true`).
-Override the published path with `out:<path>`. Configure permanently via
-`artifacts.*` in `.intense/ways-of-working.yaml`. Pass `mode:agent` for a single JSON
-object (also written under the publish dir as `.json`) for programmatic callers.
+By default every skill writes to `wip/intent-engineering/<run-id>/` in the target
+repo (`report.md`, per-lens JSON, `metadata.json`). Override with `out:<path>`. Pass
+`mode:agent` to any review/audit/validate skill to get a single JSON object instead of
+markdown (for programmatic callers).
 
 ## Install
 
@@ -111,11 +104,9 @@ Then the `/ie-*` skills and `ie-*-reviewer` agents are available.
 
 - `${CLAUDE_PLUGIN_ROOT}` resolves at runtime (standard in Claude Code) — lenses read
   their knowledge docs from there.
-- Published reports go under `docs/intent-engineering/`; ephemeral scratch under
-  `.intense/runs/` (cleaned up after publish; gitignore via `/ie-init`).
-- Read-only by default; only `/ie-review` in interactive mode mutates code (applies safe
-  fixes, commits on a clean tree, never pushes). Orchestrators write the published
-  report; `/ie-init` writes under `.intense/` (and may append a `.gitignore` line).
+- Reports go to `wip/` so they're easy to gitignore.
+- Read-only by default; only `/ie-review` in interactive mode mutates (applies safe
+  fixes, commits on a clean tree, never pushes) and `/ie-init` writes under `.intense/`.
 - The five lens agents ship in `agents/`. If your global git ignore excludes `agents/`
   (a common pattern), the repo `.gitignore` here re-includes them — keep that negation
   so the plugin stays installable.

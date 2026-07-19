@@ -45,16 +45,12 @@ schemas, and cross-references stay mutually consistent.
    skill or agent must address shipped files as `${CLAUDE_PLUGIN_ROOT}/<dir>/<file>` —
    never a bare filename or repo-relative path. A lens runs in isolation and can only
    resolve `${CLAUDE_PLUGIN_ROOT}` paths.
-4. **Read-only by default; never push.** Lenses are read-only except for the Layer A
-   run-scratch JSON write. Orchestrators write the published report under
-   `docs/intent-engineering/` (and clean up run scratch). Only `/ie-review` (interactive)
-   mutates product code — applies safe fixes, commits on a clean tree — and `/ie-init`
-   writes under `.intense/` (optional `.gitignore` append for runs). Nothing ever pushes,
-   opens PRs, or files tickets.
-5. **Two-layer artifacts — not `wip/`.** Run scratch → `.intense/runs/<run-id>/`
-   (lens JSON; deleted after publish when `cleanup_runs: true`). Published report →
-   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Configure via `artifacts.*` in
-   `ways-of-working.yaml`. Do not reintroduce plugin defaults under `wip/` or `.wip/`.
+4. **Read-only by default; never push.** Lenses are read-only except for the one
+   artifact-JSON write. Only `/ie-review` (interactive) mutates project files — applies
+   safe fixes, commits on a clean tree — and `/ie-init` writes under `.intense/`. Nothing
+   ever pushes, opens PRs, or files tickets.
+5. **`wip/` (not `.wip/`).** Reports and scratch go to `wip/intent-engineering/<run-id>/`.
+   `wip/` is gitignored. (`.wip/` was a legacy report dir — removed; don't reintroduce it.)
 6. **`ie-` prefix** for every skill and agent. Project config dir is **`.intense/`**.
 
 ---
@@ -69,8 +65,8 @@ intent-engineering/                       dev repo + marketplace
   CHANGELOG.md                            dated change history + decisions
   .claude-plugin/marketplace.json         marketplace entry (install from repo root)
   scripts/check-contracts.rb              contract-integrity check (the one automated check)
-  docs/intent-engineering/                published ie-* reports (date-stamped markdown)
-  .intense/runs/                          gitignored ephemeral lens scratch (cleaned up)
+  wip/                                    gitignored scratch: task brief, future-ideas,
+                                          fixtures/, and run reports
   plugins/intent-engineering/             THE INSTALLABLE PLUGIN (self-contained)
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
@@ -97,24 +93,23 @@ intent-engineering/                       dev repo + marketplace
    surfaces; architecture only on a supported framework (Rails + Python today), code/audit only.
    Resolved `lenses:` toggles (`on`/`off`/`auto`) override the defaults.
 3. **Dispatch** each lens in parallel using `references/subagent-template.md`, binding
-   `run_artifact_dir = $RUN` (Layer A). Each lens reads its `resources/` heuristic docs,
-   returns compact JSON per the schema, and writes full detail to `$RUN/{lens}.json`.
+   `run_artifact_dir = $OUT`. Each lens reads its `resources/` heuristic docs, returns
+   compact JSON per the schema, and writes full detail to `$OUT/{lens}.json`.
 4. **Merge / dedup / gate** (`references/report-template.md`): dedup by file+line+title,
    promote findings agreed by 2+ lenses, suppress below the confidence gate (default
    anchor 75; P0 survives 50+), apply config severity overrides and pattern policy.
-5. **Report** to the published path `$REPORT_PATH` under `docs/intent-engineering/`
-   (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
+5. **Report** to `$OUT/report.md` (or a single JSON object in `mode:agent`) plus
+   `$OUT/metadata.json`.
 
 `ie-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
-no artifacts, prose (not findings JSON). `ie-init` scaffolds `.intense/` and may offer
-a `.gitignore` line for `.intense/runs/`.
+no artifacts, prose (not findings JSON). `ie-init` scaffolds `.intense/` and writes
+nothing else.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
-the apply stage), `out:<path>` (override published report path). Path resolution:
-`references/config-resolution.md` → Artifact paths. Defaults: run
-`.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-<skill>[-scope].md`.
-Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —
-keep them in sync if you change one.
+the apply stage), `out:<path>` (override report dir). `OUT` precedence:
+`out:` arg > resolved `ways-of-working.report_dir` > built-in `wip/intent-engineering`.
+Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` — keep
+them in sync if you change one.
 
 ---
 

@@ -5,31 +5,6 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
-## [0.6.0] — 2026-07-19
-
-Portable report layout: drop `wip/` as the plugin default so installs work in repos that
-never used that convention.
-
-### Changed
-- **Two-layer artifacts.** Run scratch (per-lens JSON) defaults to
-  `.intense/runs/<run-id>/`; the published human report defaults to
-  `docs/intent-engineering/<stamp>-<skill>[-scope].md` (`.json` in `mode:agent`).
-  After a successful publish, run scratch is deleted (`artifacts.cleanup_runs: true`).
-- **Config:** `ways-of-working.yaml` now has `artifacts.run_dir`, `artifacts.report_dir`,
-  and `artifacts.cleanup_runs` instead of a single `report_dir` pointing at `wip/`.
-- **Legacy:** a top-level `report_dir:` **without** an `artifacts:` block still means
-  single-bucket mode under that path with cleanup off (existing project configs keep
-  working).
-- **`/ie-init`** offers to append `.intense/runs/` to `.gitignore` and documents the
-  new report defaults.
-- Orchestrators (`ie-audit`, `ie-review`, `ie-validate-plan`), `config-resolution.md`,
-  `report-template.md`, and `subagent-template.md` bind `run_artifact_dir` to Layer A
-  (`$RUN`) only; `out:<path>` overrides the **published** path.
-
-### Removed
-- **`wip/intent-engineering` as the default report home.** Optional personal `wip/`
-  scratch is unrelated to the plugin default.
-
 ## [0.5.0] — 2026-06-19
 
 Hardening release: all six architecture packs (Rails, Python, Laravel, Express, Phoenix,
