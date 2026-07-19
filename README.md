@@ -2,6 +2,7 @@
 
 [![contracts](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg)](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Listed on ClaudePluginHub](https://www.claudepluginhub.com/badge/davidteren-intent-engineering-plugins-intent-engineering)](https://www.claudepluginhub.com/plugins/davidteren-intent-engineering-plugins-intent-engineering?ref=badge)
 
 **Site:** [davidteren.github.io/intent-engineering](https://davidteren.github.io/intent-engineering/)
 
@@ -28,7 +29,7 @@ concrete fixes.
 >
 > **How:** A small set of lenses (each grounded in a researched principle) run as parallel
 > agents. They return scored, deduplicated findings with concrete fixes, written to a
-> report in `wip/`. The same lenses work in four contexts: planning, plan validation, code
+> report under `docs/intent-engineering/`. The same lenses work in four contexts: planning, plan validation, code
 > review, and codebase audit.
 
 > This is the **development repo** for the plugin (and its marketplace). The installable
@@ -126,9 +127,11 @@ opt into append via `extends: true`; pattern lists are replace-only). See
 
 ## Reports
 
-By default every skill writes to `wip/intent-engineering/<run-id>/` in the target repo
-(`report.md`, per-lens JSON, `metadata.json`). Override with `out:<path>`. Pass `mode:agent`
-to any review/audit/validate skill for a single JSON object instead of markdown.
+Two layers: ephemeral run scratch under `.intense/runs/<run-id>/` (per-lens JSON;
+deleted after publish by default), and a published report under
+`docs/intent-engineering/<stamp>-<skill>[-scope].md`. Override the published path with
+`out:<path>`; set `artifacts.*` in `.intense/ways-of-working.yaml` for permanent
+defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 
 ---
 
