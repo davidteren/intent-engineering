@@ -26,6 +26,9 @@ for the design see **PLAN.md**.
 - **Score keys** on every lens agent Output (audit/plan), matching `scoring-rubric.md`.
 - **Contract check section 11** — skill↔catalog drift, no re-authored path bash,
   fix_class rubric present, score keys present on agents.
+- **Ruby/Rails comment bar** — YARD for API docs; comments must be succinct and only
+  under valid conditions (public contract, non-obvious why, deliberate exception).
+  Smells added to `resources/frameworks/ruby.md` and `rails.md` for the convention lens.
 
 ## [0.6.0] — 2026-07-19
 

@@ -36,6 +36,28 @@
 - Order multiple `rescue` clauses most-specific first.
 - Never swallow an exception with an empty `rescue` and no comment explaining why.
 
+### Comments & documentation (YARD; succinct; only when valid)
+Applies to humans and agents writing Ruby. Prefer a better name over a comment. When a
+comment is warranted, use **YARD** for API docs and keep every comment **short**.
+
+**Valid conditions** (comment only when at least one holds):
+- Public API where types and names cannot carry the contract (params, returns, raises).
+- Non-obvious **why** (invariant, ordering constraint, security, performance trade-off).
+- Deliberate exception to a normal rule (empty `rescue`, disabled lint, surprising default).
+- Non-local coupling a reader will miss (e.g. must match a column/key defined elsewhere).
+
+**Invalid conditions** (do not comment):
+- Restating the next line or the method name ("increment counter", "returns the user").
+- Narrating control flow the code already shows.
+- Speculative "for future" notes, agent chat residue, or multi-paragraph essays.
+- Commented-out dead code (delete it; history is in git).
+
+**Format:**
+- Class/module/method API docs → **YARD** tags (`@param`, `@return`, `@raise`, `@example`,
+  `@see`, `@note` sparingly). One short summary line first; tags only when they add signal.
+- Inline `#` comments → one line when possible; never a paragraph next to obvious code.
+- Prefer `attr_*`, types (RBS/Sorbet if the project uses them), and names so YARD stays thin.
+
 ### Idioms (guard clauses, ||=, safe navigation &.)
 - **Guard clauses** over nested conditionals: `return unless valid?` at the top instead of wrapping the body in `if`.
 - **`||=`** for lazy init / defaulting: `@cache ||= compute`. Do *not* use it for booleans (`enabled ||= true` is a bug when `enabled` is legitimately `false`).
@@ -59,6 +81,13 @@
 - Unnecessary `self.` receiver on reads.
 - `if !condition` instead of `unless condition`; `x == nil` instead of `x.nil?`.
 - Long method (>~10 lines) that should be decomposed.
+- **Comment noise:** `# gets the user` / `# loop over items` restating the code; multi-line
+  essays above a one-liner; agent-style "I'll now…" residue left in source.
+- **Non-YARD API docs** on public methods (plain prose blocks or RDoc-style without tags
+  when the project expects YARD, or inventing a private markup dialect).
+- **Comment without a valid condition:** documenting the obvious while names/types already
+  carry the meaning; "for future use" comments with no current call site.
+- **Empty `rescue` with no why** (only place an inline comment is *required* when swallowing).
 
 ## Least-astonishment traps specific to Ruby
 - **Bang that doesn't mutate / has no safe pair.** Readers assume `do_it!` is the dangerous twin of `do_it`. A lone `process!` with no `process` surprises everyone.
@@ -117,3 +146,5 @@ def ready?; @status == :ready; end
 - Ruby Style Guide (community / RuboCop) — https://rubystyle.guide/
 - Shopify Ruby Style Guide — https://ruby-style-guide.shopify.dev/
 - Airbnb Ruby Style Guide — https://github.com/airbnb/ruby
+- YARD — getting started / tags — https://yardoc.org/
+- YARD tags list — https://rubydoc.info/gems/yard/file/docs/Tags.md

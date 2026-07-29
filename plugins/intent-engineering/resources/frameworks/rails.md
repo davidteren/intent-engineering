@@ -53,6 +53,13 @@ Rules: one class/module per file; file path mirrors the constant path (`Admin::R
 - Use generators (`rails g model/controller/migration`) to land files in the right place with the right names.
 - Lean on the integrated stack ("omakase"): ActiveJob, ActionMailer, ActiveStorage, etc., before bolting on a parallel mechanism.
 
+### Comments & documentation (YARD; succinct; only when valid)
+Same bar as `ruby.md` (YARD for API docs; short; only under valid conditions). Rails specifics:
+- Prefer conventional names, strong params, and scopes so comments are unnecessary.
+- Document non-obvious model invariants, callback *why* (prefer removing the callback),
+  and security-sensitive controller edges with **YARD** on the public method, not a novel above `def`.
+- Do not leave agent narration or "what this action does" restatements of RESTful seven.
+
 ## Convention violation smells (detectable — feed the convention lens)
 - **Custom controller action where a sub-resource fits**: `def approve` / `def publish` on a resource controller, plus a `member`/`collection` route, instead of a nested resource.
 - **Fat controller**: query building (`where`/`joins`), multi-step orchestration, or business rules inside a controller action; controller longer than ~the seven actions.
@@ -62,6 +69,7 @@ Rules: one class/module per file; file path mirrors the constant path (`Admin::R
 - **Non-RESTful routing**: `match`/`get 'things/do_x'` ad-hoc routes proliferating instead of resourceful routes.
 - **Mutation in a query-named method**: a `get_*`/`find_*`/`fetch_*` method that also writes or enqueues.
 - **`save` return value ignored**: calling `save` (returns boolean) where `save!` (raises) is expected, or vice versa, silently swallowing failures.
+- **Comment noise / non-YARD docs:** restating `index`/`create`/association lines; multi-paragraph agent essays; public PORO/service API without YARD when documented at all; comments that fail the "valid conditions" bar in `ruby.md`.
 
 ## Least-astonishment traps specific to Rails
 - **Callbacks with side effects**: `after_save :send_email` / `after_create :call_api` make every `save` fire hidden external effects — surprising in tests, bulk imports, and consoles. Prefer explicit calls or background jobs invoked from the action.
@@ -125,3 +133,5 @@ Repo-local `CLAUDE.md` / `AGENTS.md` conventions **override** these community/fr
 - Active Record Basics (naming, schema conventions) — https://guides.rubyonrails.org/active_record_basics.html
 - Rails naming conventions (model/table/FK/controller mapping) — https://gist.github.com/iangreenleaf/b206d09c587e8fc6399e
 - Ruby Style Guide (snake_case, predicates `?`, bang `!`, constants) — https://rubystyle.guide
+- YARD — getting started / tags — https://yardoc.org/
+- YARD tags list — https://rubydoc.info/gems/yard/file/docs/Tags.md
