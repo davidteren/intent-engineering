@@ -55,46 +55,33 @@ Announce the team.
 ## Stage 3 — Dispatch
 
 Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(Artifact paths). Shared procedure (skill slug `validate-plan`):
+(Artifact paths). Bind skill slots only:
 
-```bash
-STAMP=$(date +%Y%m%d-%H%M%S)
-RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
-OUT_ARG="<out: value or empty>"
-RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
-REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
-CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
-SKILL_SLUG="validate-plan"
-SCOPE_SLUG="<sanitized plan basename or empty>"
-EXT="md"   # json when mode:agent
-RUN="${RUN_DIR}/${RUN_ID}"
-mkdir -p "$RUN"
-if [ -n "$OUT_ARG" ]; then
-  case "$OUT_ARG" in
-    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
-    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
-  esac
-else
-  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
-fi
-mkdir -p "$(dirname "$REPORT_PATH")"
-```
+| Slot | Value |
+|------|--------|
+| `SKILL_SLUG` | `validate-plan` |
+| `SCOPE_SLUG` | sanitized plan basename, or empty |
+| `OUT_ARG` | `out:` value or empty |
+| `EXT` | `md` normally; `json` when `mode:agent` |
 
-Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Bind
-`run_artifact_dir = $RUN`** (Layer A only). Pass `model: sonnet` to convention
-and experience; let predictability and simplicity inherit the session model (their
-frontmatter default) — don't spawn the always-on lenses as `sonnet`. Plan mode requires
-`scores`
-(dimensional rating per the scoring rubric) plus findings that cite the doc location
-(`line` = the relevant section's start line, or 0 when none applies) and describe the
-gap a planner/implementer would hit. Lenses write `$RUN/{lens}.json` (via the Write
-tool).
+Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
+`run_artifact_dir = $RUN` (Layer A only).
+
+Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
+policy:** pass `model: sonnet` to convention and experience; let predictability and
+simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
+Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
+that cite the doc location (`line` = the relevant section's start line, or 0 when none
+applies) and describe the gap a planner/implementer would hit. Missing required
+`scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 ## Stage 4 — Merge & rate
 
-1. Validate, dedup, confidence-gate (as `ie-review` Stage 5; no apply — it's a doc).
-2. Build the dimensional rating table (scoring rubric): `Lens | Dimension | Score |
-   Gap`, lowest first. Findings ≤ 7/10 dimensions become actionable gaps.
+1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
+   (as `ie-review` Stage 5; no apply — it's a doc).
+2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
+   Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
+   actionable gaps.
 3. Collect tensions (e.g. simplicity vs convention in the proposed approach) and
    observations.
 
@@ -103,10 +90,11 @@ tool).
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
 type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
-with `Principle` + `Lens`, Tensions, Observations, Coverage, Verdict = **Ready to
-implement / Revise first**, listing the blocking gaps to resolve before coding. The
-verdict blocks on `requirements`-level or design-blocking gaps; advisory gaps are noted
-but don't block. No time estimates.
+with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
+Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
+before coding. The verdict blocks on `requirements`-level or design-blocking gaps;
+advisory gaps are noted but don't block. Do **not** claim Ready to implement if any
+selected lens **failed**. No time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when

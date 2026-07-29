@@ -4,7 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (v0.6.0) · **Updated:** 2026-07-19
+**State:** ✅ feature-complete · 🚀 published & released (v0.6.0) · **Updated:** 2026-07-29
+
+### Last session handoff
+
+1. **What this is:** Catalog and apply-safety hardening still on a branch, not released yet.
+2. **What we finished:** Skills use the stack catalog only; fix_class gates; lens status honesty; contract section 11.
+3. **What you do next:** Open a PR for this branch (pre-PR gate first), then merge when CI is green.
 
 ---
 
@@ -103,16 +109,22 @@ registry row, run `check-contracts.rb`, then dogfood on a real repo and fold fin
 
 ## Pending
 
-- [ ] **Install & use it** — now installable from the published repo (above); run the
-      `/ie-*` skills as installed skills (so far orchestrated by hand / via the audit run).
-- [ ] **Run on a real Rails repo**; fold learnings back into `resources/`.
+- [x] **First-run path in README** — install → optional init → audit/review; IE vs CE
+      pairing note. Still worth smoke-testing as installed skills on a clean machine.
 - [x] **Dogfood all six arch packs** on real repos — **done** (Rails, Python, Laravel, Express, Phoenix, React all dogfooded read-only on real apps; each find→fix→fold).
+- [x] **Catalog-only stack selection** — skills/init/AGENTS no longer hardcode Rails+Python
+      only; contract section 11 guards skill↔catalog drift (#18, #21).
+- [x] **fix_class / gated_auto calibration** + tighter apply gates (#19).
+- [x] **Lens failed/skipped/clean** Coverage contract (#20).
+- [x] **Score keys on every lens agent** (#22).
+- [x] **Single-sourced orchestration paths** — skills bind slots; canonical bash in
+      `config-resolution.md` (#21).
+- [ ] **Experience lens depth** — greppable UX smells + real UI dogfood (#23).
 - [ ] **More architecture stacks** as real dogfood targets appear (e.g. Go, Spring, Django,
       Vue). Research-first, drop into the registry — `ruby`/`typescript`/`swift-ios` stay
       convention-only unless a consumer needs them.
-- [ ] **Deferred niceties** → `wip/improvements.md` — the hardening backlog is closed
-      (contract check covers it); remaining are optional: a committed test fixture + lens
-      regression test, a single-sourced orchestration reference, and a git pre-commit hook.
+- [ ] **Optional later** — committed lens regression fixtures; git pre-commit hook for
+      `check-contracts.rb`.
 
 ## Phases — all complete
 

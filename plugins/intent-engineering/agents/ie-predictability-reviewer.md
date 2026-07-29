@@ -73,5 +73,13 @@ don't dogmatically demand one.
 ## Output
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
-`"lens": "predictability"`. Write full detail to `{run_artifact_dir}/predictability.json`
-using the Write tool. No prose outside the JSON.
+`"lens": "predictability"`. Every finding must set `fix_class` per the shared rubric
+in `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` when unsure;
+`gated_auto` only for single-file mechanical reversible edits).
+
+**Audit / plan:** include `scores` with these exact keys (0–10):
+`name_behavior_fidelity`, `return_contract_consistency`, `failure_transparency`,
+`representation_fidelity`. Omit `scores` in review mode.
+
+Write full detail to `{run_artifact_dir}/predictability.json` using the Write tool. No
+prose outside the JSON.

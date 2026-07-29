@@ -65,6 +65,15 @@ change strips needed handling to look simpler, flag *that* as the violation.
 ## Output
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
-`"lens": "simplicity"` (principle: `occams-razor`, `kiss`, or `yagni`). Write full
-detail to `{run_artifact_dir}/simplicity.json` using the Write tool. No prose outside
-the JSON.
+`"lens": "simplicity"` (principle: `occams-razor`, `kiss`, or `yagni`). Every finding
+must set `fix_class` per the shared rubric in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` when unsure;
+`gated_auto` only for single-file mechanical reversible edits — e.g. inline a one-use
+wrapper; not "delete this abstraction layer" across files).
+
+**Audit / plan:** include `scores` with these exact keys (0–10):
+`essential_vs_accidental_complexity`, `abstraction_earns_its_keep`,
+`dependency_restraint`. Omit `scores` in review mode.
+
+Write full detail to `{run_artifact_dir}/simplicity.json` using the Write tool. No prose
+outside the JSON.

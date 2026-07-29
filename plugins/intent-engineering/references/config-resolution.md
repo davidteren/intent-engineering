@@ -90,14 +90,18 @@ Every `ie-review` / `ie-audit` / `ie-validate-plan` run uses **two layers**:
    lands at `report_dir/<stamp>-<skill>[-scope].{md,json}` (a **sibling** of the run dir,
    not nested inside it). `cleanup_runs` is forced `false` (preserves pre-0.6 configs).
 
-**Run id + published filename** (keep identical across the three orchestrators):
+**Run id + published filename** — this block is the **canonical** orchestrator procedure.
+`ie-review`, `ie-audit`, and `ie-validate-plan` **must not re-author it**; they only bind
+slots (`SKILL_SLUG`, `SCOPE_SLUG`, `OUT_ARG`, `EXT`) and follow this block.
 
 ```bash
+# CANONICAL_ORCHESTRATOR_PATHS — single source of truth (do not duplicate in skills)
 STAMP=$(date +%Y%m%d-%H%M%S)
 RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
 # skill slug: audit | review | validate-plan
 # SCOPE_SLUG: optional, sanitized path/branch fragment, or empty
 # EXT=md normally; json when mode:agent
+# RUN_DIR / REPORT_DIR / CLEANUP already resolved from artifacts.* (above)
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
 if [ -n "$OUT_ARG" ]; then

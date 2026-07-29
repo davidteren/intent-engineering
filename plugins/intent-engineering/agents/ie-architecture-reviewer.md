@@ -23,9 +23,11 @@ authoritative list (Rails, Python, Laravel, Express, Phoenix, and React at the t
 writing; read the catalog, don't trust this parenthetical). A stack is supported only if both
 `${CLAUDE_PLUGIN_ROOT}/resources/frameworks/<stack>-architecture.md` and
 `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` exist. If the detected stack has
-no rule pack, do not analyze — return `{"lens":"architecture","findings":[],"observations":["no architecture rule pack for <stack>; skipped"]}`.
-(The skills already gate selection to supported frameworks; this is the agent-level
-backstop so a direct spawn can't silently misfire.)
+no rule pack, do not analyze — return
+`{"lens":"architecture","findings":[],"observations":["SKIPPED: no architecture rule pack for <stack>"]}`.
+Prefix **`SKIPPED:`** is required so the orchestrator promotes this into Coverage as
+**skipped** (not clean empty findings). (The skills already gate selection to Arch pack
+✅ rows; this is the agent-level backstop so a direct spawn can't silently misfire.)
 
 The `python` pack is FastAPI-first but covers any layered Python service (the smells are
 about transport/validation/application/integration layering, not FastAPI specifically).
@@ -134,9 +136,17 @@ model) and architecture vs convention (the team's pattern choice) are real. Set
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
 `"lens": "architecture"`, `principle: "architecture"`, and the `smell` and/or `pattern`
-fields set. For a finding that spans a whole class (fat-model, callback-hell, God
-object), set `line` to the `class` declaration line and `end_line` to the class's last
-line. In audit context include `scores` keyed by the canonical architecture ids from the
-scoring rubric (`responsibility_placement`, `pattern_health`, `pattern_legibility`,
-`coupling_restraint`). Write full detail (with computed metrics in `evidence`) to
+fields set. Every finding must set `fix_class` per the shared rubric in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` — **default `manual`** for
+structural smells (extractions, layer moves); use `gated_auto` only for a single-file
+mechanical edit (e.g. one obvious N+1 `includes` the team already uses elsewhere).
+
+For a finding that spans a whole class (fat-model, callback-hell, God object), set
+`line` to the `class` declaration line and `end_line` to the class's last line.
+
+**Audit:** include `scores` with these exact keys (0–10): `responsibility_placement`,
+`pattern_health`, `pattern_legibility`, `coupling_restraint`. Omit `scores` in review
+mode (architecture does not run in plan).
+
+Write full detail (with computed metrics in `evidence`) to
 `{run_artifact_dir}/architecture.json` using the Write tool. No prose outside the JSON.

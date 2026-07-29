@@ -27,7 +27,9 @@ Resolve the audit set. Be explicit and bounded:
    `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and
    artifact dirs (resolved `artifacts.run_dir`, `artifacts.report_dir`, legacy
    `wip/`, `.intense/runs/`, `docs/intent-engineering/`).
-2. Detect the stack(s) by extension/manifest to pick `frameworks/<stack>.md` docs.
+2. Detect the stack(s) via `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`
+   (Detection signals); load matching `frameworks/<stack>.md` docs. Do not hardcode a
+   closed stack list.
 3. **Sampling rule (large targets).** If the set exceeds what lenses can read closely
    (rough guide: > ~40 files or very large files), select a representative sample:
    the highest-churn / largest / most-depended-on files plus the public entry points
@@ -39,17 +41,18 @@ Resolve the audit set. Be explicit and bounded:
 First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
 (`.intense/*.yaml` over `config/defaults/`); the `lenses:` toggles are authoritative,
 and `thresholds` + pattern policy feed the architecture lens. Note the source in
-Coverage. Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
+Coverage. Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`.
 
 - Predictability + simplicity always on.
-- Convention on when stack/repo standards exist.
+- Convention on when stack/repo standards exist (catalog Convention doc and/or
+  `CLAUDE.md`/`AGENTS.md`).
 - Experience on only if the target has user-facing surfaces.
-- **Architecture on when a supported framework is detected** (Rails: `Gemfile` + `app/`
-  structure; Python: `pyproject.toml`/`setup.py` + `.py` sources). This is the lens that
-  audits fat models/routers, God objects/modules, misused services, business logic in
-  schemas, layer leaks, and classifies/raises patterns — usually the highest-value pass in
-  a codebase audit. Pass it the resolved `thresholds` + pattern policy + the
-  `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`).
+- **Architecture on when a detected stack has Arch pack ✅** in the stack catalog
+  (and the audit target includes structural code). This is usually the highest-value
+  pass in a codebase audit. Pass the resolved `thresholds` + pattern policy + the
+  `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`). Never gate
+  architecture on a closed two-stack list.
 
 Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENTS.md`
 + `.intense` conventions for the convention and architecture lenses. Announce the team.
@@ -57,53 +60,39 @@ Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENT
 ## Stage 3 — Dispatch
 
 Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(Artifact paths). Shared procedure (skill slug `audit`):
+(Artifact paths). Bind skill slots only:
 
-```bash
-STAMP=$(date +%Y%m%d-%H%M%S)
-RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
-# From Stage 2 config + Argument parsing (see config-resolution.md):
-OUT_ARG="<out: value or empty>"
-RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
-REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
-CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
-SKILL_SLUG="audit"
-SCOPE_SLUG="<sanitized target slug or empty>"
-EXT="md"   # json when mode:agent
-RUN="${RUN_DIR}/${RUN_ID}"
-mkdir -p "$RUN"
-if [ -n "$OUT_ARG" ]; then
-  case "$OUT_ARG" in
-    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
-    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
-  esac
-else
-  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
-fi
-mkdir -p "$(dirname "$REPORT_PATH")"
-```
+| Slot | Value |
+|------|--------|
+| `SKILL_SLUG` | `audit` |
+| `SCOPE_SLUG` | sanitized target slug, or empty |
+| `OUT_ARG` | `out:` value or empty |
+| `EXT` | `md` normally; `json` when `mode:agent` |
 
-Spawn lenses in parallel with `Context: audit` (subagent template). **Bind
-`run_artifact_dir = $RUN`** (Layer A only). Pass `model: sonnet` to convention,
-experience, and architecture; let predictability and simplicity inherit the session model
-(their frontmatter default) — don't spawn the always-on lenses as `sonnet`. Pass the file
-set (or sample) and the stack docs to read. **Audit mode requires `scores`** — each lens returns 0-10 per
-dimension it owns (scoring rubric) plus findings citing `file:line`. Respect the
-concurrency cap. Lenses write `$RUN/{lens}.json` (via the Write tool).
+Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
+`run_artifact_dir = $RUN` (Layer A only).
+
+Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
+pass `model: sonnet` to convention, experience, and architecture; let predictability
+and simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
+Pass the file set (or sample) and the stack docs to read. **Audit mode requires
+`scores`** — each lens returns 0-10 per dimension it owns (scoring rubric) plus findings
+citing `file:line`. Missing required `scores` → lens **failed**. Respect the concurrency
+cap. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 For very large audits, a lens may itself fan out across file groups; the orchestrator
 just needs the merged per-lens return.
 
 ## Stage 4 — Merge & score
 
-1. Validate, dedup, confidence-gate (resolved `confidence_gate`, default 75; P0 at 50+
-   survives) and apply config policy (severity_overrides; suppress `approved` paths;
-   keep `blocked`-pattern findings) as in `ie-review` Stage 5 (no apply — audit is
-   read-only).
-2. Assemble the **posture table** from each lens's `scores` (read
+1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
+   (resolved `confidence_gate`, default 75; P0 at 50+ survives) and apply config policy
+   (severity_overrides; suppress `approved` paths; keep `blocked`-pattern findings) as in
+   `ie-review` Stage 5 (no apply — audit is read-only).
+2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the
-   product.
+   product. Omit or mark failed lenses rather than inventing scores.
 3. Collect tensions and observations.
 
 ## Stage 5 — Report
@@ -112,7 +101,8 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
 stack, sampling note, run_id), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations, Coverage (sampling bounds, suppressions,
-failed lenses), Verdict = the **top 3 posture gaps to fix first** with why. No apply,
+each lens failed/skipped/clean), Verdict = the **top 3 posture gaps to fix first** with
+why. Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
 no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
@@ -126,8 +116,9 @@ Then: if `CLEANUP` is true, run the **guarded** cleanup from
 Depends on `${CLAUDE_PLUGIN_ROOT}` resolving (standard in Claude Code). Read before
 Stage 2 — shared contract for every `ie-*` skill:
 
-- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .intense config
+- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .intense config + artifact paths
 - `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` — stack detection + Arch pack ✅
 - `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 - `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — audit scoring
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`

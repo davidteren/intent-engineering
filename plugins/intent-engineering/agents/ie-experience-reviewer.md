@@ -75,6 +75,15 @@ Load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
 `"lens": "experience"` (principle: `human-interface-guidelines`, `look-and-feel`,
-`ux-design`, `accessibility`, or `information-architecture`). In plan/audit context,
-include `scores`. Write full detail to `{run_artifact_dir}/experience.json` using the
-Write tool. No prose outside the JSON.
+`ux-design`, `accessibility`, or `information-architecture`). Every finding must set
+`fix_class` per the shared rubric in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` for UX work;
+`gated_auto` only for single-file mechanical a11y fixes such as adding an `aria-label`
+on an icon button).
+
+**Audit / plan:** include `scores` with these exact keys (0–10):
+`information_architecture`, `interaction_state_coverage`, `user_flow_completeness`,
+`accessibility`, `look_and_feel_consistency`. Omit `scores` in review mode.
+
+Write full detail to `{run_artifact_dir}/experience.json` using the Write tool. No prose
+outside the JSON.
