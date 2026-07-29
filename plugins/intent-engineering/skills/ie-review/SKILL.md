@@ -143,9 +143,11 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 4. **Confidence gate** — suppress findings below the resolved `confidence_gate`
    (default anchor 75), EXCEPT P0 at 50+ (a critical-but-uncertain surprise must not be
    dropped silently). Record suppressions by anchor.
-4b. **Apply config policy** — remap severities per `severity_overrides`; suppress
-   architecture findings whose file matches an `approved` path (note in Coverage); keep
-   `blocked`-pattern-in-changed-code findings at P1.
+4b. **Apply config policy** — remap severities per `severity_overrides` (value may be a
+   severity string **or** `{ severity:, because: }` map — use the severity for remapping
+   and copy `because` into Coverage/Observations); suppress architecture findings whose
+   file matches an `approved` path (note in Coverage); keep `blocked`-pattern-in-changed-code
+   findings at P1.
 5. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
 6. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;

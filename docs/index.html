@@ -152,13 +152,15 @@
     <p class="lede"><b>intent engineering</b> — catch surprising code before it ships. Five review lenses run as parallel agents across planning, plan validation, code review, and codebase audit, returning scored findings that each name the broken expectation and propose a concrete fix.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/davidteren/intent-engineering">Get it on GitHub</a>
-      <a class="btn ghost" href="https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0">Release v0.2.0 →</a>
+      <a class="btn ghost" href="https://github.com/davidteren/intent-engineering/releases/tag/v0.7.0">Release v0.7.0 →</a>
     </div>
     <div class="badges">
       <a href="https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml"><img alt="contracts CI" src="https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg"></a>
       <img alt="MIT" src="https://img.shields.io/badge/license-MIT-blue.svg">
       <img alt="lenses" src="https://img.shields.io/badge/lenses-5-5b8cff">
-      <img alt="contract checks" src="https://img.shields.io/badge/contract%20checks-67-46c08a">
+      <img alt="version" src="https://img.shields.io/badge/version-0.7.0-5b8cff">
+      <img alt="contract checks" src="https://img.shields.io/badge/contract%20checks-138-46c08a">
+      <img alt="arch packs" src="https://img.shields.io/badge/arch%20packs-6-46c08a">
     </div>
 
     <div class="install">
@@ -181,7 +183,7 @@
       <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--blue)"></span><h3>Predictability</h3><span class="tag">always-on</span></div><p>Name/behavior mismatches, hidden side effects, surprising returns, silent failures, preview ≠ result.</p><div class="pr">least-astonishment · DWIM · WYSIWYG</div></div>
       <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--green)"></span><h3>Convention</h3><span class="tag">code</span></div><p>Reinvented conventions, config where convention exists, one-offs that fight the repo or framework. Reads your CLAUDE.md / AGENTS.md first.</p><div class="pr">convention-over-configuration · framework idiom</div></div>
       <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--amber)"></span><h3>Simplicity</h3><span class="tag">always-on</span></div><p>Needless abstraction, speculative generality, knobs nobody sets — and the flip side: don’t oversimplify away real requirements.</p><div class="pr">Occam · KISS · YAGNI</div></div>
-      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--purple)"></span><h3>Experience</h3><span class="tag">UI</span></div><p>Missing interaction states, broken keyboard/focus, accessibility gaps, weak information architecture, AI-slop design.</p><div class="pr">HIG · look &amp; feel · UX</div></div>
+      <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--purple)"></span><h3>Experience</h3><span class="tag">UI</span></div><p>Missing interaction states, non-semantic controls, form/destructive feedback gaps, broken keyboard/focus, accessibility gaps, weak IA, AI-slop design. Greppable smell cards included.</p><div class="pr">HIG · look &amp; feel · UX</div></div>
       <div class="lens reveal"><div class="top"><span class="pip" style="background:var(--orange)"></span><h3>Architecture</h3><span class="tag">Rails · Python (FastAPI) · Laravel · Express · Phoenix · React</span></div><p>Fat models/routers/controllers/components, God objects/modules/contexts, misused services, callback hell, queries in views / N+1, prop drilling, effect overuse, layer leaks, async &amp; process misuse. Classifies design patterns against a per-stack catalog and enforces your policy.</p><div class="pr">structural quality · design patterns</div></div>
     </div>
   </div>
@@ -195,7 +197,7 @@
       <p>The same lenses adapt to the moment — from the first plan to the final audit.</p>
     </div>
     <div class="ctx">
-      <div class="card reveal"><code>/ie-init</code><h4>Set up once</h4><p>Scaffold <code>.intense/</code> config — lens toggles, pattern policy, thresholds — and commit it.</p></div>
+      <div class="card reveal"><code>/ie-init</code><h4>Set up once</h4><p>Scaffold <code>.intense/</code> config — lens toggles, pattern policy, thresholds — and optional <code>calibrate</code> from repo measurements. Commit it.</p></div>
       <div class="card reveal"><code>/ie-plan-assist</code><h4>While planning</h4><p>An advisory checklist of the principle decisions to get right now. Non-blocking.</p></div>
       <div class="card reveal"><code>/ie-validate-plan</code><h4>Before coding</h4><p>Dimensional 0–10 ratings on a plan or spec + the design gaps to resolve first.</p></div>
       <div class="card reveal"><code>/ie-review</code><h4>On a change</h4><p>Findings by severity on a PR, branch, or local diff; applies safe verified fixes — never pushes.</p></div>
@@ -211,7 +213,7 @@
       <h2>Fan out, gate, report.</h2>
     </div>
     <div class="flow">
-      <div class="step reveal"><h4>Select</h4><p>Resolve <code class="mono" style="color:var(--accent-2)">.intense</code> config; pick the lenses that fit the context.</p></div>
+      <div class="step reveal"><h4>Select</h4><p>Walk up to the nearest <code class="mono" style="color:var(--accent-2)">.intense</code> config; pick the lenses that fit the context.</p></div>
       <div class="step reveal"><h4>Fan out</h4><p>Each lens runs as a parallel sub-agent against its own heuristics.</p></div>
       <div class="step reveal"><h4>Gate</h4><p>Merge, dedup, and confidence-gate; cross-lens agreement promotes a finding.</p></div>
       <div class="step reveal"><h4>Report</h4><p>A ranked report with the broken expectation and a concrete fix for each.</p></div>
@@ -238,9 +240,9 @@
       <div class="feat reveal">
         <h3>Tunable &amp; trustworthy</h3>
         <ul>
-          <li><code>.intense/</code> config: toggle lenses, override severities, declare conventions, set architecture thresholds and pattern policy — project overrides defaults.</li>
-          <li>Read-only by default; only <code>/ie-review</code> applies fixes locally, and it never pushes.</li>
-          <li>A 67-check contract test runs in CI on every PR, so the plugin keeps its own promises.</li>
+          <li><code>.intense/</code> config (walk-up from cwd): toggle lenses, override severities, declare conventions/sources, set architecture thresholds and pattern policy — project overrides defaults.</li>
+          <li>Read-only by default; only <code>/ie-review</code> applies <code>gated_auto</code> fixes locally, and it never pushes.</li>
+          <li>A 138-check contract suite runs in CI on every PR, so the plugin keeps its own promises.</li>
         </ul>
       </div>
     </div>
@@ -253,7 +255,7 @@
       <span class="brand"><svg class="glyph" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#5b8cff" stroke-width="2"/><circle cx="16" cy="16" r="2.6" fill="#ffb454"/></svg> intent-engineering</span>
       <span class="sp"></span>
       <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
-      <a href="https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0">v0.2.0</a>
+      <a href="https://github.com/davidteren/intent-engineering/releases/tag/v0.7.0">v0.7.0</a>
       <a href="https://github.com/davidteren/intent-engineering/blob/main/README.md">Docs</a>
       <a href="https://github.com/davidteren/intent-engineering/blob/main/LICENSE">MIT</a>
     </div>
