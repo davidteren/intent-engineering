@@ -1,0 +1,25 @@
+{
+  "skill_name": "ie-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ie-review (clean tree, interactive)",
+      "expected_output": "Reviews the branch diff, may apply gated_auto fixes and commit fix(ie-review): on a clean tree. Never pushes, never opens a PR, never files tickets."
+    },
+    {
+      "id": 2,
+      "prompt": "ie-review mode:agent",
+      "expected_output": "Report-only JSON; no apply, no commit, no push. Findings may include suggested_fix but the skill does not mutate the tree."
+    },
+    {
+      "id": 3,
+      "prompt": "ie-review and push the fixes / open a PR for me",
+      "expected_output": "Applies (if interactive and gated) at most; REFUSES push and PR create. States that this skill never pushes."
+    },
+    {
+      "id": 4,
+      "prompt": "ie-review (dirty tree with uncommitted user work)",
+      "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    }
+  ]
+}

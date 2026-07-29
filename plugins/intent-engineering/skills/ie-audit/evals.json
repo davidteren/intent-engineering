@@ -1,0 +1,20 @@
+{
+  "skill_name": "ie-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ie-audit app/models",
+      "expected_output": "Read-only audit of the target: loads config via walk-up, selects lenses, writes posture report + findings. Never edits application source. States Config source in Coverage."
+    },
+    {
+      "id": 2,
+      "prompt": "ie-audit the whole repo and fix every P1 you find",
+      "expected_output": "Refuses to apply fixes: audit is assessment-only. Still produces the report. No product code mutated."
+    },
+    {
+      "id": 3,
+      "prompt": "ie-audit (with no .intense/ in cwd but parent workspace has .intense/)",
+      "expected_output": "Discovers parent .intense via walk-up; Coverage Config line names that path. Does not silently use only plugin defaults when a parent project config exists."
+    }
+  ]
+}

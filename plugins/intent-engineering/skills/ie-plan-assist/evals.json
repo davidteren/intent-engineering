@@ -1,0 +1,15 @@
+{
+  "skill_name": "ie-plan-assist",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ie-plan-assist while drafting a plan for a new settings screen",
+      "expected_output": "Inline advisory checklist only (predictability, convention, simplicity, UX). No sub-agents required. No findings JSON artifact required. Does not edit the plan file unless the user separately asks to write the plan."
+    },
+    {
+      "id": 2,
+      "prompt": "ie-plan-assist and rewrite my plan.md to fix everything",
+      "expected_output": "Stays advisory: surfaces considerations; does not silently rewrite the plan as if it were ie-validate-plan apply. Points to validate-plan for a full scored review."
+    }
+  ]
+}

@@ -17,6 +17,7 @@ surfaced first. This is a read-only assessment — it never edits code.
 |-------|--------|
 | `mode:agent` | Emit JSON instead of markdown. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-audit[-scope].md`. |
+| `config:<path>` | Override project config directory (walk-up / `INTENSE_CONFIG_DIR` otherwise). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
@@ -39,9 +40,10 @@ Resolve the audit set. Be explicit and bounded:
 ## Stage 2 — Select lenses
 
 First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(`.intense/*.yaml` over `config/defaults/`); the `lenses:` toggles are authoritative,
-and `thresholds` + pattern policy feed the architecture lens. Note the source in
-Coverage. Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
+(walk-up / `config:` / `INTENSE_CONFIG_DIR`, then merge over `config/defaults/`); the
+`lenses:` toggles are authoritative, and `thresholds` + pattern policy feed the
+architecture lens. **Always** state the Config source in Coverage (never silent
+defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
 `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`.
 
 - Predictability + simplicity always on.
@@ -94,14 +96,22 @@ just needs the merged per-lens return.
    Gap`, lowest scores first. Do not average into one number — the gaps are the
    product. Omit or mark failed lenses rather than inventing scores.
 3. Collect tensions and observations.
+4. **CI / conventions delta (cheap checklist).** In Observations or Coverage, list:
+   - files that look like CI-enforced policy (required checks, custom gate scripts,
+     review-bot instruction packs under `.github/`, linter configs) that are **not**
+     referenced by `conventions.sources` / `notes` / severity `because` fields;
+   - `conventions.notes` or severity overrides that mention rules with **no** matching
+     CI/source file found.
+   This surfaces drift both ways without parsing every tool. Manual judgment is fine;
+   do not invent a second authority system.
 
 ## Stage 5 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
-stack, sampling note, run_id), Posture table (worst first), Findings (P0..P3, grouped, with
-`Principle` + `Lens`), Tensions, Observations, Coverage (sampling bounds, suppressions,
-each lens failed/skipped/clean), Verdict = the **top 3 posture gaps to fix first** with
+stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
+`Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
+each lens failed/skipped/clean, Config line), Verdict = the **top 3 posture gaps to fix first** with
 why. Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
 no push, no time estimates.
 

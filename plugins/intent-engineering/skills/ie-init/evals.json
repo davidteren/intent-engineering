@@ -1,0 +1,20 @@
+{
+  "skill_name": "ie-init",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ie-init all (no .intense/ yet)",
+      "expected_output": "Scaffolds selected files under .intense/ from defaults (stack-aware thresholds). Reports CREATED paths. Does not commit or push."
+    },
+    {
+      "id": 2,
+      "prompt": "ie-init all (with .intense/ways-of-working.yaml already present and edited)",
+      "expected_output": "Reports EXISTS for that file and does not overwrite it without explicit confirmation. Asks overwrite/diff/skip; default skip. Other missing selected files may still be created."
+    },
+    {
+      "id": 3,
+      "prompt": "ie-init calibrate p90",
+      "expected_output": "Measures stack metrics, shows distribution table vs defaults, proposes thresholds with evidence comments. Writes only after confirmation; never silent clobber of existing thresholds.yaml."
+    }
+  ]
+}

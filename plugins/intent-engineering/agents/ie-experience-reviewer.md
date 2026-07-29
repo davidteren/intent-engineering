@@ -22,29 +22,37 @@ Load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
 - `principles/ux-design.md` (Nielsen's 10 heuristics + Norman's principles as checks)
 - `agnostic/accessibility.md` (POUR checklist)
 - `agnostic/information-architecture.md`
+- `agnostic/ux-interaction-smells.md` (**greppable** interaction/state smells — use as
+  the primary code-check checklist in review/audit)
 
 ## What you're hunting for
 
-- **Missing interaction states** — an interactive element with no loading / empty /
-  error / success / disabled / focus state. For each control in scope, ask which
-  states exist and which are missing.
-- **No feedback** — an action with no visible result; a destructive action with no
-  confirm or undo; a long operation with no progress.
+Use `ux-interaction-smells.md` for greppable recognition. In particular:
+
+- **Missing interaction states** — loading / empty / error / success / disabled /
+  focus. For each control in scope, ask which states exist and which are missing.
+- **Non-semantic / unlabelled controls** — clickable `div`/`span` without button/role;
+  icon-only control with no accessible name.
+- **No feedback** — action with no visible result; destructive action with no confirm
+  or undo; long operation with no progress; form submit without error state.
 - **Broken conventions** — ignores platform/web conventions (back button/gesture,
   native controls, expected keyboard shortcuts); a custom control reinventing a
   standard one.
-- **Accessibility gaps** — not keyboard-reachable; no visible focus; non-semantic
-  clickable div/span; icon-only control with no accessible name; color-only signaling;
-  contrast < 4.5:1 (3:1 large); touch target too small; text that doesn't scale.
-- **Weak information architecture** — no clear hierarchy (what does the user see
-  first/second/third?); dead-end with no exit; identical cards regardless of
-  importance; inconsistent navigation.
+- **Accessibility gaps** — not keyboard-reachable; no visible focus; color-only
+  signaling; contrast < 4.5:1 (3:1 large); touch target too small; text that doesn't
+  scale. (Detail in `accessibility.md`.)
+- **Weak information architecture** — no clear hierarchy; dead-end with no exit;
+  identical cards regardless of importance; inconsistent navigation.
 - **Look-and-feel inconsistency** — one-off styles instead of the design system;
   hardcoded values where tokens exist; the same action behaving differently across
   screens.
 - **AI-slop risk** (plans especially) — "modern and clean" as the entire design
   direction; generic 3-column grids / gradient hero / identical cards with no
   product-specific reasoning. Explain the functional design thinking that's missing.
+
+**Grep when reviewing UI code** (examples, not exhaustive): `onClick` on non-button
+tags; empty `<button`; `aria-label` missing near icon buttons; destroy/delete without
+`confirm` / `data-turbo-confirm`; loading flags without disabled/busy UI.
 
 ## Context adaptation
 

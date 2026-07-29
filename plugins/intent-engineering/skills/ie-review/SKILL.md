@@ -24,6 +24,7 @@ number/URL or branch.
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
+| `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `INTENSE_CONFIG_DIR`. |
 
 ## Operating principles
 
@@ -67,10 +68,13 @@ intent shapes how hard each lens looks, not which lenses run.
 ## Stage 3 — Select lenses
 
 First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-— merge project `.intense/*.yaml` (repo root) over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
+— discover nearest `.intense/` via **walk-up** (or `config:` / `INTENSE_CONFIG_DIR`),
+then deep-merge over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
 The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
-resolved `conventions`, `confidence_gate`, `thresholds`, and pattern policy feed the
-lenses and synthesis. Note the config source in Coverage. Then read
+resolved `conventions` (including `sources`), `confidence_gate`, `thresholds`, and
+pattern policy feed the lenses and synthesis. **Always** put an explicit Config line in
+Coverage, e.g. `Config: project:/path/.intense (walked up from <cwd>)` or
+`Config: defaults (no .intense/ found, searched from <cwd>)`. Then read
 `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` for selection rules and
 `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` for stack detection + Arch pack
 status. **Do not hardcode stack lists here** — the catalog is the only source of truth.
@@ -80,8 +84,10 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
   always a framework, repo standard, or sibling pattern to be consistent with). Detect
   the stack(s) from the catalog's Detection signals column; load matching
   `frameworks/<stack>.md` docs for every stack that has a Convention doc.
-- **`ie-experience-reviewer`:** only when the diff touches a user-facing surface (UI
-  components, frontend files, templates/views, CLI UX). Skip for pure backend/lib/infra.
+- **`ie-experience-reviewer`:** when the diff touches a user-facing surface (UI
+  components, frontend files, templates/views/partials, CLI UX) **or** full-stack
+  changes that include those paths alongside backend. Skip only for pure
+  backend/lib/infra with no template/UI path.
 - **`ie-architecture-reviewer`:** when the catalog has **Arch pack ✅** for a detected
   stack **and** the diff touches structural code for that stack (not config/docs/test-only
   with no structural change). Use the catalog Detection signals and pack paths — never a
