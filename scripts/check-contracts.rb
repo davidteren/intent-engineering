@@ -476,8 +476,9 @@ orchestrator_skills.each do |rel|
   text = read(rel)
   bad "#{rel}: must reference stack-catalog.md for architecture selection" unless text.include?("stack-catalog.md")
   # Stale closed lists that re-encode "only Rails + Python"
-  if text.match?(/Arch pack.*today:\s*`?rails`?.*`?python`?/i) ||
-     text.match?(/\*\*Rails:\*\*.*`Gemfile`.*\*\*Python:\*\*.*`pyproject\.toml`/m)
+  # Use =~ (not String#match?) so this stays Ruby 2.0+ portable as the header claims.
+  if text =~ /Arch pack.*today:\s*`?rails`?.*`?python`?/i ||
+     text =~ /\*\*Rails:\*\*.*`Gemfile`.*\*\*Python:\*\*.*`pyproject\.toml`/m
     bad "#{rel}: hardcodes Rails+Python architecture selection; use stack-catalog only"
   else
     ok "#{rel}: no Rails+Python-only architecture hardcode"
@@ -486,8 +487,8 @@ end
 
 init_skill = read("skills/ie-init/SKILL.md")
 bad "skills/ie-init/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
-if init_skill.match?(/Arch pack ✅\s*\(today:/) ||
-   init_skill.match?(/convention-only:.*`react`/)
+if init_skill =~ /Arch pack ✅\s*\(today:/ ||
+   init_skill =~ /convention-only:.*`react`/
   bad "skills/ie-init/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
 else
   ok "skills/ie-init/SKILL.md: no stale Arch pack today-list"
@@ -501,7 +502,7 @@ end
   else
     ok "#{rel}: does not re-author canonical path bash"
   end
-  bad "#{rel}: must mention CANONICAL or canonical stamp / RUN_ID procedure" unless text.match?(/canonical/i)
+  bad "#{rel}: must mention CANONICAL or canonical stamp / RUN_ID procedure" unless text =~ /canonical/i
 end
 config_res = read("references/config-resolution.md")
 if config_res.include?("CANONICAL_ORCHESTRATOR_PATHS")

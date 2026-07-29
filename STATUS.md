@@ -30,9 +30,9 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
   `python-architecture`, `laravel-architecture`, `express-architecture`, `phoenix-architecture`,
   `react-architecture`), 6 agnostic docs, 6 pattern catalogs (`rails.yaml` 14, `python.yaml` 13,
   `laravel.yaml` 15, `express.yaml` 12, `phoenix.yaml` 11, `react.yaml` 11).
-- **Automated check:** `scripts/check-contracts.rb` — 105 checks across 10 sections, green
+- **Automated check:** `scripts/check-contracts.rb` — 118 checks across 11 sections, green
   (section 8 cross-references generalized to every stack with a threshold namespace;
-  section 10 enforces stack-registry consistency).
+  section 10 enforces stack-registry consistency; section 11 guards skill↔catalog drift).
 - **Stack registry** (`references/stack-catalog.md`) — one source of truth for stack
   detection + which packs each loads; the architecture lens, the skills, and a stack-aware
   `/ie-init` read it, so adding a stack is data + a catalog row, not skill edits.

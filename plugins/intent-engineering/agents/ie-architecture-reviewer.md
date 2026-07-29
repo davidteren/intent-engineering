@@ -141,7 +141,7 @@ fields set. Every finding must set `fix_class` per the shared rubric in
 structural smells (extractions, layer moves); use `gated_auto` only for a single-file
 mechanical edit (e.g. one obvious N+1 `includes` the team already uses elsewhere).
 
-For a finding that spans a whole class (fat-model, callback-hell, God object), set
+For a finding that spans a whole class (`fat-model`, `callback-hell`, `god-object`), set
 `line` to the `class` declaration line and `end_line` to the class's last line.
 
 **Audit:** include `scores` with these exact keys (0–10): `responsibility_placement`,

@@ -80,8 +80,8 @@ Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` 
 `"lens": "convention"`. Use `principle: "framework-idiom"` for stack-idiom findings,
 `"convention-over-configuration"` for the general case. Every finding must set
 `fix_class` per the shared rubric in
-`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` when unsure;
-`gated_auto` only for single-file mechanical reversible edits).
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (do not restate the rubric
+here).
 
 **Audit / plan:** include `scores` with these exact keys (0–10): `framework_idiom`,
 `repo_consistency`, `configuration_restraint`. Omit `scores` in review mode.
