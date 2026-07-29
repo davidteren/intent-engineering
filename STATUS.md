@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (v0.6.0) · **Updated:** 2026-07-29
+**State:** ✅ feature-complete · 🚀 published & released (v0.7.0) · **Updated:** 2026-07-29
 
 ### Last session handoff
 
-1. **What this is:** Open GitHub issues #23–#28 implemented on a branch (walk-up config, evals, UX smells, calibrate, sources).
-2. **What we finished:** Contracts green at 138 checks; issue bodies addressed in plugin contracts.
-3. **What you do next:** Review PR, merge when CI is green, close issues with the PR link.
+1. **What this is:** Release v0.7.0 (walk-up config, evals, UX smells, calibrate, apply-safety).
+2. **What we finished:** Version bump, CHANGELOG, landing site, STATUS; PR #30 review threads closed via #31.
+3. **What you do next:** After #31 merges, confirm GitHub release `v0.7.0` and Pages site.
 
 ---
 
@@ -46,9 +46,9 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
 
 - **Repo (public, MIT):** https://github.com/davidteren/intent-engineering
 - **Landing site:** https://davidteren.github.io/intent-engineering/ (GitHub Pages, `docs/`)
-- **Release:** `v0.6.0` (Latest) — two-layer artifacts (`.intense/runs` +
-  `docs/intent-engineering/`, no `wip/` default); `v0.5.0` dogfood + external-tool
-  deferral; `v0.4.0`–`v0.2.0` prior.
+- **Release:** `v0.7.0` (Latest) — config walk-up, skill evals, experience greppable
+  smells, calibrate, conventions.sources, apply-safety contracts; `v0.6.0` two-layer
+  artifacts; `v0.5.0` dogfood + external-tool deferral; `v0.4.0`–`v0.2.0` prior.
 - **CI:** `contracts` workflow runs `check-contracts.rb` on every PR + pushes to `main`;
   `contract-integrity check` is a required status check (branch protection on `main`).
 - Announced on X (2026-06-14).

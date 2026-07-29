@@ -16,7 +16,7 @@ plan validation, code review, and codebase audit:
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
-| `/ie-init` | a repo, once | Scaffolds `.intense/` config (lens toggles, pattern policy, thresholds) so the team can tune the lenses and commit the settings. |
+| `/ie-init` | a repo, once | Scaffolds `.intense/` config (lens toggles, pattern policy, thresholds). Optional `calibrate` measures the repo and proposes thresholds with evidence comments. |
 | `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode it applies safe, verified fixes (never pushes). |
@@ -34,8 +34,9 @@ plan validation, code review, and codebase audit:
   speculative generality, knobs nobody sets. Also guards against over-simplifying away
   real requirements.
 - **Experience** (`ie-experience-reviewer`) — HIG, look-and-feel, UX. Missing
-  interaction states, broken keyboard/focus, accessibility gaps, weak information
-  architecture, AI-slop design. Runs only on user-facing surfaces.
+  interaction states, non-semantic controls, form/destructive feedback gaps, broken
+  keyboard/focus, accessibility gaps, weak information architecture, AI-slop design.
+  Greppable smell cards in `ux-interaction-smells.md`. Runs only on user-facing surfaces.
 - **Architecture** (`ie-architecture-reviewer`) — framework structure (Rails, Python
   (FastAPI), Laravel, Express, Phoenix, React today). Fat models/routers/controllers/
   handlers/components, God objects/modules/contexts, misused service objects, callback hell,

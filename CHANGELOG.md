@@ -7,48 +7,47 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-07-29
+
+Hardening + discoverability: config walk-up, skill evals, experience greppable smells,
+threshold calibrate, and apply-safety contracts. Landing site and docs brought in line
+with current release numbers and contract counts.
+
 ### Fixed
-- **PR #30 review follow-up.** Config Coverage says "filesystem root" (not git root);
-  `config:` path detection includes `patterns.yaml`; walk-up checks `/`; eval JSON shape
-  hardened; UX smells heading/links/wikilinks cleaned; authority-order section; ie-init
-  section order; convention agent notes wording + glob base; validate-plan eval requires
-  Config source line.
-- **Catalog-only stack selection.** `ie-review` / `ie-audit` / `ie-init` no longer
-  hardcode Rails+Python (or mislabel React as convention-only). Architecture selection
-  and init scaffolding read only `stack-catalog.md` Arch pack ✅/⬜. Convention agent
-  resolves stacks from the catalog / frameworks tree. `AGENTS.md` updated to match.
-- **Auto-apply safety.** Shared `fix_class` / `gated_auto` rubric in
-  `subagent-template.md` and every lens agent; interactive review applies only
-  gated_auto + confidence ≥ 75 + severity ≤ P2; Stage 1 captures `TREE_CLEAN`.
-- **Lens status honesty.** Report template and orchestrators distinguish
-  failed / skipped / clean; architecture pack-miss uses `SKIPPED:` observation;
-  no all-clear when a selected lens failed.
 - **Config walk-up (#25).** Project `.intense/` is discovered by walking up from cwd
-  (nearest wins; depth cap 32), not only `./.intense`. Escape hatches:
-  `config:<path>` and `INTENSE_CONFIG_DIR`. Coverage must always state the Config source.
+  (nearest wins; depth cap 32; checks `/`); not only `./.intense`. Escape hatches:
+  `config:<path>` and `INTENSE_CONFIG_DIR`. Coverage must always state the Config source
+  (search range: cwd → filesystem root). `config:` path detection includes
+  `patterns.yaml`.
+- **Catalog-only stack selection.** Skills/init no longer hardcode Rails+Python;
+  architecture selection reads only `stack-catalog.md` Arch pack ✅/⬜.
+- **Auto-apply safety.** Shared `fix_class` / `gated_auto` rubric; interactive review
+  applies only gated_auto + confidence ≥ 75 + severity ≤ P2; Stage 1 captures
+  `TREE_CLEAN`.
+- **Lens status honesty.** failed / skipped / clean; architecture pack-miss uses
+  `SKIPPED:`; no all-clear when a selected lens failed.
+- **Polymorphic `severity_overrides`.** String or `{ severity, because }` map; `because`
+  surfaces in Coverage/Observations.
 
 ### Added
-- **Skill evals (#28).** `evals.json` next to each skill pins happy-path + refusal
-  cases (read-only audit/validate-plan, never-push review, no-clobber init). Contract
-  section 12 parses them; missing files are warnings only.
-- **Experience greppable smells (#23).** `resources/agnostic/ux-interaction-smells.md`
-  + experience agent / lens-catalog / principle-index wiring.
-- **`ie-init calibrate` (#27).** Measure repo metric distributions and propose
-  thresholds at a target percentile (default p90) with evidence comments.
-- **`conventions.sources` + CI delta (#26).** ways-of-working supports source path
-  globs; severity overrides may carry `because:`; audit reports CI↔config drift.
+- **Skill evals (#28).** `evals.json` next to each skill (happy-path + refusal cases).
+  Contract section 12 parses them (missing = warning; bad shape = hard fail).
+- **Experience greppable smells (#23 core).** `resources/agnostic/ux-interaction-smells.md`
+  + experience agent / lens-catalog / principle-index. (Real UI dogfood still open on #23.)
+- **`ie-init calibrate` (#27).** Measure repo metric distributions; propose thresholds at
+  a target percentile (default p90) with evidence comments.
+- **`conventions.sources` + CI delta (#26).** Path globs for high-authority convention
+  docs; audit reports CI↔config drift checklist.
+- **Ruby/Rails comment bar.** YARD for API docs; succinct; only under valid conditions.
 
 ### Changed
-- **Single-sourced orchestration paths.** Skills bind `SKILL_SLUG` / `SCOPE_SLUG` /
-  `OUT_ARG` / `EXT` only; canonical bash lives in `config-resolution.md`
-  (`CANONICAL_ORCHESTRATOR_PATHS`).
-- **Score keys** on every lens agent Output (audit/plan), matching `scoring-rubric.md`.
-- **Contract check section 11** — skill↔catalog drift, no re-authored path bash,
-  fix_class rubric present, score keys present on agents.
-- **Ruby/Rails comment bar** — YARD for API docs; comments must be succinct and only
-  under valid conditions (public contract, non-obvious why, deliberate exception).
-  Smells added to `resources/frameworks/ruby.md` and `rails.md` for the convention lens.
-- **Contract check section 12** — skill evals + walk-up / sources presence.
+- **Single-sourced orchestration paths.** Skills bind slots only; canonical bash in
+  `config-resolution.md` (`CANONICAL_ORCHESTRATOR_PATHS`).
+- **Score keys** on every lens agent Output (audit/plan).
+- **Contract check** sections 11–12 (skill↔catalog drift; skill evals + walk-up/sources).
+  Suite is **138 checks** across 12 sections.
+- **Authority order** documented in config-resolution (`.intense` > CLAUDE/AGENTS/sources
+  > sibling code > plugin defaults).
 
 ## [0.6.0] — 2026-07-19
 
@@ -359,3 +358,4 @@ single commit at publish time.)
   project-over-global, lists replace unless `extends: true`.
 
 [0.2.0]: https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0
+[0.7.0]: https://github.com/davidteren/intent-engineering/releases/tag/v0.7.0
