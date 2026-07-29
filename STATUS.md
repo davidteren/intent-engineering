@@ -8,9 +8,9 @@ phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
 ### Last session handoff
 
-1. **What this is:** Catalog and apply-safety hardening still on a branch, not released yet.
-2. **What we finished:** Skills use the stack catalog only; fix_class gates; lens status honesty; contract section 11.
-3. **What you do next:** Open a PR for this branch (pre-PR gate first), then merge when CI is green.
+1. **What this is:** Open GitHub issues #23–#28 implemented on a branch (walk-up config, evals, UX smells, calibrate, sources).
+2. **What we finished:** Contracts green at 138 checks; issue bodies addressed in plugin contracts.
+3. **What you do next:** Review PR, merge when CI is green, close issues with the PR link.
 
 ---
 
@@ -30,9 +30,8 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
   `python-architecture`, `laravel-architecture`, `express-architecture`, `phoenix-architecture`,
   `react-architecture`), 6 agnostic docs, 6 pattern catalogs (`rails.yaml` 14, `python.yaml` 13,
   `laravel.yaml` 15, `express.yaml` 12, `phoenix.yaml` 11, `react.yaml` 11).
-- **Automated check:** `scripts/check-contracts.rb` — 118 checks across 11 sections, green
-  (section 8 cross-references generalized to every stack with a threshold namespace;
-  section 10 enforces stack-registry consistency; section 11 guards skill↔catalog drift).
+- **Automated check:** `scripts/check-contracts.rb` — 138 checks across 12 sections, green
+  (skill evals + walk-up/sources in §12; skill↔catalog drift in §11; stack registry in §10).
 - **Stack registry** (`references/stack-catalog.md`) — one source of truth for stack
   detection + which packs each loads; the architecture lens, the skills, and a stack-aware
   `/ie-init` read it, so adding a stack is data + a catalog row, not skill edits.
@@ -119,7 +118,13 @@ registry row, run `check-contracts.rb`, then dogfood on a real repo and fold fin
 - [x] **Score keys on every lens agent** (#22).
 - [x] **Single-sourced orchestration paths** — skills bind slots; canonical bash in
       `config-resolution.md` (#21).
-- [ ] **Experience lens depth** — greppable UX smells + real UI dogfood (#23).
+- [x] **Config walk-up + explicit Config source** (#25).
+- [x] **conventions.sources + CI/conventions delta on audit** (#26).
+- [x] **ie-init calibrate** threshold measurement procedure (#27).
+- [x] **Per-skill evals** with refusal cases; contract §12 (#28).
+- [x] **Experience greppable UX smells** (`ux-interaction-smells.md`) (#23 core).
+- [ ] **Experience real UI dogfood** — fold false positives back after one React/Hotwire
+      read-only run (#23 remainder).
 - [ ] **More architecture stacks** as real dogfood targets appear (e.g. Go, Spring, Django,
       Vue). Research-first, drop into the registry — `ruby`/`typescript`/`swift-ios` stay
       convention-only unless a consumer needs them.

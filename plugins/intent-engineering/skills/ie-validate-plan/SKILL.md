@@ -17,6 +17,7 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 |-------|--------|
 | `mode:agent` | Emit JSON; no interactive routing. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-validate-plan[-scope].md`. |
+| `config:<path>` | Override project config directory (walk-up / `INTENSE_CONFIG_DIR` otherwise). |
 | remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
 ## Stage 1 — Read & classify
@@ -36,9 +37,10 @@ requirements doc is allowed to defer detail a plan must pin down).
 ## Stage 2 — Select lenses
 
 First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(`.intense/*.yaml` over `config/defaults/`) — the `lenses:` toggles, `conventions`, and
-`confidence_gate` apply here too. (The architecture lens is code-only and does not run
-in plan validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
+(walk-up / `config:` / `INTENSE_CONFIG_DIR`, then merge over `config/defaults/`) — the
+`lenses:` toggles, `conventions`, and `confidence_gate` apply here too. **Always** state
+Config source in Coverage. (The architecture lens is code-only and does not run in plan
+validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
 
 - **Always-on:** predictability (does the proposed design behave as its names/contracts
   imply?), simplicity (is the scope/approach the simplest that meets the goal? building

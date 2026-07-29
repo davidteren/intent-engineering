@@ -89,9 +89,10 @@ intent-engineering/                       dev repo + marketplace
 
 `ie-validate-plan`, `ie-review`, and `ie-audit` are orchestrators with the same shape:
 
-1. **Load resolved config** (`references/config-resolution.md`): deep-merge project
-   `.intense/*.yaml` over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Always before lens
-   selection.
+1. **Load resolved config** (`references/config-resolution.md`): discover nearest
+   `.intense/` via walk-up (or `config:` / `INTENSE_CONFIG_DIR`), then deep-merge over
+   `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Always before lens selection; always record
+   the Config source in Coverage.
 2. **Select lenses** (`references/lens-catalog.md`): predictability + simplicity are
    always-on; convention is on for essentially all code; experience only on user-facing
    surfaces; architecture only when `stack-catalog.md` has Arch pack ✅ for a detected

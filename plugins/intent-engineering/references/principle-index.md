@@ -25,6 +25,7 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | API & Interface Design | `resources/agnostic/api-design.md` | predictability + convention |
 | Accessibility | `resources/agnostic/accessibility.md` | experience |
 | Information Architecture | `resources/agnostic/information-architecture.md` | experience |
+| UX interaction smells (greppable) | `resources/agnostic/ux-interaction-smells.md` | experience |
 
 ## Framework conventions
 
@@ -63,6 +64,6 @@ read the source docs for detection heuristics; this index is the quick lookup.
 |------|--------|
 | Resolution + merge rules | `references/config-resolution.md` |
 | Global defaults | `config/defaults/{ways-of-working,patterns,thresholds}.yaml` |
-| Project override | `.intense/*.yaml` at the repo root (scaffold with `/ie-init`) |
+| Project override | nearest `.intense/*.yaml` via walk-up from cwd (scaffold with `/ie-init`); override with `config:<path>` or `INTENSE_CONFIG_DIR` |
 
 All plugin paths are relative to `${CLAUDE_PLUGIN_ROOT}/`.

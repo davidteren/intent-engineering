@@ -1,7 +1,7 @@
 ---
 name: ie-init
-description: "Scaffold Intent Engineering project config into a repo's .intense/ directory — ways-of-working, pattern policy (allow/block/approved), and architecture thresholds — so the team can tune the lenses and commit the settings. Stack-aware menu; idempotent (never clobbers existing config without confirmation). Use to set up or extend a project's .intense/ config."
-argument-hint: "[all | ways | patterns | thresholds] (blank = menu)"
+description: "Scaffold Intent Engineering project config into a repo's .intense/ directory — ways-of-working, pattern policy (allow/block/approved), and architecture thresholds — so the team can tune the lenses and commit the settings. Stack-aware menu; optional calibrate measures repo distributions and proposes thresholds; idempotent (never clobbers existing config without confirmation). Use to set up or extend a project's .intense/ config."
+argument-hint: "[all | ways | patterns | thresholds | calibrate [p90|p75|…]] (blank = menu)"
 ---
 
 # Intent Engineering — Init project config
@@ -11,6 +11,9 @@ directory so a team can declare its "ways of working" (lens toggles, conventions
 design-pattern policy (allow / block / pre-approved), and architecture thresholds — then
 commit them. Once present, `.intense/` supersedes the plugin defaults
 (`config-resolution.md`) for every `ie-*` run in that repo.
+
+Also supports **`calibrate`**: measure the repo's actual metric distributions and propose
+threshold values (with evidence comments) instead of shipping generous defaults blind.
 
 ## Interactive tool
 
@@ -39,17 +42,49 @@ fall back to a numbered list and wait for the user's reply — never silently pi
 
 ### 2. Choose what to scaffold
 
-Parse `$ARGUMENTS`: `all`, `ways`, `patterns`, `thresholds` select directly. Blank →
+Parse `$ARGUMENTS`: `all`, `ways`, `patterns`, `thresholds`, `calibrate` (optional
+percentile token `p90` / `p75` / `p95`, default **p90**) select directly. Blank →
 present the menu (multi-select):
 
 | Option | File created | What it controls |
 |--------|--------------|------------------|
-| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, **external-tool preference**, severity overrides, local conventions, confidence gate, **artifact paths** (run scratch + published report) |
+| Ways of working | `.intense/ways-of-working.yaml` | lens toggles, **external-tool preference**, severity overrides, local conventions (`notes` + `sources`), confidence gate, **artifact paths** (run scratch + published report) |
 | Pattern policy | `.intense/patterns.yaml` | allowed / blocked / pre-approved design patterns, unknown-pattern handling |
 | Thresholds | `.intense/thresholds.yaml` | architecture metric limits (fat model/controller, God object, service object, …) |
-| All | all three | full config set |
+| **Calibrate** | updates thresholds (or proposes a patch) | measure repo distributions; propose thresholds at the target percentile with evidence comments |
+| All | all three | full config set (not calibrate) |
 
-Recommend **All** for a first run.
+Recommend **All** for a first run. Recommend **Calibrate** after All when an Arch pack
+is available and the team wants thresholds that match this codebase.
+
+### 2c. Calibrate thresholds (`calibrate` / menu)
+
+When the user asks to calibrate (or `$ARGUMENTS` starts with `calibrate`):
+
+1. Detect stack via stack-catalog; require **Arch pack ✅**. If none, stop and explain.
+2. Load metric keys from the stack's namespace in
+   `${CLAUDE_PLUGIN_ROOT}/config/defaults/thresholds.yaml` and path globs from the stack
+   architecture doc / pattern catalog (same units the architecture lens measures:
+   LOC, public methods, associations, callbacks, method length, etc.).
+3. Measure distributions over the repo (exclude `vendor`/`node_modules`/build): for each
+   metric compute **n, median, p75, p90, p95, max** (simple sort + index is fine; Bash
+   or a short Ruby/Python one-liner is OK).
+4. Target percentile = argument (`p90` default) or user choice. Propose
+   `threshold = ceil(percentile)` (or just above p90 so the fat tail flags, not the bulk).
+5. **Present** a table: metric | median | p75 | p90 | max | default | proposed. Flag any
+   metric where the shipped default is far outside the distribution (either direction).
+6. On confirmation, write/update `.intense/thresholds.yaml` for that stack namespace.
+   **Never clobber without confirmation.** Put **evidence in comments**:
+
+   ```yaml
+   max_callbacks: 2   # median 0, p75 0, p90 2, max 29 (measured 2026-07-29, n=515, target p90)
+   ```
+
+7. If the user declines write, print the proposed YAML block for copy-paste.
+
+If full measurement is too heavy for the session, fall back to the smaller form: run
+the same measurement summary into the next `/ie-audit` Observations section and leave
+thresholds unchanged until the human pastes numbers.
 
 ### 2b. Opt in/out of lenses + external tools (when scaffolding ways-of-working)
 

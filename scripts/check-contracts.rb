@@ -31,6 +31,8 @@
 #   9. Resource docs: each principle/framework/agnostic doc has a detection (smells) section
 #      and a Sources section with >=2 links; every resource doc is cited (no orphans) in
 #      principle-index.md or lens-catalog.md.
+#  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift).
+#  12. Skill evals.json (optional; present files must parse; refusal cases preferred).
 
 require "json"
 require "yaml"
@@ -536,6 +538,71 @@ score_keys.each do |lens, keys|
     bad "agents/ie-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
   end
   bad "agents/ie-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+end
+
+# ---------------------------------------------------------------------------
+section "12. Skill evals (behavioral contracts, incl. refusal cases)"
+
+# Optional per-skill evals.json pin happy-path + refusal behaviour. Missing files are
+# warnings (adoption can grow gradually); present files must parse and match the skill.
+skill_dirs = Dir[File.join(PLUGIN, "skills", "ie-*")].select { |p| File.directory?(p) }.sort
+skill_dirs.each do |dir|
+  slug = File.basename(dir)
+  eval_path = File.join(dir, "evals.json")
+  rel = "skills/#{slug}/evals.json"
+  unless File.file?(eval_path)
+    note "#{rel}: missing (optional; add refusal-case evals when ready)"
+    next
+  end
+  begin
+    data = JSON.parse(File.read(eval_path))
+  rescue JSON::ParserError => e
+    bad "#{rel}: invalid JSON (#{e.message})"
+    next
+  end
+  if data["skill_name"] == slug
+    ok "#{rel}: skill_name matches directory"
+  else
+    bad "#{rel}: skill_name #{data['skill_name'].inspect} != #{slug.inspect}"
+  end
+  evals = data["evals"]
+  unless evals.is_a?(Array) && !evals.empty?
+    bad "#{rel}: evals must be a non-empty array"
+    next
+  end
+  ok "#{rel}: #{evals.size} eval case(s)"
+  refusalish = evals.any? { |e|
+    body = [e["prompt"], e["expected_output"]].join(" ")
+    body =~ /never|refus|STOP|does not (edit|modify|push|overwrite|clobber)|no (push|edit)/i
+  }
+  if refusalish
+    ok "#{rel}: includes at least one refusal / non-mutation case"
+  else
+    note "#{rel}: no obvious refusal/non-mutation case (happy-path only)"
+  end
+  evals.each_with_index do |e, i|
+    %w[id prompt expected_output].each do |k|
+      bad "#{rel}: eval[#{i}] missing #{k}" if e[k].nil? || e[k].to_s.strip.empty?
+    end
+  end
+end
+
+# Config walk-up procedure must remain documented (issue #25)
+config_res = read("references/config-resolution.md")
+if config_res.include?("walk-up") || config_res.include?("Walk-up") || config_res.include?("resolve_intense_dir")
+  ok "config-resolution.md documents walk-up / resolve_intense_dir"
+else
+  bad "config-resolution.md: missing walk-up discovery procedure"
+end
+if config_res.include?("INTENSE_CONFIG_DIR") && config_res.include?("config:")
+  ok "config-resolution.md documents INTENSE_CONFIG_DIR and config: override"
+else
+  bad "config-resolution.md: missing INTENSE_CONFIG_DIR or config: escape hatch"
+end
+if config_res.include?("conventions.sources")
+  ok "config-resolution.md documents conventions.sources"
+else
+  bad "config-resolution.md: missing conventions.sources"
 end
 
 # ---------------------------------------------------------------------------

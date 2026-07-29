@@ -6,34 +6,93 @@ declare which design patterns are allowed / blocked / pre-approved.
 
 ## Locations (in precedence order)
 
-1. **Project config** — `.intense/` at the **repo root** (read from the current working
-   directory). Highest precedence. Committable, so the team shares one source of truth.
-   Files: `.intense/ways-of-working.yaml`, `.intense/patterns.yaml`,
-   `.intense/thresholds.yaml`.
-2. **Global defaults** — `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Shipped with the
+1. **Explicit override** (highest) — either of:
+   - run argument `config:<path>` (directory that contains or *is* `.intense`, or a
+     directory that holds `ways-of-working.yaml` / `patterns.yaml` / `thresholds.yaml`)
+   - environment variable `INTENSE_CONFIG_DIR` (same path rules)
+2. **Nearest project config** — the nearest `.intense/` directory found by **walking up**
+   from the current working directory (see Discover procedure). Committable team config.
+   Files: `ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml` inside that dir.
+3. **Global defaults** — `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Shipped with the
    plugin. Used for any key the project file doesn't set.
 
 A project file need not be complete — it overrides only the keys it specifies; the rest
 fall back to defaults.
 
-## Loading procedure (orchestrator, before lens dispatch)
+## Discover project `.intense/` (walk-up)
+
+**Do not** bind project config only to `./.intense` relative to cwd. Nested checkouts
+and monorepo workspaces often place cwd inside a sub-repo while the tuned config lives
+at a parent workspace root. Silent fallback to defaults is the failure mode this
+procedure prevents.
 
 ```bash
-# project dir (repo root); fall back to cwd
-PROJECT_INTENSE=".intense"
+# Resolve PROJECT_INTENSE (directory containing the three yaml files)
+# Precedence: config:<path> arg → INTENSE_CONFIG_DIR → walk-up → empty (defaults only)
+resolve_intense_dir() {
+  if [ -n "$CONFIG_ARG" ]; then
+    case "$CONFIG_ARG" in
+      */.intense|.intense) echo "$CONFIG_ARG" ;;
+      *) if [ -d "$CONFIG_ARG/.intense" ]; then echo "$CONFIG_ARG/.intense"
+         elif [ -f "$CONFIG_ARG/ways-of-working.yaml" ] || [ -f "$CONFIG_ARG/thresholds.yaml" ]; then echo "$CONFIG_ARG"
+         else echo "$CONFIG_ARG/.intense"; fi ;;
+    esac
+    return
+  fi
+  if [ -n "${INTENSE_CONFIG_DIR:-}" ]; then
+    CONFIG_ARG="$INTENSE_CONFIG_DIR"
+    resolve_intense_dir
+    return
+  fi
+  dir="$PWD"
+  depth=0
+  # Walk up to filesystem root (cap 32). Nearest `.intense` wins — a sub-repo with
+  # its own config shadows a parent workspace; a sub-repo *without* one inherits the
+  # parent workspace's config (the multi-repo workspace case).
+  while [ -n "$dir" ] && [ "$dir" != "/" ] && [ "$depth" -lt 32 ]; do
+    if [ -d "$dir/.intense" ]; then
+      echo "$dir/.intense"
+      return
+    fi
+    dir=$(dirname "$dir")
+    depth=$((depth + 1))
+  done
+  return 1
+}
+
+PROJECT_INTENSE=$(resolve_intense_dir) || PROJECT_INTENSE=""
 DEFAULTS="${CLAUDE_PLUGIN_ROOT}/config/defaults"
+CONFIG_SOURCE="defaults"
+[ -n "$PROJECT_INTENSE" ] && CONFIG_SOURCE="project:$PROJECT_INTENSE"
+# Always record for Coverage (required — never silent about source):
+#   Config: project:/path/to/.intense (walked up from <cwd>)
+#   Config: defaults (no .intense/ found, searched from <cwd> to git root)
+#   Config: project:/path (via config: or INTENSE_CONFIG_DIR)
 for f in ways-of-working patterns thresholds; do
-  if [ -f "$PROJECT_INTENSE/$f.yaml" ]; then echo "project: $f"; else echo "default: $f"; fi
+  if [ -n "$PROJECT_INTENSE" ] && [ -f "$PROJECT_INTENSE/$f.yaml" ]; then
+    echo "project: $f ($PROJECT_INTENSE/$f.yaml)"
+  else
+    echo "default: $f"
+  fi
 done
 ```
 
-Read whichever file exists for each of the three configs; if the project file exists,
-deep-merge it over the default per the rules below. Pass the resolved values to the
-lenses in their spawn prompt (e.g. resolved thresholds to `ie-architecture-reviewer`,
-resolved `conventions.notes` to `ie-convention-reviewer`, lens toggles to selection).
+**Walk-up rules:**
+- Start at `$PWD`; look for `$dir/.intense` at each level.
+- Stop at the first match (**nearest wins**). A child repo with its own `.intense/`
+  shadows a parent workspace.
+- Continue past `.git` boundaries so a workspace-of-repos layout can share one
+  `.intense/` at the workspace root when sub-repos have none.
+- Cap walk depth at 32 parents.
 
-When no project `.intense/` exists at all, use defaults silently — the plugin works
-out of the box. (Mention in Coverage which config source was used.)
+Read whichever file exists for each of the three configs under `PROJECT_INTENSE`; if the
+project file exists, deep-merge it over the default per the rules below. Pass the
+resolved values to the lenses in their spawn prompt (e.g. resolved thresholds to
+`ie-architecture-reviewer`, resolved `conventions.notes` / `conventions.sources` to
+`ie-convention-reviewer`, lens toggles to selection).
+
+When no project `.intense/` is found, use defaults — the plugin works out of the box.
+**Always** put the config source line in Coverage (including when using defaults).
 
 ## Merge rules (project over global)
 
@@ -56,8 +115,9 @@ out of the box. (Mention in Coverage which config source was used.)
 |--------|----------|--------|
 | `lenses.*` | skill lens-selection | `on`/`off`/`auto` decides which lenses run (turn an agent off here) |
 | `tools.architecture` | `ie-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
-| `severity_overrides` | synthesis | remap a finding's severity by principle/smell id |
-| `conventions.notes` | `ie-convention-reviewer` | repo-authoritative conventions (alongside CLAUDE.md/AGENTS.md) |
+| `severity_overrides` | synthesis | remap a finding's severity by principle/smell id. Values may be a severity string (`P1`) or a map `{ severity: P1, because: "…" }` (the `because` string is copied into Coverage / Observations) |
+| `conventions.notes` | `ie-convention-reviewer` | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md) |
+| `conventions.sources` | `ie-convention-reviewer` | list of path globs (relative to the discovered project root parent of `.intense/`, or cwd) whose files are high-authority convention sources — review-bot instruction packs, engineering standards, CI policy docs. Read them after CLAUDE.md/AGENTS.md; **notes still win** over sources when both speak (project config is highest) |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
 | `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.intense/runs`) |
 | `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/intent-engineering`) |

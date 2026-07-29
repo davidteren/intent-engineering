@@ -18,6 +18,20 @@ for the design see **PLAN.md**.
 - **Lens status honesty.** Report template and orchestrators distinguish
   failed / skipped / clean; architecture pack-miss uses `SKIPPED:` observation;
   no all-clear when a selected lens failed.
+- **Config walk-up (#25).** Project `.intense/` is discovered by walking up from cwd
+  (nearest wins; depth cap 32), not only `./.intense`. Escape hatches:
+  `config:<path>` and `INTENSE_CONFIG_DIR`. Coverage must always state the Config source.
+
+### Added
+- **Skill evals (#28).** `evals.json` next to each skill pins happy-path + refusal
+  cases (read-only audit/validate-plan, never-push review, no-clobber init). Contract
+  section 12 parses them; missing files are warnings only.
+- **Experience greppable smells (#23).** `resources/agnostic/ux-interaction-smells.md`
+  + experience agent / lens-catalog / principle-index wiring.
+- **`ie-init calibrate` (#27).** Measure repo metric distributions and propose
+  thresholds at a target percentile (default p90) with evidence comments.
+- **`conventions.sources` + CI delta (#26).** ways-of-working supports source path
+  globs; severity overrides may carry `because:`; audit reports CI↔config drift.
 
 ### Changed
 - **Single-sourced orchestration paths.** Skills bind `SKILL_SLUG` / `SCOPE_SLUG` /
@@ -29,6 +43,7 @@ for the design see **PLAN.md**.
 - **Ruby/Rails comment bar** — YARD for API docs; comments must be succinct and only
   under valid conditions (public contract, non-obvious why, deliberate exception).
   Smells added to `resources/frameworks/ruby.md` and `rails.md` for the convention lens.
+- **Contract check section 12** — skill evals + walk-up / sources presence.
 
 ## [0.6.0] — 2026-07-19
 

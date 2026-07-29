@@ -32,16 +32,25 @@ tools:
 
 # --- Severity overrides -----------------------------------------------------------
 # Raise or lower the severity a lens assigns to a given principle/smell. Optional.
-# Key = principle or smell id (see findings-schema.json principle enum / rails-architecture.md).
+# Key = principle or smell id (see findings-schema.json principle enum / architecture docs).
+# Value is either a severity string, or a map with severity + because (for CI-backed rules).
 severity_overrides: {}
   # silent-failure: P1
   # fat-model: P1
+  # callback-hell:
+  #   severity: P1
+  #   because: "blocked by a required CI job"
 
 # --- Local conventions ------------------------------------------------------------
 # Highest-authority conventions for THIS repo, honored by the convention lens
 # alongside CLAUDE.md / AGENTS.md. Lists REPLACE the global list unless extends: true.
+# sources: path globs of files the convention lens must read (review-bot rules, CI policy
+# docs, engineering standards). notes win over sources when both speak.
 conventions:
   extends: false
+  sources: []
+  # - .github/instructions/*.md
+  # - docs/engineering-standards.md
   notes: []
   # - "Use interactors, not service objects, for multi-step domain operations."
   # - "All money is a Money value object, never a raw integer/float."

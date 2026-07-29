@@ -21,7 +21,14 @@ without reason throws that away.
    `<standards-paths>` when available, else Glob for them). **A repo-local convention
    OVERRIDES the community default.** A consistent repo-local choice is never a
    violation — even if it differs from the framework norm.
-2. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
+2. **Then** read resolved `.intense` convention config (from config-resolution walk-up):
+   - `conventions.notes` — hand-authored rules (highest project authority after notes
+     that conflict with sources: **notes win**).
+   - `conventions.sources` — path globs (review-bot instructions, engineering standards,
+     CI policy docs). Glob and read those files as high-authority local convention.
+     Authority order: `notes` > `sources` files > `CLAUDE.md`/`AGENTS.md` > sibling
+     code > plugin framework docs.
+3. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
    - `principles/convention-over-configuration.md`
    - the matching `frameworks/<stack>.md` for the diff's stack — read its "Convention
      violation smells" section. Resolve stacks from
