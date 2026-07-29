@@ -8,9 +8,9 @@ phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
 ### Last session handoff
 
-1. **What this is:** Release v0.7.0 (walk-up config, evals, UX smells, calibrate, apply-safety).
-2. **What we finished:** Version bump, CHANGELOG, landing site, STATUS; PR #30 review threads closed via #31.
-3. **What you do next:** After #31 merges, confirm GitHub release `v0.7.0` and Pages site.
+1. **What this is:** Released **v0.7.0** (walk-up config, evals, UX smells, calibrate, apply-safety).
+2. **What we finished:** PR #31 merged; GitHub release + tag live; landing site points at 0.7.0 / 138 checks.
+3. **What you do next:** Optional smoke install of v0.7.0; continue #23 experience UI dogfood when ready.
 
 ---
 
