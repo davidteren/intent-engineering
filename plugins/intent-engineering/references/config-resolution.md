@@ -148,7 +148,7 @@ When no project `.intense/` is found, use defaults — the plugin works out of t
 | `tools.architecture` | `ie-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
 | `severity_overrides` | synthesis | remap a finding's severity by principle/smell id. Values may be a severity string (`P1`) or a map `{ severity: P1, because: "…" }` (the `because` string is copied into Coverage / Observations) |
 | `conventions.notes` | `ie-convention-reviewer` | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md) |
-| `conventions.sources` | `ie-convention-reviewer` | list of path globs (relative to the discovered project root parent of `.intense/`, or cwd) whose files are high-authority convention sources — review-bot instruction packs, engineering standards, CI policy docs. Read them after CLAUDE.md/AGENTS.md; **notes still win** over sources when both speak (project config is highest) |
+| `conventions.sources` | `ie-convention-reviewer` | path globs for high-authority convention files (review-bot packs, standards, CI policy). Resolve relative globs from the **project base** (see Base directory for `conventions.sources` globs). Authority: **notes > sources > CLAUDE/AGENTS** (Authority order section) |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
 | `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.intense/runs`) |
 | `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/intent-engineering`) |
@@ -228,16 +228,9 @@ Never `rm -rf` an unbound or mis-bound path. Always print the published path to 
 
 ## Authority order for conventions
 
-When the convention/architecture lenses judge "is this how this repo does things?", the
-authority order is:
-
-1. `.intense/*.yaml` (explicit, structured) — highest
-2. Repo `CLAUDE.md` / `AGENTS.md` (prose standards)
-3. Existing sibling code (de-facto convention)
-4. Plugin defaults + framework docs (`resources/frameworks/*`) — lowest
-
-A higher source overrides a lower one. A consistent repo-local choice is never a
-violation, even when it differs from the framework norm.
+See **Authority order (what wins when sources disagree)** near the top of this file —
+including `conventions.sources` between project YAML notes and `CLAUDE.md`/`AGENTS.md`,
+and the project base for relative source globs. Do not use a shorter list here.
 
 ## External tool preference (`tools.architecture`)
 
