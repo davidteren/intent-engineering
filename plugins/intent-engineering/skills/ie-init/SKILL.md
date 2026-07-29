@@ -71,10 +71,10 @@ so the team configures which modules run at init rather than editing YAML afterw
    should the architecture lens treat it?" → `enrich` (default — heuristics + tool),
    `prefer` (run the tool, suppress overlapping heuristics — no duplication), `report`
    (tool findings only), `off` (ignore tools). Write to `tools.architecture`.
-3. **Where do reports go?** Confirm or override defaults: run scratch → `.intense/runs/`
-   (deleted after publish when `cleanup_runs: true`); published report →
-   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Write overrides into `artifacts.*`.
-   Always restate the defaults in the Step 5 summary even when the user accepts them.
+3. **Where do reports go?** Confirm or override the **Artifact paths** defaults from
+   `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (do not invent paths — read
+   that section). Write overrides into `artifacts.*`. Always restate the resolved
+   defaults in the Step 5 summary even when the user accepts them.
 
 Non-interactive / `$ARGUMENTS`-driven runs: skip the prompts and scaffold the documented
 defaults verbatim (the file's comments explain every option for later editing).

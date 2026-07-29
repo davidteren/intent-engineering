@@ -21,17 +21,33 @@ fall back to defaults.
 
 ## Authority order (what wins when sources disagree)
 
-Descending authority for *conventions and judgment* (not only YAML merge):
+Descending authority for *conventions and judgment* (not only YAML merge). Single source
+of truth — agents reference this section; do not invent a different order.
 
-1. **Project `.intense/*.yaml`** (including `conventions.notes`, pattern policy, thresholds,
-   severity overrides) — highest for plugin config.
-2. **Repo instruction docs** — `CLAUDE.md` / `AGENTS.md` (and paths listed under
-   `conventions.sources`).
-3. **Sibling code** — established patterns in the same tree.
-4. **Plugin defaults / framework docs** under `${CLAUDE_PLUGIN_ROOT}/` — lowest.
+1. **Project config YAML** — resolved `.intense/*.yaml` fields (`conventions.notes`,
+   pattern policy, thresholds, severity overrides). Highest for plugin config.
+2. **`conventions.sources` files** — paths/globs listed under project config (review-bot
+   packs, engineering standards, CI policy docs).
+3. **Repo instruction docs** — `CLAUDE.md` / `AGENTS.md` whose directory is an ancestor of
+   the work.
+4. **Sibling code** — established patterns in the same tree.
+5. **Plugin defaults / framework docs** under `${CLAUDE_PLUGIN_ROOT}/` — lowest.
 
-Within conventions specifically: **`notes` beat `sources`** when both speak. YAML merge
-(project over `config/defaults/`) is separate and described under Merge rules.
+Within conventions: **`notes` (tier 1) beat `sources` (tier 2)** when both speak. YAML
+merge (project over `config/defaults/`) is separate and described under Merge rules.
+
+### Base directory for `conventions.sources` globs
+
+Relative globs in `conventions.sources` resolve from **one** project base:
+
+| How config was found | Project base for relative globs |
+|----------------------|----------------------------------|
+| Walk-up / path ends in `.intense` | Parent of that `.intense/` directory |
+| `config:` / `INTENSE_CONFIG_DIR` is a dir that **is** `.intense` | Parent of that dir |
+| `config:` / `INTENSE_CONFIG_DIR` is a dir that **contains** the three yaml files directly | That directory itself |
+| Defaults only (no project config) | `$PWD` |
+
+Absolute paths in `sources` are used as-is (no rebasing).
 
 ## Discover project `.intense/` (walk-up)
 
