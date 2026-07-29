@@ -57,6 +57,28 @@ present the menu (multi-select):
 Recommend **All** for a first run. Recommend **Calibrate** after All when an Arch pack
 is available and the team wants thresholds that match this codebase.
 
+### 2b. Opt in/out of lenses + external tools (when scaffolding ways-of-working)
+
+If `ways-of-working.yaml` is being scaffolded **and** the menu is interactive (AskUserQuestion
+available), present short opt-in questions and write the answers into the file (Step 3),
+so the team configures which modules run at init rather than editing YAML afterward:
+
+1. **Which lenses run?** Default `predictability`, `convention`, `simplicity` on;
+   `experience`, `architecture` auto. Let the user turn any **off** (e.g. a team that relies
+   solely on its own pipeline might set `architecture: off`). Write to `lenses.*`.
+2. **External-tool preference** (only meaningful if the architecture lens is on). "If your repo
+   already runs a static-analysis tool (reek/rubocop, ruff, phpstan, eslint, credo…), how
+   should the architecture lens treat it?" → `enrich` (default — heuristics + tool),
+   `prefer` (run the tool, suppress overlapping heuristics — no duplication), `report`
+   (tool findings only), `off` (ignore tools). Write to `tools.architecture`.
+3. **Where do reports go?** Confirm or override defaults: run scratch → `.intense/runs/`
+   (deleted after publish when `cleanup_runs: true`); published report →
+   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Write overrides into `artifacts.*`.
+   Always restate the defaults in the Step 5 summary even when the user accepts them.
+
+Non-interactive / `$ARGUMENTS`-driven runs: skip the prompts and scaffold the documented
+defaults verbatim (the file's comments explain every option for later editing).
+
 ### 2c. Calibrate thresholds (`calibrate` / menu)
 
 When the user asks to calibrate (or `$ARGUMENTS` starts with `calibrate`):
@@ -85,28 +107,6 @@ When the user asks to calibrate (or `$ARGUMENTS` starts with `calibrate`):
 If full measurement is too heavy for the session, fall back to the smaller form: run
 the same measurement summary into the next `/ie-audit` Observations section and leave
 thresholds unchanged until the human pastes numbers.
-
-### 2b. Opt in/out of lenses + external tools (when scaffolding ways-of-working)
-
-If `ways-of-working.yaml` is being scaffolded **and** the menu is interactive (AskUserQuestion
-available), present short opt-in questions and write the answers into the file (Step 3),
-so the team configures which modules run at init rather than editing YAML afterward:
-
-1. **Which lenses run?** Default `predictability`, `convention`, `simplicity` on;
-   `experience`, `architecture` auto. Let the user turn any **off** (e.g. a team that relies
-   solely on its own pipeline might set `architecture: off`). Write to `lenses.*`.
-2. **External-tool preference** (only meaningful if the architecture lens is on). "If your repo
-   already runs a static-analysis tool (reek/rubocop, ruff, phpstan, eslint, credo…), how
-   should the architecture lens treat it?" → `enrich` (default — heuristics + tool),
-   `prefer` (run the tool, suppress overlapping heuristics — no duplication), `report`
-   (tool findings only), `off` (ignore tools). Write to `tools.architecture`.
-3. **Where do reports go?** Confirm or override defaults: run scratch → `.intense/runs/`
-   (deleted after publish when `cleanup_runs: true`); published report →
-   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Write overrides into `artifacts.*`.
-   Always restate the defaults in the Step 5 summary even when the user accepts them.
-
-Non-interactive / `$ARGUMENTS`-driven runs: skip the prompts and scaffold the documented
-defaults verbatim (the file's comments explain every option for later editing).
 
 ### 3. Copy templates (idempotent, stack-aware)
 

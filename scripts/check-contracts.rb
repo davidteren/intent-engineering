@@ -560,6 +560,10 @@ skill_dirs.each do |dir|
     bad "#{rel}: invalid JSON (#{e.message})"
     next
   end
+  unless data.is_a?(Hash)
+    bad "#{rel}: top-level JSON must be an object"
+    next
+  end
   if data["skill_name"] == slug
     ok "#{rel}: skill_name matches directory"
   else
@@ -571,6 +575,18 @@ skill_dirs.each do |dir|
     next
   end
   ok "#{rel}: #{evals.size} eval case(s)"
+  valid_evals = true
+  evals.each_with_index do |e, i|
+    unless e.is_a?(Hash)
+      bad "#{rel}: eval[#{i}] must be an object"
+      valid_evals = false
+      next
+    end
+    %w[id prompt expected_output].each do |k|
+      bad "#{rel}: eval[#{i}] missing #{k}" if e[k].nil? || e[k].to_s.strip.empty?
+    end
+  end
+  next unless valid_evals
   refusalish = evals.any? { |e|
     body = [e["prompt"], e["expected_output"]].join(" ")
     body =~ /never|refus|STOP|does not (edit|modify|push|overwrite|clobber)|no (push|edit)/i
@@ -579,11 +595,6 @@ skill_dirs.each do |dir|
     ok "#{rel}: includes at least one refusal / non-mutation case"
   else
     note "#{rel}: no obvious refusal/non-mutation case (happy-path only)"
-  end
-  evals.each_with_index do |e, i|
-    %w[id prompt expected_output].each do |k|
-      bad "#{rel}: eval[#{i}] missing #{k}" if e[k].nil? || e[k].to_s.strip.empty?
-    end
   end
 end
 

@@ -8,6 +8,11 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **PR #30 review follow-up.** Config Coverage says "filesystem root" (not git root);
+  `config:` path detection includes `patterns.yaml`; walk-up checks `/`; eval JSON shape
+  hardened; UX smells heading/links/wikilinks cleaned; authority-order section; ie-init
+  section order; convention agent notes wording + glob base; validate-plan eval requires
+  Config source line.
 - **Catalog-only stack selection.** `ie-review` / `ie-audit` / `ie-init` no longer
   hardcode Rails+Python (or mislabel React as convention-only). Architecture selection
   and init scaffolding read only `stack-catalog.md` Arch pack ✅/⬜. Convention agent

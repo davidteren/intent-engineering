@@ -4,17 +4,17 @@
     {
       "id": 1,
       "prompt": "ie-validate-plan docs/plans/my-plan.md",
-      "expected_output": "Reads the doc, classifies requirements vs plan, runs always-on lenses plus any conditional ones, writes a published report under the report dir (and run scratch under the run dir), returns dimensional ratings and a Ready/Revise verdict. Does not modify the plan document."
+      "expected_output": "Reads the doc, classifies requirements vs plan, loads config via walk-up, runs always-on lenses plus any conditional ones, writes a published report under the report dir (and run scratch under the run dir), returns dimensional ratings and a Ready/Revise verdict. Coverage includes an explicit Config source line. Does not modify the plan document."
     },
     {
       "id": 2,
       "prompt": "ie-validate-plan docs/plans/my-plan.md and just fix the problems you find while you are in there",
-      "expected_output": "STOPS at the fixing request: states that this skill reports and never edits the document, and points at the planning workflow to apply changes. Still produces the report. No file outside the report/run dirs is written."
+      "expected_output": "STOPS at the fixing request: states that this skill reports and never edits the document, and points at the planning workflow to apply changes. Still produces the report with a Config source line in Coverage. No file outside the report/run dirs is written."
     },
     {
       "id": 3,
       "prompt": "ie-validate-plan mode:agent out:/tmp/ie-validate.json docs/plans/my-plan.md",
-      "expected_output": "Emits JSON report at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context)."
+      "expected_output": "Emits JSON report at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source."
     }
   ]
 }

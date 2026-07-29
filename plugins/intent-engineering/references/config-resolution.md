@@ -19,6 +19,20 @@ declare which design patterns are allowed / blocked / pre-approved.
 A project file need not be complete — it overrides only the keys it specifies; the rest
 fall back to defaults.
 
+## Authority order (what wins when sources disagree)
+
+Descending authority for *conventions and judgment* (not only YAML merge):
+
+1. **Project `.intense/*.yaml`** (including `conventions.notes`, pattern policy, thresholds,
+   severity overrides) — highest for plugin config.
+2. **Repo instruction docs** — `CLAUDE.md` / `AGENTS.md` (and paths listed under
+   `conventions.sources`).
+3. **Sibling code** — established patterns in the same tree.
+4. **Plugin defaults / framework docs** under `${CLAUDE_PLUGIN_ROOT}/` — lowest.
+
+Within conventions specifically: **`notes` beat `sources`** when both speak. YAML merge
+(project over `config/defaults/`) is separate and described under Merge rules.
+
 ## Discover project `.intense/` (walk-up)
 
 **Do not** bind project config only to `./.intense` relative to cwd. Nested checkouts
@@ -34,7 +48,7 @@ resolve_intense_dir() {
     case "$CONFIG_ARG" in
       */.intense|.intense) echo "$CONFIG_ARG" ;;
       *) if [ -d "$CONFIG_ARG/.intense" ]; then echo "$CONFIG_ARG/.intense"
-         elif [ -f "$CONFIG_ARG/ways-of-working.yaml" ] || [ -f "$CONFIG_ARG/thresholds.yaml" ]; then echo "$CONFIG_ARG"
+         elif [ -f "$CONFIG_ARG/ways-of-working.yaml" ] || [ -f "$CONFIG_ARG/patterns.yaml" ] || [ -f "$CONFIG_ARG/thresholds.yaml" ]; then echo "$CONFIG_ARG"
          else echo "$CONFIG_ARG/.intense"; fi ;;
     esac
     return
@@ -49,11 +63,12 @@ resolve_intense_dir() {
   # Walk up to filesystem root (cap 32). Nearest `.intense` wins — a sub-repo with
   # its own config shadows a parent workspace; a sub-repo *without* one inherits the
   # parent workspace's config (the multi-repo workspace case).
-  while [ -n "$dir" ] && [ "$dir" != "/" ] && [ "$depth" -lt 32 ]; do
+  while [ -n "$dir" ] && [ "$depth" -lt 32 ]; do
     if [ -d "$dir/.intense" ]; then
       echo "$dir/.intense"
       return
     fi
+    [ "$dir" = "/" ] && break
     dir=$(dirname "$dir")
     depth=$((depth + 1))
   done
@@ -66,7 +81,7 @@ CONFIG_SOURCE="defaults"
 [ -n "$PROJECT_INTENSE" ] && CONFIG_SOURCE="project:$PROJECT_INTENSE"
 # Always record for Coverage (required — never silent about source):
 #   Config: project:/path/to/.intense (walked up from <cwd>)
-#   Config: defaults (no .intense/ found, searched from <cwd> to git root)
+#   Config: defaults (no .intense/ found, searched from <cwd> up to filesystem root)
 #   Config: project:/path (via config: or INTENSE_CONFIG_DIR)
 for f in ways-of-working patterns thresholds; do
   if [ -n "$PROJECT_INTENSE" ] && [ -f "$PROJECT_INTENSE/$f.yaml" ]; then

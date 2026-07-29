@@ -7,7 +7,7 @@ Experience failures are often **structural** — missing states and non-semantic
 not taste. This doc lists greppable / inspectable signals the experience lens uses, so
 UX review can approach architecture-pack rigor without inventing pixel scores.
 
-## Detectable smells (feed the experience lens)
+## Detectable smells
 
 ### Missing interaction states
 - Interactive control with no **loading** state while async work runs (button that stays
@@ -64,13 +64,13 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 
 ## Relationship
 
-[[accessibility]] — name/role/value and keyboard. [[../principles/ux-design]] — Nielsen /
-Norman checks. [[../principles/human-interface-guidelines]] — platform conventions.
-[[information-architecture]] — hierarchy and exit paths.
+[[accessibility]] — name/role/value and keyboard. [[ux-design]] — Nielsen / Norman checks.
+[[human-interface-guidelines]] — platform conventions. [[information-architecture]] —
+hierarchy and exit paths.
 
 ## Sources
-- Nielsen Norman Group — 10 usability heuristics — https://www.nngroup.com/articles/ten-usability-heuristics/
-- W3C WAI — ARIA Authoring Practices (name, role, state) — https://www.w3.org/WAI/ARIA/apg/
-- WebAIM — Keyboard accessibility — https://webaim.org/techniques/keyboard/
-- GOV.UK Design System — Error messages / progress — https://design-system.service.gov.uk/components/error-message/
-- Apple HIG — Feedback / modality — https://developer.apple.com/design/human-interface-guidelines/
+- [Nielsen Norman Group — 10 usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
+- [W3C WAI — ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
+- [WebAIM — Keyboard accessibility](https://webaim.org/techniques/keyboard/)
+- [GOV.UK Design System — Error messages](https://design-system.service.gov.uk/components/error-message/)
+- [Apple HIG — Feedback / modality](https://developer.apple.com/design/human-interface-guidelines/)
