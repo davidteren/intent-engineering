@@ -24,9 +24,10 @@ without reason throws that away.
 2. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
    - `principles/convention-over-configuration.md`
    - the matching `frameworks/<stack>.md` for the diff's stack — read its "Convention
-     violation smells" section. (Stacks that ship a doc today: rails, ruby, react,
-     typescript, python, swift-ios — this list mirrors `resources/frameworks/`; if a
-     stack has no doc, skip stack-idiom checks for it.)
+     violation smells" section. Resolve stacks from
+     `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` (every row with a Convention
+     doc) or by listing `resources/frameworks/*.md` (exclude `*-architecture.md`). If
+     a stack has no convention doc, skip stack-idiom checks for it.
    - `agnostic/naming.md`, `agnostic/defaults-and-configuration.md`
 
 ## What you're hunting for
@@ -77,5 +78,13 @@ convention against simplicity, set `tension` and present both.
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
 `"lens": "convention"`. Use `principle: "framework-idiom"` for stack-idiom findings,
-`"convention-over-configuration"` for the general case. Write full detail to
-`{run_artifact_dir}/convention.json` using the Write tool. No prose outside the JSON.
+`"convention-over-configuration"` for the general case. Every finding must set
+`fix_class` per the shared rubric in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (do not restate the rubric
+here).
+
+**Audit / plan:** include `scores` with these exact keys (0–10): `framework_idiom`,
+`repo_consistency`, `configuration_restraint`. Omit `scores` in review mode.
+
+Write full detail to `{run_artifact_dir}/convention.json` using the Write tool. No prose
+outside the JSON.

@@ -75,7 +75,8 @@ commit it. Project config **supersedes** the plugin defaults
 (`config/defaults/`):
 
 - `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides, local
-  conventions the convention lens must honor, the confidence gate, report dir.
+  conventions the convention lens must honor, the confidence gate, and **`artifacts.*`**
+  (`run_dir`, `report_dir`, `cleanup_runs` — two-layer report layout).
 - `patterns.yaml` — design-pattern policy: `allowed`, `blocked` (no new use), and
   `approved` (grandfathered paths). The architecture lens enforces it.
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,

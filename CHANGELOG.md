@@ -5,6 +5,31 @@ All notable changes to **intent-engineering**. Format follows
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
+## [Unreleased]
+
+### Fixed
+- **Catalog-only stack selection.** `ie-review` / `ie-audit` / `ie-init` no longer
+  hardcode Rails+Python (or mislabel React as convention-only). Architecture selection
+  and init scaffolding read only `stack-catalog.md` Arch pack ✅/⬜. Convention agent
+  resolves stacks from the catalog / frameworks tree. `AGENTS.md` updated to match.
+- **Auto-apply safety.** Shared `fix_class` / `gated_auto` rubric in
+  `subagent-template.md` and every lens agent; interactive review applies only
+  gated_auto + confidence ≥ 75 + severity ≤ P2; Stage 1 captures `TREE_CLEAN`.
+- **Lens status honesty.** Report template and orchestrators distinguish
+  failed / skipped / clean; architecture pack-miss uses `SKIPPED:` observation;
+  no all-clear when a selected lens failed.
+
+### Changed
+- **Single-sourced orchestration paths.** Skills bind `SKILL_SLUG` / `SCOPE_SLUG` /
+  `OUT_ARG` / `EXT` only; canonical bash lives in `config-resolution.md`
+  (`CANONICAL_ORCHESTRATOR_PATHS`).
+- **Score keys** on every lens agent Output (audit/plan), matching `scoring-rubric.md`.
+- **Contract check section 11** — skill↔catalog drift, no re-authored path bash,
+  fix_class rubric present, score keys present on agents.
+- **Ruby/Rails comment bar** — YARD for API docs; comments must be succinct and only
+  under valid conditions (public contract, non-obvious why, deliberate exception).
+  Smells added to `resources/frameworks/ruby.md` and `rails.md` for the convention lens.
+
 ## [0.6.0] — 2026-07-19
 
 Portable report layout: drop `wip/` as the plugin default so installs work in repos that

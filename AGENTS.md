@@ -94,7 +94,8 @@ intent-engineering/                       dev repo + marketplace
    selection.
 2. **Select lenses** (`references/lens-catalog.md`): predictability + simplicity are
    always-on; convention is on for essentially all code; experience only on user-facing
-   surfaces; architecture only on a supported framework (Rails + Python today), code/audit only.
+   surfaces; architecture only when `stack-catalog.md` has Arch pack ✅ for a detected
+   stack, code/audit only.
    Resolved `lenses:` toggles (`on`/`off`/`auto`) override the defaults.
 3. **Dispatch** each lens in parallel using `references/subagent-template.md`, binding
    `run_artifact_dir = $RUN` (Layer A). Each lens reads its `resources/` heuristic docs,

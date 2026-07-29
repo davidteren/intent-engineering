@@ -45,20 +45,31 @@ monotonic across the whole report.
    Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
    not in the severity tables.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
-   Omit empty severities. **If every severity is empty (a fully clean run) do NOT drop
-   the section — render an explicit all-clear line so the result reads as success, not a
-   failed run:** `No findings — all selected lenses returned clean (N lenses, M files
-   reviewed).` and set the Verdict to Ready / Healthy. (In `mode:agent`, `findings: []`
-   with a clean verdict carries the same state.)
+   Omit empty severities. **All-clear is allowed only when every *selected* lens is
+   `clean` (not failed, not skipped-as-selected).** If severities are empty and all
+   selected lenses are clean, do NOT drop the section — render:
+   `No findings — all selected lenses returned clean (N lenses, M files reviewed).`
+   and set Verdict to Ready / Healthy. If any selected lens **failed**, do **not** use
+   that all-clear line; state which lenses failed and set Verdict accordingly (review:
+   Not ready or Ready with fixes; plan: Revise first). (In `mode:agent`, empty
+   `findings` with a clean verdict is valid only when lens statuses are all clean.)
 4. **Posture** *(audit & plan only)* — the scoring table from `scoring-rubric.md`,
-   lowest scores first.
+   lowest scores first (from clean lenses only).
 5. **Tensions** — any findings carrying a `tension`: name the two principles in
    conflict and the trade-off, so the user decides rather than the tool dictating.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), confidence suppressions by anchor, lenses that failed.
+   remote-mode limits), confidence suppressions by anchor, and **per-lens status**:
+   - **failed** — non-JSON return, missing `$RUN/{lens}.json`, missing required
+     `scores` in audit/plan, or harness error after optional one re-dispatch.
+   - **skipped** — not selected, or architecture pack absent (catalog ⬜ / no pack);
+     promote `SKIPPED:` observations from the architecture agent here. Not the same
+     as clean empty findings.
+   - **clean** — valid return, analyzed, zero findings remaining after the confidence
+     gate (or findings present and listed).
 8. **Verdict** — review: Ready / Ready with fixes / Not ready. audit: top 3 posture
    gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps.
+   **Never** Ready / all-clear / Ready to implement when any selected lens **failed**.
 
 No time estimates. No praise. Every finding actionable.
 

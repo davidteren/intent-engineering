@@ -55,6 +55,9 @@ Produce: `BASE`, `FILES` (`git diff --name-only $BASE`), `DIFF` (`git diff -U10 
 scope; list them in Coverage. If no base resolves, stop — don't fall back to
 `git diff HEAD` (it would miss committed work).
 
+Also capture **`TREE_CLEAN`**: `git status --porcelain` empty at this moment (before any
+write). Stage 5 uses this flag for the optional commit (do not re-check after apply).
+
 ## Stage 2 — Intent
 
 Summarize what the change is trying to do (2-3 lines) from the PR body / commit log
@@ -68,22 +71,22 @@ First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-reso
 The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
 resolved `conventions`, `confidence_gate`, `thresholds`, and pattern policy feed the
 lenses and synthesis. Note the config source in Coverage. Then read
-`${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` for selection rules.
+`${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` for selection rules and
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` for stack detection + Arch pack
+status. **Do not hardcode stack lists here** — the catalog is the only source of truth.
 
 - **Always-on:** `ie-predictability-reviewer`, `ie-simplicity-reviewer`.
 - **`ie-convention-reviewer`:** on for essentially all code review (there is almost
   always a framework, repo standard, or sibling pattern to be consistent with). Detect
-  the stack(s) from file extensions/paths to pick the `frameworks/<stack>.md` doc(s).
+  the stack(s) from the catalog's Detection signals column; load matching
+  `frameworks/<stack>.md` docs for every stack that has a Convention doc.
 - **`ie-experience-reviewer`:** only when the diff touches a user-facing surface (UI
   components, frontend files, templates/views, CLI UX). Skip for pure backend/lib/infra.
-- **`ie-architecture-reviewer`:** when a supported framework is detected and the diff
-  touches structural code. **Rails:** a `Gemfile`/`config/application.rb` + changes to
-  `app/models`, `app/controllers`, `app/services`, `app/interactors`, or similar.
-  **Python:** a `pyproject.toml`/`setup.py`/`setup.cfg` + changes to `.py` sources
-  (routers, services, models/schemas, dependencies, app factory). Skip when no supported
-  framework, or the diff is config/docs/test-only with no structural change. Pass it the
-  resolved `thresholds` + pattern policy + the `tools.architecture` preference
-  (`enrich`/`prefer`/`report`/`off`).
+- **`ie-architecture-reviewer`:** when the catalog has **Arch pack ✅** for a detected
+  stack **and** the diff touches structural code for that stack (not config/docs/test-only
+  with no structural change). Use the catalog Detection signals and pack paths — never a
+  closed two-stack list. Pass the resolved `thresholds` + pattern policy + the
+  `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`).
 
 Honor the config `lenses:` toggles over these defaults (`off` forces a lens off even if
 relevant; `on` forces it on; `auto` = the judgment above).
@@ -98,45 +101,35 @@ dispatching. This is progress reporting, not a confirmation prompt.
 ## Stage 4 — Dispatch
 
 Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(Artifact paths). Shared procedure (skill slug `review`):
+(Artifact paths). Bind skill slots only — do **not** re-author the path bash:
 
-```bash
-STAMP=$(date +%Y%m%d-%H%M%S)
-RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
-OUT_ARG="<out: value or empty>"
-RUN_DIR="<artifacts.run_dir or legacy single-bucket or .intense/runs>"
-REPORT_DIR="<artifacts.report_dir or legacy or docs/intent-engineering>"
-CLEANUP="<artifacts.cleanup_runs; false if legacy single-bucket; default true>"
-SKILL_SLUG="review"
-SCOPE_SLUG="<sanitized branch/PR slug or empty>"
-EXT="md"   # json when mode:agent
-RUN="${RUN_DIR}/${RUN_ID}"
-mkdir -p "$RUN"
-if [ -n "$OUT_ARG" ]; then
-  case "$OUT_ARG" in
-    *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
-    *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
-  esac
-else
-  REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
-fi
-mkdir -p "$(dirname "$REPORT_PATH")"
-```
+| Slot | Value |
+|------|--------|
+| `SKILL_SLUG` | `review` |
+| `SCOPE_SLUG` | sanitized branch/PR slug, or empty |
+| `OUT_ARG` | `out:` value or empty |
+| `EXT` | `md` normally; `json` when `mode:agent` |
+
+Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
+Bind **`run_artifact_dir = $RUN`** (Layer A only).
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
-with `Context: review`. **Bind `run_artifact_dir = $RUN`** (Layer A only — not the
-published path). Pass model `sonnet` to
-convention and experience; let predictability and simplicity inherit the session model
-(highest-stakes reasoning). Respect the harness active-subagent cap (queue and backfill;
+with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
+convention, experience, and **architecture**; let predictability and simplicity inherit
+the session model. Respect the harness active-subagent cap (queue and backfill;
 capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.json`
 (via the Write tool) and returns compact JSON.
 
 ## Stage 5 — Merge, gate, act
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape.
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape (including
+**Lens status**: failed / skipped / clean).
 
-1. **Validate** each return; drop malformed findings (record the count).
+1. **Validate** each return; assign per-lens status (failed / skipped / clean). Drop
+   malformed *findings* (record the count) but mark the **lens failed** on non-JSON,
+   missing `$RUN/{lens}.json`, or a selected lens that never returned. One re-dispatch
+   is allowed on non-JSON; still failed after that.
 2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
    keep highest severity + confidence; record which lenses flagged it.
 3. **Cross-lens agreement** — 2+ lenses on the same fingerprint: promote one anchor
@@ -148,14 +141,16 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    architecture findings whose file matches an `approved` path (note in Coverage); keep
    `blocked`-pattern-in-changed-code findings at P1.
 5. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
-6. **Act (default mode only; skip in `mode:agent`).** Apply the fixes that are clear,
-   reversible improvements with a concrete `suggested_fix` (`fix_class: gated_auto`).
-   Apply only when the working tree is what was reviewed (`local-aligned`/standalone) —
-   never in `pr-remote`/`branch-remote`. After applying, run affected tests/lint; if
-   they fail, revert that fix and report it instead. If the tree was clean before the
-   review, commit applied fixes as one `fix(ie-review): <summary>` commit; if dirty,
-   apply but leave uncommitted. Push back (don't apply) when a lens is wrong; skip
-   taste calls and conflicting suggestions but surface what was skipped. Never push.
+6. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
+   **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
+   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
+   concrete `suggested_fix`. Apply only when the working tree is what was reviewed
+   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
+   run affected tests/lint; if they fail, revert that fix and report it instead. If
+   **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
+   `fix(ie-review): <summary>` commit; if it was false, apply but leave uncommitted.
+   Push back (don't apply) when a lens is wrong; skip taste calls and conflicting
+   suggestions but surface what was skipped. Never push.
 
 ## Stage 6 — Report
 
@@ -164,8 +159,10 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
 verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
-lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage, Verdict
-(Ready / Ready with fixes / Not ready). No time estimates. Every finding actionable.
+lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
+selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
+ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
+estimates. Every finding actionable.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
@@ -192,11 +189,12 @@ This skill depends on `${CLAUDE_PLUGIN_ROOT}` resolving to the plugin dir (stand
 Claude Code). Read these contract files before Stage 3 — they are the single source of
 truth, shared by every `ie-*` skill:
 
-- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .intense config
+- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .intense config + artifact paths
 - `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` — lenses + selection rules
-- `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` — dispatch + confidence rubric
+- `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` — stack detection + Arch pack ✅
+- `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` — dispatch + confidence + fix_class
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` — finding contract
-- `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — output shape
+- `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — output shape + lens status
 
 Lens detection heuristics live in `${CLAUDE_PLUGIN_ROOT}/resources/`; the lens agents
 read those themselves.

@@ -1,11 +1,11 @@
 # Software Development Philosophies — Index
-> How the broader philosophy landscape maps to the four intent-engineering lenses.
+> How the broader philosophy landscape maps to the intent-engineering lenses.
 
 This is a cross-reference map, not deep prose. Reviewer agents use it as a
 "see also" index: from any well-known software philosophy, find the lens it
 informs and the 1:1 principle doc that covers it in depth.
 
-## The four lenses (recap)
+## The five lenses (recap)
 - **Predictability** — least-astonishment, DWIM, WYSIWYG. Code/UI behaves the
   way a reasonable person already expects; no hidden surprises.
 - **Convention** — convention-over-configuration, framework idiom. Follow the
@@ -14,6 +14,8 @@ informs and the 1:1 principle doc that covers it in depth.
   the actual problem; don't add structure on speculation.
 - **Experience** — HIG, look-and-feel, UX. The human-facing surface is
   coherent, learnable, and pleasant.
+- **Architecture** — structural quality and design patterns on supported
+  frameworks (code/audit only; see `stack-catalog.md` Arch pack ✅ rows).
 
 ## Philosophy → lens map
 

@@ -464,6 +464,81 @@ end
 ok "every threshold namespace and pattern catalog maps to an architecture-supported stack row" if $failures == failures_before
 
 # ---------------------------------------------------------------------------
+section "11. Skill / agent prose vs catalog (behavioral drift)"
+
+# Skills that select or scaffold architecture must read the stack catalog and must not
+# hardcode a closed Arch-pack subset (the P1 that left 4 of 6 packs unwired).
+orchestrator_skills = %w[
+  skills/ie-review/SKILL.md
+  skills/ie-audit/SKILL.md
+]
+orchestrator_skills.each do |rel|
+  text = read(rel)
+  bad "#{rel}: must reference stack-catalog.md for architecture selection" unless text.include?("stack-catalog.md")
+  # Stale closed lists that re-encode "only Rails + Python"
+  # Use =~ (not String#match?) so this stays Ruby 2.0+ portable as the header claims.
+  if text =~ /Arch pack.*today:\s*`?rails`?.*`?python`?/i ||
+     text =~ /\*\*Rails:\*\*.*`Gemfile`.*\*\*Python:\*\*.*`pyproject\.toml`/m
+    bad "#{rel}: hardcodes Rails+Python architecture selection; use stack-catalog only"
+  else
+    ok "#{rel}: no Rails+Python-only architecture hardcode"
+  end
+end
+
+init_skill = read("skills/ie-init/SKILL.md")
+bad "skills/ie-init/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
+if init_skill =~ /Arch pack ✅\s*\(today:/ ||
+   init_skill =~ /convention-only:.*`react`/
+  bad "skills/ie-init/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
+else
+  ok "skills/ie-init/SKILL.md: no stale Arch pack today-list"
+end
+
+# Orchestrators must not re-author the canonical path bash; they bind slots only.
+%w[skills/ie-review/SKILL.md skills/ie-audit/SKILL.md skills/ie-validate-plan/SKILL.md].each do |rel|
+  text = read(rel)
+  if text.include?("RUN_ID=\"${STAMP}-$(head -c4 /dev/urandom")
+    bad "#{rel}: re-authors RUN_ID bash; bind slots and use config-resolution canonical block"
+  else
+    ok "#{rel}: does not re-author canonical path bash"
+  end
+  bad "#{rel}: must mention CANONICAL or canonical stamp / RUN_ID procedure" unless text =~ /canonical/i
+end
+config_res = read("references/config-resolution.md")
+if config_res.include?("CANONICAL_ORCHESTRATOR_PATHS")
+  ok "config-resolution.md marks CANONICAL_ORCHESTRATOR_PATHS"
+else
+  bad "config-resolution.md: missing CANONICAL_ORCHESTRATOR_PATHS marker on path bash"
+end
+
+# Subagent template must define fix_class rubric (auto-apply safety)
+template = read("references/subagent-template.md")
+if template.include?("fix_class") && template.include?("gated_auto")
+  ok "subagent-template.md defines fix_class / gated_auto rubric"
+else
+  bad "subagent-template.md: missing shared fix_class / gated_auto rubric"
+end
+
+# Score keys: each agent Output should cite its scoring-rubric keys
+score_keys = {
+  "predictability" => %w[name_behavior_fidelity return_contract_consistency failure_transparency representation_fidelity],
+  "convention" => %w[framework_idiom repo_consistency configuration_restraint],
+  "simplicity" => %w[essential_vs_accidental_complexity abstraction_earns_its_keep dependency_restraint],
+  "experience" => %w[information_architecture interaction_state_coverage user_flow_completeness accessibility look_and_feel_consistency],
+  "architecture" => %w[responsibility_placement pattern_health pattern_legibility coupling_restraint]
+}
+score_keys.each do |lens, keys|
+  agent = read("agents/ie-#{lens}-reviewer.md")
+  missing = keys.reject { |k| agent.include?(k) }
+  if missing.empty?
+    ok "agents/ie-#{lens}-reviewer.md cites all score keys"
+  else
+    bad "agents/ie-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
+  end
+  bad "agents/ie-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+end
+
+# ---------------------------------------------------------------------------
 puts "\n#{'-' * 60}"
 warn_note = $warnings.zero? ? "" : ", #{$warnings} warning(s)"
 if $failures.zero?

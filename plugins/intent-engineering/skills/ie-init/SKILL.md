@@ -28,13 +28,13 @@ fall back to a numbered list and wait for the user's reply — never silently pi
   of truth for detection and which pack a stack carries.** Match the repo against its
   `Detection signals` column to identify the stack(s). Do not hardcode detection here; the
   catalog owns it, so a newly-added stack works without editing this skill.
-- Note each detected stack's **Arch pack** status and **Threshold ns** from the catalog:
-  - **Arch pack ✅** (today: `rails`, `python`) — the stack has a `<stack>.*` threshold
-    namespace and a pattern catalog. Scaffold *that stack's* namespace (Step 3), not the
-    whole multi-stack file.
-  - **Arch pack ⬜** (convention-only: `ruby`, `typescript`, `react`, `swift-ios`) — no
-    threshold/pattern pack yet. Offer `ways-of-working.yaml` (stack-agnostic) and say the
-    architecture pack for this stack isn't available.
+- Note each detected stack's **Arch pack** status and **Threshold ns** from the catalog
+  **column only** (never a hardcoded "today" list — the catalog is the sole truth):
+  - **Arch pack ✅** — the stack has a `<stack>.*` threshold namespace and a pattern
+    catalog. Scaffold *that stack's* namespace (Step 3), not the whole multi-stack file.
+  - **Arch pack ⬜** — convention-only; no threshold/pattern pack yet. Offer
+    `ways-of-working.yaml` (stack-agnostic) and say the architecture pack for this stack
+    isn't available.
   - **Unknown / no match** — offer `ways-of-working.yaml` only; note no pack was detected.
 
 ### 2. Choose what to scaffold

@@ -113,7 +113,8 @@ Run `/ie-init` to scaffold a project config into `.intense/` at your repo root, 
 it. Project config **supersedes** the plugin defaults (`config/defaults/`):
 
 - `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides, local
-  conventions the convention lens must honor, confidence gate, report dir.
+  conventions the convention lens must honor, confidence gate, and `artifacts.*`
+  (`run_dir`, `report_dir`, `cleanup_runs`).
 - `patterns.yaml` — design-pattern policy: `allowed`, `blocked` (no new use), `approved`
   (grandfathered paths). The architecture lens enforces it.
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
@@ -134,6 +135,19 @@ deleted after publish by default), and a published report under
 defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 
 ---
+
+## First run
+
+1. Install the plugin (marketplace add + install — see below).
+2. Optional: `/ie-init` to scaffold `.intense/` (defaults work without it).
+3. Run `/ie-audit` on a path or `/ie-review` on your branch; open the report under
+   `docs/intent-engineering/`.
+
+**With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
+correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
+UX, and architecture packs. If you already run reek/eslint/phpstan/…, set
+`tools.architecture: prefer` in `.intense/ways-of-working.yaml` so the architecture
+lens does not duplicate those tools.
 
 ## Install (local dogfooding)
 

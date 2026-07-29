@@ -70,11 +70,28 @@ Anchored. Synthesis gates at 75 (P0 survives at 50+).
 - **25 / 0 — suppress.** Speculative; no evidence in scope. Exist in the enum only so
   synthesis can count drops.
 
+## Shared `fix_class` rubric (all lenses)
+
+Every finding must set `fix_class`. Interactive `/ie-review` may apply only
+`gated_auto` (and only under its apply gates). Prefer the **stricter** class when unsure.
+
+| Class | Use when | Do **not** use when |
+|-------|----------|---------------------|
+| **`gated_auto`** | Single-file (or one adjacent import/rename), mechanical, reversible edit; a normal reviewer would accept without design debate; concrete `suggested_fix` names the edit. Examples: rename a misnamed `get_*` that writes; rethrow instead of bare `rescue`; align one return branch shape. | Multi-file refactors; API/shape redesign; new abstractions; UX redesign; "extract service"; anything needing product judgment. |
+| **`manual`** | Needs design input, multi-hunk/multi-file change, or a clear but non-mechanical fix. Default for architecture smells and most convention/UX gaps. | Pure learning notes (use advisory). |
+| **`advisory`** | Report-only: tension notes, residual risks, "watch this", trade-off framing with no single correct edit. | Actionable bugs you can fix concretely (use manual or gated_auto). |
+
+Orchestrator apply rules (review interactive only): apply only when
+`fix_class == gated_auto` **and** `confidence >= 75` **and** severity ≤ P2; reclassify
+over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
+remote scopes.
+
 ## Shared rules
 
 - **Name the surprise.** Every finding states the expectation that was set and the
   actual behavior. "Surprising" without naming the expectation is not a finding.
 - **Concrete fixes only.** No "consider" / "might want to". A specific change.
+- **Set `fix_class` honestly.** Default to `manual` when the fix is non-mechanical.
 - **Respect local conventions.** Repo `CLAUDE.md`/`AGENTS.md` and existing patterns
   win over generic ideals. A consistent repo-local choice is not a violation.
 - **Flag tensions, don't dogmatize.** When two principles conflict (DWIM vs
