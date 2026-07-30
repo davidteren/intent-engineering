@@ -212,9 +212,10 @@ resolve_explicit_config() {
 resolve_walk_up() {
   dir="$PWD"
   depth=0
-  # Walk up to filesystem root (cap 32). Nearest `.intense` wins.
+  # Walk up to filesystem root (cap 32). Nearest `.intense` with at least one yaml wins.
+  # Empty placeholder `.intense/` dirs are skipped (no project: without real config).
   while [ -n "$dir" ] && [ "$depth" -lt 32 ]; do
-    if [ -d "$dir/.intense" ]; then
+    if [ -d "$dir/.intense" ] && has_intense_yaml "$dir/.intense"; then
       echo "$dir/.intense"
       return 0
     fi
