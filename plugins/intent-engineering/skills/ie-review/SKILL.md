@@ -145,9 +145,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    dropped silently). Record suppressions by anchor.
 4b. **Apply config policy** (order matters — see config-resolution):
    1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
-      `conventions.auto` discovery, promote findings whose `smell`/`principle` matches a
-      gate theme (e.g. `callback-hell` + `callback-check.yml` → at least `min_severity`,
-      default P1). Never demote. Record each promotion in Coverage.
+      `conventions.auto` discovery, promote findings that match a gate theme under the
+      **smell-first** rules in config-resolution (non-empty `smells` → smell required;
+      e.g. `callback-hell` + `callback-check.yml` → at least `min_severity`, default P1).
+      Never demote. Record each promotion in Coverage.
    2. **`severity_overrides`** (always last; wins on conflict): value may be a severity
       string **or** `{ severity:, because: }` map — copy `because` into Coverage.
    3. Suppress architecture findings on **pre-existing** `approved` paths (note Coverage);

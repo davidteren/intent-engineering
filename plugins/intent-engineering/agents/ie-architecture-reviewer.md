@@ -112,6 +112,9 @@ thresholds and `patterns/python.yaml`.
     **In `audit` context there is no diff** — treat every instance as pre-existing
     (blocked → advisory P3). The P1 "blocked in changed code" rule applies only in
     `review` context, where a changed-files set exists.
+  - **One finding per unit:** if the same unit matches both `preferred.instead_of` and
+    `blocked` for the same pattern id, emit **one** finding (preferred framing wins:
+    title + `suggested_fix` name the preferred id). Do not double-report.
   - **approved** instance/path → suppress findings about **pre-existing** blocked /
     instead_of use on that path; note in observations. **Net-new files** under an
     approved path that introduce a blocked pattern still get P1 (grandfather is not a

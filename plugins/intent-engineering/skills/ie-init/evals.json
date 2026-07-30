@@ -29,7 +29,7 @@
     {
       "id": 6,
       "prompt": "ie-init fresh with Rails stack; user accepts prefer interactors",
-      "expected_output": "patterns.yaml includes preferred interactor instead_of service_object and blocked service_object when user said yes; optional approved app/services/** if grandfather chosen. Pattern ids must exist in rails catalog."
+      "expected_output": "patterns.yaml includes preferred interactor instead_of service_object when user said yes; does not also block service_object for the same stance (avoid duplicate findings). Optional approved app/services/** if grandfather chosen. Pattern ids must exist in rails catalog."
     }
   ]
 }

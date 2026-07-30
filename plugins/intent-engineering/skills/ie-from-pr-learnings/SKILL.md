@@ -37,7 +37,7 @@ Per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`:
 
 1. Discover `PROJECT_INTENSE` (walk-up / `config:` / `INTENSE_CONFIG_DIR`).
 2. If none, create `.intense/` at the **workspace root** (for multi-repo stacks, the
-   parent that contains `ablefy_be`/`ablefy_fe`-style siblings, not deep inside one app)
+   parent that contains backend/frontend-style siblings, not deep inside one app)
    after confirming with the user.
 3. Load existing `ways-of-working.yaml` / `patterns.yaml` / `thresholds.yaml` if present.
 4. Always record **Config source** for the report.

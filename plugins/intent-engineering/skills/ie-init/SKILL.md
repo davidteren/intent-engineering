@@ -1,7 +1,7 @@
 ---
 name: ie-init
 description: "Setup and upgrade Intent Engineering project config in .intense/ — full wizard for greenfield monoliths and multi-repo workspaces (placement, conventions.auto roots, severity_align, pattern preference), plus upgrade that merges missing capabilities without clobbering notes. Optional calibrate measures repo distributions and proposes thresholds. Stack-aware; idempotent. Use to set up, extend, or upgrade a project's .intense/ config."
-argument-hint: "[all | ways | patterns | thresholds | fresh | upgrade | calibrate [p90|p75|…]] (blank = wizard)"
+argument-hint: "[all | ways | patterns | thresholds | fresh | upgrade | multi-repo | roots:a,b | calibrate [p90|p75|…]] (blank = wizard)"
 ---
 
 # Intent Engineering — Init / setup / upgrade
@@ -108,7 +108,7 @@ instructions packs=3, gate-like workflows≈8").
 **Shared workspace config (recommended for multi-repo):**
 
 - One `.intense/` at the workspace root.
-- Child apps inherit via **walk-up** when agents run from `ablefy_be/` etc.
+- Child apps inherit via **walk-up** when agents run from `backend/` etc.
 - Set `conventions.auto.roots` to the sibling dir names (relative to project base).
 
 **Per-repo only:** only when the user insists stacks diverge sharply; warn that
@@ -190,11 +190,14 @@ ask short questions and write answers into the files. Defaults differ by profile
 
 5. **Pattern stance** (when scaffolding patterns **and** a stack catalog has
    `interactor` + `service_object`, typically Rails):  
-   - Prefer interactors for new multi-step domain work? → if yes, set  
-     `preferred: [{ id: interactor, instead_of: [service_object], when: "…", note: "…" }]`  
-     and `blocked: [service_object]`.  
+   - Prefer interactors for new multi-step domain work? → if yes, set **only**  
+     `preferred: [{ id: interactor, instead_of: [service_object], when: "…", note: "…" }]`.  
+     Do **not** also add `service_object` to `blocked` for the same stance (preferred
+     already P1s new instead_of use; double-listing creates duplicate findings).  
    - Grandfather legacy services? → if yes,  
      `approved: [{ path: app/services/**, reason: "legacy; no NEW services" }]`.  
+   - Optional advanced: block without preferred only when the team wants a ban with no
+     replacement id.  
    - If no Rails (or user declines), leave preferred/blocked empty (or stack seed only).
 
 6. **Where do reports go?** Confirm `artifacts.*` defaults from
@@ -206,8 +209,9 @@ ask short questions and write answers into the files. Defaults differ by profile
    user accepts / edits. Explicit sources always win over exclude.
 
 Non-interactive: scaffold defaults verbatim (auto mode `curated`, severity_align on,
-preferred empty, roots empty unless multi-repo was forced via arguments — if multi-repo
-was confirmed earlier in the same interactive session, keep roots).
+preferred empty). Set `conventions.auto.roots` when `$ARGUMENTS` includes
+`multi-repo` and/or `roots:a,b,c` (comma-separated sibling dirs). Without those tokens,
+roots stay empty (base only) unless this run already confirmed multi-repo interactively.
 
 ---
 
@@ -440,6 +444,8 @@ user accepted). It never commits or pushes.
 | `/ie-init upgrade` | Capability diff + merge missing |
 | `/ie-init calibrate` | Threshold measurement (default p90) |
 | `/ie-init calibrate p75` | Calibrate at p75 |
+| `/ie-init multi-repo` | Fresh with multi-repo profile default |
+| `/ie-init roots:backend,frontend` | Seed `conventions.auto.roots` (with or without multi-repo) |
 
 ---
 

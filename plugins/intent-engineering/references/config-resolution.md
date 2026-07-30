@@ -64,7 +64,7 @@ conventions:
   auto:
     mode: curated       # off | curated | all
     include: [agents, copilot, instructions, workflows]
-    roots: []           # e.g. [ablefy_be, ablefy_fe] for a workspace of repos
+    roots: []           # e.g. [backend, frontend] for a workspace of repos
     exclude: []         # extra globs to drop (merged with defaults when present)
 ```
 
@@ -125,27 +125,36 @@ severity_align:
 
 **Mode `off`:** no auto promotion (only explicit `severity_overrides`).  
 **Mode `curated_gates`:** for each finding, if any auto-discovered workflow path matches a
-theme row **and** the finding's `smell` or `principle` is in that row, set severity to
+theme row **and** the finding matches that row under the rules below, set severity to
 `max(current, theme.severity or min_severity)` and append
 `because: "CI gate: <workflow basename>"` into Coverage / finding evidence.
 
+**Finding match rules** (apply per theme row after the workflow basename matched):
+
+1. If the row lists **non-empty `smells`**: the finding matches only when its `smell`
+   is in that list. **Do not** promote on `principle` alone when smells are listed
+   (avoids promoting every `architecture` finding because a `callback-*.yml` exists).
+2. Else if the row lists **non-empty `principles`**: the finding matches when its
+   `principle` is in that list.
+3. Else (both empty): **Coverage note only** — do not change severity (test / process gates).
+
 **Built-in theme map** (workflow basename contains any of `match` tokens, case-insensitive):
 
-| match tokens (workflow name) | smells (architecture / schema) | principles |
-|------------------------------|--------------------------------|------------|
-| `callback` | `callback-hell` | `architecture` |
-| `migration`, `migrations` | (migration / schema smells if present) | `architecture`, `framework-idiom` |
-| `rubocop`, `eslint`, `prettier`, `lint` | — | `framework-idiom`, `convention-over-configuration` |
-| `semgrep`, `brakeman`, `codeql`, `security`, `secret`, `detect-secret` | — | `least-astonishment`, `failure-transparency` (and security-ish notes) |
-| `rspec`, `jest`, `playwright`, `test`, `minitest` | — | (no auto principle; Coverage note only unless themes add one) |
-| `pr-title` | — | (process; Coverage note only) |
+| match tokens (workflow name) | smells | principles |
+|------------------------------|--------|------------|
+| `callback` | `callback-hell` | (empty — smell-gated) |
+| `migration`, `migrations` | (empty until schema smells exist in schema) | `framework-idiom` only if finding is migration-related; else Coverage note |
+| `rubocop`, `eslint`, `prettier`, `lint` | (empty) | `framework-idiom`, `convention-over-configuration` |
+| `semgrep`, `brakeman`, `codeql`, `security`, `secret`, `detect-secret` | (empty) | Coverage note only unless project `themes` add smells/principles |
+| `rspec`, `jest`, `playwright`, `test`, `minitest` | (empty) | Coverage note only |
+| `pr-title` | (empty) | Coverage note only |
 
 Project `severity_align.themes` entries:
 
 ```yaml
 - match: [callback]           # substrings of workflow basename
-  smells: [callback-hell]
-  principles: [architecture]
+  smells: [callback-hell]     # when non-empty, smell is required (principle alone is not enough)
+  principles: []              # optional; used only when smells is empty
   severity: P1                # optional; default min_severity
 ```
 

@@ -38,7 +38,7 @@ concrete fixes.
 
 ---
 
-## The skills (four contexts + setup)
+## The skills (four contexts + setup + learnings)
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
@@ -47,6 +47,7 @@ concrete fixes.
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
 | `/ie-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
+| `/ie-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
 
 ---
 
@@ -173,7 +174,7 @@ Then the `/ie-*` skills and `ie-*-reviewer` agents are available in any repo.
 plugins/intent-engineering/         the installable plugin (self-contained)
   .claude-plugin/plugin.json
   agents/      ie-*-reviewer.md      the five lenses (incl. architecture)
-  skills/      ie-*/SKILL.md         contexts: init, plan-assist, validate-plan, review, audit
+  skills/      ie-*/SKILL.md         init, plan-assist, validate-plan, review, audit, from-pr-learnings
   references/  *.md, *.json          shared contract (schema, templates, catalogs, config-resolution)
   config/defaults/  *.yaml           shipped config defaults
   resources/   principles/ frameworks/ agnostic/ patterns/   researched knowledge base + catalog

@@ -8,12 +8,27 @@ This file ships inside the installable plugin and tracks the latest release.
 The **full dated history** lives in the development repo:
 <https://github.com/davidteren/intent-engineering/blob/main/CHANGELOG.md>.
 
-## [Unreleased]
+## [0.8.0] — 2026-07-30
 
-### Added
-- **`/ie-init` setup/upgrade wizard** — fresh | upgrade | calibrate; monolith vs
-  multi-repo placement + `auto.roots`; capability questions (`conventions.auto`,
-  `severity_align`, preferred patterns); upgrade merges missing keys only.
+Workspace-aware setup and CI-aligned conventions.
+
+### Highlights
+- **`/ie-init` wizard** — fresh | upgrade (calibrate from 0.7 stays on same entry);
+  monolith vs multi-repo placement + `auto.roots` / `roots:` tokens; capability
+  questions; upgrade merges missing keys only.
+- **`/ie-from-pr-learnings`** — PR triage / `pr:` URLs → notes, sources,
+  severity_overrides (no silent clobber, never push).
+- **`conventions.auto` + smell-first `severity_align`** — discover Copilot /
+  instructions / PR gates; promote only when theme smells match (or principles when
+  smells empty).
+- **`patterns.preferred`** — directional A-instead-of-B for new work.
+- **First run:** install → optional `/ie-init` → `/ie-audit` or `/ie-review`.
+
+### Contract suite
+141 checks across 12 sections.
+
+See the [full changelog](https://github.com/davidteren/intent-engineering/blob/main/CHANGELOG.md)
+for complete history (0.1.0 → 0.8.0).
 
 ## [0.7.0] — 2026-07-29
 
@@ -32,6 +47,3 @@ Hardening + discoverability release.
 
 ### Contract suite
 138 checks across 12 sections (was 105/10 before the 0.6→0.7 hardening line).
-
-See the [full changelog](https://github.com/davidteren/intent-engineering/blob/main/CHANGELOG.md)
-for complete history (0.1.0 → 0.7.0).

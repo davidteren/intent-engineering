@@ -75,7 +75,7 @@ intent-engineering/                       dev repo + marketplace
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
     agents/      ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
-    skills/      ie-{init,plan-assist,validate-plan,review,audit}/SKILL.md
+    skills/      ie-{init,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
     references/  findings-schema.json, subagent-template.md, lens-catalog.md,
                  stack-catalog.md, report-template.md, scoring-rubric.md,
                  principle-index.md, config-resolution.md   (the shared contract layer)
@@ -103,7 +103,8 @@ intent-engineering/                       dev repo + marketplace
    returns compact JSON per the schema, and writes full detail to `$RUN/{lens}.json`.
 4. **Merge / dedup / gate** (`references/report-template.md`): dedup by file+line+title,
    promote findings agreed by 2+ lenses, suppress below the confidence gate (default
-   anchor 75; P0 survives 50+), apply config severity overrides and pattern policy.
+   anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
+   and pattern policy (incl. `preferred`).
 5. **Report** to the published path `$REPORT_PATH` under `docs/intent-engineering/`
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
@@ -302,4 +303,5 @@ Adding anything means updating its references in lockstep, or it's orphaned:
 /plugin install intent-engineering
 ```
 
-Then `/ie-init`, `/ie-review`, `/ie-audit`, `/ie-validate-plan`, `/ie-plan-assist`.
+Then `/ie-init`, `/ie-review`, `/ie-audit`, `/ie-validate-plan`, `/ie-plan-assist`,
+`/ie-from-pr-learnings`.
