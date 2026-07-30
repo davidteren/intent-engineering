@@ -82,14 +82,17 @@ migrations, i18n, CSS tokens, tests serial, naming.
 ### 4. Propose YAML patch (never silent clobber)
 
 1. Show a **diff-style** summary: new notes, new sources, severity rows, threshold ideas.
-2. Ask: apply / merge / skip (default **merge** into existing lists without deleting
-   hand-written notes).
-3. On apply:
+2. Ask: **merge** (default) / **replace notes** (only with explicit confirm; overwrites
+   `conventions.notes` with the proposed set) / **skip**. Never silent clobber.
+3. On merge:
    - Append unique `notes` lines (skip exact duplicates).
    - Append unique `sources` paths that exist on disk.
    - Merge `severity_overrides` keys (show conflict if key already set differently).
-4. Optionally write `docs/intent-engineering/PR-LEARNINGS-<date>.md` under the project
-   (or `out:`) summarizing G-ids and source PRs for humans.
+4. On replace notes (user must restate overwrite intent): replace `conventions.notes`
+   only; still merge sources/severities unless also confirmed.
+5. Optionally write `docs/intent-engineering/<stamp>-from-pr-learnings.md` under the
+   project (or `out:`) summarizing G-ids and source PRs for humans.
+6. Never commit or push.
 
 ### 5. Optional calibrate handoff
 

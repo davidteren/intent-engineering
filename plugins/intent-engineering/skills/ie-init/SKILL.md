@@ -10,7 +10,8 @@ Scaffolds and upgrades project config under `.intense/` so a team can declare wa
 working (lens toggles, conventions, auto sources, severity align), design-pattern
 policy (preferred / allow / block / approved), and architecture thresholds — then
 commit them. Once present, `.intense/` supersedes the plugin defaults
-(`config-resolution.md`) for every `ie-*` run in that tree (via walk-up).
+(`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`) for every `ie-*` run in that
+tree (via walk-up).
 
 **Modes** (auto-detected when `$ARGUMENTS` is blank; overridable by token):
 
@@ -45,8 +46,9 @@ fails), fall back to a numbered list and wait for the user's reply — never sil
    appear, limit upgrade merges to those files only. Jump to Step U after a light
    detect pass (0b–0c still run so the report names stacks/roots).
 3. Else if `$ARGUMENTS` has `fresh` or a file token (`all` / `ways` / `patterns` /
-   `thresholds`) → **fresh** with that selection.
-4. Else (blank): discover nearest `.intense/` via walk-up
+   `thresholds`) **or** `multi-repo` / `roots:…` → **fresh** with that selection
+   (multi-repo/roots imply fresh + profile multi-repo; still run 0b–0d).
+4. Else (blank): discover nearest usable `.intense/` via walk-up
    (`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`).
    - Found → recommend **upgrade**; still offer fresh re-scaffold (overwrite only with
      confirm). Present: `1) upgrade  2) fresh (re-scaffold)  3) calibrate`.
@@ -91,7 +93,7 @@ Under the project base and each multi-repo root, note presence of:
 - `.github/copilot-instructions.md` or `**/copilot-instructions.md`
 - `.github/instructions/**`
 - `.github/workflows/*` that look like PR gates (name/body signals in
-  `config-resolution.md` → Convention auto-sources)
+  `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` → Convention auto-sources)
 
 Report a one-line inventory in the wizard summary (e.g. "agents=2, copilot=1,
 instructions packs=3, gate-like workflows≈8").
@@ -100,7 +102,7 @@ instructions packs=3, gate-like workflows≈8").
 
 ### 1. Placement (fresh + multi-repo; skip for pure calibrate)
 
-**Target dir** for config files is always `{project_base}/.intense/`.
+**Write root** for config files is `{project_base}/.intense/` unless per-repo is chosen.
 
 | Profile | Default project base | Confirm |
 |---------|----------------------|---------|
@@ -109,15 +111,21 @@ instructions packs=3, gate-like workflows≈8").
 
 **Shared workspace config (recommended for multi-repo):**
 
-- One `.intense/` at the workspace root.
+- One `.intense/` at the workspace root (`project_base` = workspace).
 - Child apps inherit via **walk-up** when agents run from `backend/` etc.
 - Set `conventions.auto.roots` to the sibling dir names (relative to project base).
 
-**Per-repo only:** only when the user insists stacks diverge sharply; warn that
-cross-stack notes and severity will not share unless duplicated.
+**Per-repo only:** when the user insists stacks diverge sharply:
 
-If cwd is already inside a child app and multi-repo is chosen, **change writes** to the
-workspace root after confirmation — do not silently put config only in the child.
+1. List each sibling app root that will get its own `.intense/`.
+2. Confirm the list; write **once per app** under `{app_root}/.intense/` (not only
+   workspace).
+3. Do **not** set shared `auto.roots` across apps unless the user also wants a parent
+   config; warn that notes/severity will not share unless duplicated.
+
+If cwd is already inside a child app and **shared** multi-repo is chosen, **change writes**
+to the workspace root after confirmation — never use a relative `mkdir .intense` in the
+child without an absolute `project_base`.
 
 For **upgrade**, resolve existing `PROJECT_INTENSE` via walk-up; do not move it unless
 the user explicitly asks to migrate placement.
@@ -277,9 +285,10 @@ Start from the default template, then apply capability answers:
   later for PR-mined notes).
 
 ```bash
-mkdir -p .intense   # at project_base
+# PROJECT_BASE is the resolved placement root (workspace or monolith git root), absolute.
+mkdir -p "$PROJECT_BASE/.intense"
 SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/ways-of-working.yaml"
-DST=".intense/ways-of-working.yaml"
+DST="$PROJECT_BASE/.intense/ways-of-working.yaml"
 # Prefer: copy then edit keys, or emit merged YAML with comments preserved where practical.
 if [ -e "$DST" ]; then echo "EXISTS: $DST"; else …; fi
 ```

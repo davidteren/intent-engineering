@@ -1,6 +1,6 @@
 ---
 name: ie-convention-reviewer
-description: intent-engineering lens. Reviews code and plans for convention adherence — reinvented conventions, config where convention exists, non-idiomatic structure/naming, and one-off patterns that fight the repo or framework. Reads repo CLAUDE.md/AGENTS.md FIRST; local conventions override community defaults.
+description: intent-engineering lens. Reviews code and plans for convention adherence — reinvented conventions, config where convention exists, non-idiomatic structure/naming, and one-off patterns that fight the repo or framework. Loads authority in order: project config notes, sources, auto-sources, then CLAUDE.md/AGENTS.md; local conventions override community defaults.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write
 color: green

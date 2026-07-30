@@ -140,23 +140,27 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    keep highest severity + confidence; record which lenses flagged it.
 3. **Cross-lens agreement** — 2+ lenses on the same fingerprint: promote one anchor
    step (50->75, 75->100). Note the agreeing lenses.
-4. **Confidence gate** — suppress findings below the resolved `confidence_gate`
-   (default anchor 75), EXCEPT P0 at 50+ (a critical-but-uncertain surprise must not be
-   dropped silently). Record suppressions by anchor.
-4b. **Apply config policy** (order matters — see config-resolution):
+4. **Apply config policy before the confidence gate** (order matters — see
+   config-resolution):
    1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
       `conventions.auto` discovery, promote findings that match a gate theme under the
-      **smell-first** rules in config-resolution (non-empty `smells` → smell required;
-      e.g. `callback-hell` + `callback-check.yml` → at least `min_severity`, default P1).
-      Never demote. Record each promotion in Coverage.
-   2. **`severity_overrides`** (always last; wins on conflict): value may be a severity
-      string **or** `{ severity:, because: }` map — copy `because` into Coverage.
+      **smell-first** rules (e.g. `callback-hell` + `callback-check.yml` → at least
+      `min_severity`, default P1). Never demote. Record each promotion in Coverage.
+      Mark those findings `severity_aligned: true` for the gate exception below.
+   2. **`severity_overrides`** (wins over align on conflict): string or
+      `{ severity:, because: }` — copy `because` into Coverage.
    3. Pattern policy: suppress architecture findings only when the path is `approved`
       **and** the change is not a **net-new** introduction of a blocked / preferred-
-      `instead_of` pattern (grandfather is not a license for new classes). Keep
-      blocked / preferred-`instead_of` introductions in **changed** code at P1.
-5. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
-6. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
+      `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
+      **changed** code at P1.
+5. **Confidence gate** — suppress findings below the resolved `confidence_gate`
+   (default anchor 75), EXCEPT:
+   - P0 at confidence 50+, or
+   - findings that received a **`severity_align` promotion** at confidence 50+
+     (CI-backed floors must not be dropped solely for mid confidence).
+   Record suppressions by anchor.
+6. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
+7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
    concrete `suggested_fix`. Apply only when the working tree is what was reviewed

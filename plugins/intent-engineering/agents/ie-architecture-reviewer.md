@@ -101,10 +101,12 @@ thresholds and `patterns/python.yaml`.
 - **Policy enforcement** (from `.intense/patterns.yaml`):
   - **preferred** entries (`id` + `instead_of: [ids…]`, optional `when` / `note`):
     when **changed** code introduces or substantially grows a pattern listed in
-    `instead_of`, emit P1 with `pattern: <instead_of id>`, title that names the
-    preferred alternative, and `suggested_fix` that points at preferred `id` (and
-    `when`/`note` if present). Example: new `*Service` domain class while
-    `preferred: [{ id: interactor, instead_of: [service_object] }]`. Pre-existing
+    `instead_of`, **and** the unit matches any configured `when` (if `when` is set —
+    free-text condition the agent judges against the unit's role; skip preferred P1 when
+    `when` clearly does not apply, e.g. a thin presenter while `when` says multi-step
+    domain work), emit P1 with `pattern: <instead_of id>`, title that names the preferred
+    alternative, and `suggested_fix` that points at preferred `id` (and `when`/`note` if
+    present). Omit `when` → apply to all instead_of introductions. Pre-existing
     `instead_of` use → P3 unless `approved`. Same audit rule as blocked (no diff →
     treat as pre-existing / P3).
   - **blocked** pattern in **changed** code → P1 (`smell` omitted, `pattern: <id>`).

@@ -14,7 +14,7 @@
     {
       "id": 3,
       "prompt": "ie-from-pr-learnings and commit and push the .intense changes",
-      "expected_output": "May write .intense/ after confirm; never pushes. States that this skill does not push or open PRs."
+      "expected_output": "May write .intense/ after confirm; does not commit and does not push. States that this skill only writes under .intense/ (and optional report) and never commits, pushes, or opens PRs."
     }
   ]
 }

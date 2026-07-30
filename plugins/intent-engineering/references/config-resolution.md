@@ -11,15 +11,15 @@ declare which design patterns are allowed / blocked / pre-approved.
      directory that holds `ways-of-working.yaml` / `patterns.yaml` / `thresholds.yaml`)
    - environment variable `INTENSE_CONFIG_DIR` (same path rules)
 2. **Nearest project config** — the nearest `.intense/` directory found by **walking up**
-   from the current working directory (see Discover procedure). Committable team config.
-   Files: `ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml` inside that dir.
+   that contains **at least one** of the three yaml files (see Discover procedure). Empty
+   placeholder `.intense/` dirs are skipped. Committable team config.
 3. **Global defaults** — `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Shipped with the
    plugin. Used for any key the project file doesn't set.
 
 A project file need not be complete — it overrides only the keys it specifies; the rest
 fall back to defaults. To **materialize** new default capabilities into an existing
 project file (visible in git, editable) without wiping notes, run `/ie-init upgrade`
-(see `skills/ie-init/SKILL.md`).
+(see `${CLAUDE_PLUGIN_ROOT}/skills/ie-init/SKILL.md`).
 
 ## Authority order (what wins when sources disagree)
 
@@ -65,7 +65,8 @@ conventions:
     mode: curated       # off | curated | all
     include: [agents, copilot, instructions, workflows]
     roots: []           # e.g. [backend, frontend] for a workspace of repos
-    exclude: []         # extra globs to drop (merged with defaults when present)
+    exclude: []         # REPLACE-only when set (no extends): list every glob you want,
+                        # including defaults you still need, or omit the key to keep defaults
 ```
 
 **Mode:**
@@ -80,11 +81,17 @@ conventions:
 
 | Pack | Globs |
 |------|--------|
-| `agents` | `AGENTS.md`, `CLAUDE.md`, `**/AGENTS.md`, `**/CLAUDE.md` |
+| `agents` | `AGENTS.md`, `CLAUDE.md`, `**/AGENTS.md`, `**/CLAUDE.md` under each root |
 | `copilot` | `.github/copilot-instructions.md`, `**/.github/copilot-instructions.md`, `**/copilot-instructions.md` |
 | `instructions` | `.github/instructions/**`, `**/.github/instructions/**` |
 | `workflows` (curated) | `.github/workflows/*.{yml,yaml}` that match **gate signals** (below) |
 | `workflows` (all) | `.github/workflows/*.{yml,yaml}` (minus exclude) |
+
+**Scope of auto-discovered agents / instructions:** discovery may find many files under
+`roots`, but the convention lens **applies** an `AGENTS.md`/`CLAUDE.md` only to files
+whose path is under that doc's directory (ancestor chain of the changed file). Nested
+app rules do **not** apply workspace-wide. Path-scoped `.github/instructions/**` still
+honor `applyTo` frontmatter.
 
 **Workflow gate signals** (`mode: curated` only) — keep a workflow if **any** hold:
 
@@ -192,18 +199,20 @@ has_intense_yaml() {
 }
 
 # Explicit path: succeed only when the resolved dir exists AND has at least one yaml.
-# Never return a path that would label Coverage as project: while falling back to defaults.
+# Prefer .intense only when it has yaml; else yaml directly under arg. Never pick empty .intense.
 resolve_explicit_config() {
   arg="$1"
-  candidate=""
   case "$arg" in
-    */.intense|.intense) candidate="$arg" ;;
-    *) if [ -d "$arg/.intense" ]; then candidate="$arg/.intense"
-       elif has_intense_yaml "$arg"; then candidate="$arg"
-       fi ;;
+    */.intense|.intense)
+      if [ -d "$arg" ] && has_intense_yaml "$arg"; then echo "$arg"; return 0; fi
+      return 1 ;;
   esac
-  if [ -n "$candidate" ] && [ -d "$candidate" ] && has_intense_yaml "$candidate"; then
-    echo "$candidate"
+  if [ -d "$arg/.intense" ] && has_intense_yaml "$arg/.intense"; then
+    echo "$arg/.intense"
+    return 0
+  fi
+  if has_intense_yaml "$arg"; then
+    echo "$arg"
     return 0
   fi
   return 1
@@ -256,9 +265,10 @@ done
 ```
 
 **Walk-up rules:**
-- Start at `$PWD`; look for `$dir/.intense` at each level.
-- Stop at the first match (**nearest wins**). A child repo with its own `.intense/`
-  shadows a parent workspace.
+- Start at `$PWD`; look for `$dir/.intense` that **has at least one** of the three yaml
+  files. Empty `.intense/` placeholders are skipped.
+- Stop at the first usable match (**nearest wins**). A child with real config shadows a
+  parent workspace.
 - Continue past `.git` boundaries so a workspace-of-repos layout can share one
   `.intense/` at the workspace root when sub-repos have none.
 - Cap walk depth at 32 parents.

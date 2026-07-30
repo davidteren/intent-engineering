@@ -190,13 +190,13 @@ The plugin works out of the box with defaults; a repo tunes it via committable
 `.intense/*.yaml` at its root.
 
 - `ways-of-working.yaml` — lens toggles (turn an agent `off`), external-tool preference
-  (`tools.architecture`: `enrich`/`prefer`/`report`/`off` — defer to reek/eslint/phpstan/…
-  instead of duplicating), severity overrides, local conventions, confidence gate, and
-  **`artifacts.*`** (`run_dir`, `report_dir`, `cleanup_runs` — two-layer report layout;
+  (`tools.architecture`: `enrich`/`prefer`/`report`/`off`), severity overrides,
+  **`severity_align`**, local conventions (`notes`, `sources`, **`auto`** discovery),
+  confidence gate, and **`artifacts.*`** (`run_dir`, `report_dir`, `cleanup_runs`;
   see rule 5 and `references/config-resolution.md`).
-- `patterns.yaml` — design-pattern policy: `allowed` / `blocked` (no new use) / `approved`
-  (grandfathered paths). Keys reference **snake_case pattern ids** from
-  `resources/patterns/<stack>.yaml`.
+- `patterns.yaml` — design-pattern policy: `preferred` (A instead of B) / `allowed` /
+  `blocked` (no new use) / `approved` (grandfathered paths). Keys reference
+  **snake_case pattern ids** from `resources/patterns/<stack>.yaml`.
 - `thresholds.yaml` — architecture metric limits, namespaced `rails.<unit>.<metric>`.
 
 **Merge rule:** project overrides global. Scalars/maps replace key-by-key. **Lists

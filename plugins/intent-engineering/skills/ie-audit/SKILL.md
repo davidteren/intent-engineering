@@ -87,11 +87,11 @@ just needs the merged per-lens return.
 
 ## Stage 4 — Merge & score
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
-   (resolved `confidence_gate`, default 75; P0 at 50+ survives) and apply config policy
-   as in `ie-review` Stage 5: **`severity_align` then `severity_overrides`**, suppress
-   `approved` paths, keep `blocked` / preferred-instead_of findings (no apply — audit is
-   read-only).
+1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
+   policy **before** the confidence gate as in `ie-review` Stage 5: **`severity_align`
+   then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
+   survive), suppress `approved` paths, keep `blocked` / preferred-instead_of findings
+   (no apply — audit is read-only).
 2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the

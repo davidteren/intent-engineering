@@ -94,7 +94,8 @@ conventions:
       - "**/.github/workflows/*deploy*"
       - "**/.github/workflows/*staging*"
       - "**/.github/workflows/*terraform*"
-      - "**/.github/workflows/*image*"
+      - "**/.github/workflows/*container*"
+      - "**/.github/workflows/*docker*"
   notes: []
   # - "Use interactors, not service objects, for multi-step domain operations."
   # - "All money is a Money value object, never a raw integer/float."
