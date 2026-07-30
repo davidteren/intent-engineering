@@ -1,13 +1,30 @@
 # Intent Engineering — pattern policy (GLOBAL DEFAULTS)
 #
-# Project override: `.intense/patterns.yaml`. Pattern names must match the catalog at
+# Project override: `.intense/patterns.yaml`. Pattern ids must match the catalog at
 # resources/patterns/<stack>.yaml. See references/config-resolution.md for merge rules.
 #
-# MERGE: when a project `.intense/patterns.yaml` sets one of the lists below, that list
-# REPLACES the global list wholesale — the `allowed`/`blocked`/`approved` lists are
-# replace-only (there is no `extends` knob for them). List every entry you want, not just
-# the additions.
+# How the four policy knobs fit together:
+#
+#   preferred  — directional: "use A instead of B" for NEW work (instead_of list).
+#   allowed    — vocabulary we endorse; never flag merely for existing; still check misuse.
+#   blocked    — do not introduce in CHANGED code (P1); pre-existing = P3 unless approved.
+#   approved   — grandfather path globs so legacy blocked uses stay quiet.
+#
+# Example: prefer interactors, block new service objects, grandfather app/services/**
+#
+# MERGE: when a project sets one of the lists below, that list REPLACES the global list
+# wholesale (replace-only; no `extends` knob). List every entry you want.
 version: 1
+
+# --- Preferred (directional guidance) -------------------------------------------
+# When a unit of work fits either the preferred id OR an instead_of id, choose preferred.
+# Architecture lens (review): introducing an instead_of pattern in CHANGED code → P1
+# with suggested_fix pointing at preferred.id. Pre-existing instead_of → P3 unless approved.
+preferred: []
+  # - id: interactor
+  #   instead_of: [service_object]
+  #   when: "multi-step domain work, transactional boundaries, orchestrated side effects"
+  #   note: "Use app/interactors (Interactor gem / organizers), not a new *Service class."
 
 # --- Allowed --------------------------------------------------------------------
 # Patterns the team uses on purpose. Recognized instances are classified and checked
@@ -24,14 +41,14 @@ allowed: []
 # Patterns blocked for NEW use. A blocked pattern appearing in CHANGED code -> P1.
 # Pre-existing uses are reported advisory (P3) unless also covered by `approved`.
 blocked: []
-  # - service_object   # e.g. "we standardized on interactors"
+  # - service_object   # e.g. "we standardized on interactors" (+ preferred + approved)
 
 # --- Approved (grandfathered) ---------------------------------------------------
 # Pre-approved specific instances/paths. Findings there are suppressed and noted in
 # Coverage. Use to grandfather legacy code without muting the whole rule.
 approved: []
-  # - path: app/services/legacy/**
-  #   reason: "grandfathered; migration tracked in JIRA-123"
+  # - path: app/services/**
+  #   reason: "legacy service layer; no NEW services — use interactors"
 
 # --- Unknown patterns -----------------------------------------------------------
 # A structural unit (class/module in a pattern-bearing location) that matches NO

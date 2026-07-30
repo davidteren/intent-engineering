@@ -17,7 +17,9 @@ declare which design patterns are allowed / blocked / pre-approved.
    plugin. Used for any key the project file doesn't set.
 
 A project file need not be complete — it overrides only the keys it specifies; the rest
-fall back to defaults.
+fall back to defaults. To **materialize** new default capabilities into an existing
+project file (visible in git, editable) without wiping notes, run `/ie-init upgrade`
+(see `skills/ie-init/SKILL.md`).
 
 ## Authority order (what wins when sources disagree)
 
@@ -48,6 +50,112 @@ Relative globs in `conventions.sources` resolve from **one** project base:
 | Defaults only (no project config) | `$PWD` |
 
 Absolute paths in `sources` are used as-is (no rebasing).
+
+### Convention auto-sources (Copilot, instructions, workflows)
+
+Explicit `conventions.sources` is never enough in a real monorepo: Copilot packs and
+PR-gate workflows already encode house rules. **`conventions.auto`** discovers them so
+the convention lens (and audit CI-delta) see the same authority surface humans already
+maintain in GitHub.
+
+```yaml
+conventions:
+  sources: []           # always merged in (explicit)
+  auto:
+    mode: curated       # off | curated | all
+    include: [agents, copilot, instructions, workflows]
+    roots: []           # e.g. [ablefy_be, ablefy_fe] for a workspace of repos
+    exclude: []         # extra globs to drop (merged with defaults when present)
+```
+
+**Mode:**
+
+| Mode | Behavior |
+|------|----------|
+| `off` | No discovery. Only explicit `sources` + normal AGENTS/CLAUDE read. |
+| `curated` (default) | Expand **include** packs with high-signal globs; for `workflows`, keep only files that look like **PR code gates** (name or content signals below). |
+| `all` | Expand include packs with broad globs (all workflow yml under roots). Still applies `exclude`. |
+
+**Pack → default globs** (under each `root`, relative to project base; `.` = base):
+
+| Pack | Globs |
+|------|--------|
+| `agents` | `AGENTS.md`, `CLAUDE.md`, `**/AGENTS.md`, `**/CLAUDE.md` |
+| `copilot` | `.github/copilot-instructions.md`, `**/.github/copilot-instructions.md`, `**/copilot-instructions.md` |
+| `instructions` | `.github/instructions/**`, `**/.github/instructions/**` |
+| `workflows` (curated) | `.github/workflows/*.{yml,yaml}` that match **gate signals** (below) |
+| `workflows` (all) | `.github/workflows/*.{yml,yaml}` (minus exclude) |
+
+**Workflow gate signals** (`mode: curated` only) — keep a workflow if **any** hold:
+
+- Filename contains: `rubocop`, `eslint`, `semgrep`, `callback`, `migration`, `secret`,
+  `detect-secret`, `brakeman`, `lint`, `test`, `rspec`, `jest`, `playwright`, `contract`,
+  `security`, `codeql`, `typecheck`, `tsc`, `prettier`, `danger`, `pr-title`
+- File body (first ~80 lines) mentions: `pull_request:`, `bin/check`, `rubocop`, `eslint`,
+  `semgrep`, `rspec`, `jest`, `playwright`, `strong_migrations`, `online_migrations`
+
+Drop workflows that are clearly infra-only after exclude (labeler, terraform branch
+create/delete, image deploy dispatch, renovate-only). When unsure in `curated`, **exclude**.
+
+**Path-scoped instructions:** files under `.github/instructions/` often have YAML
+frontmatter `applyTo: "glob,glob"`. The convention lens **must** honor `applyTo` when
+present: only apply those rules to matching files in the review/audit scope. Files
+without `applyTo` apply repo-wide for that root.
+
+**Authority of auto-discovered files:** same as explicit `sources` (tier 2 under
+Authority order). `notes` still win. List the **resolved path list** in Coverage:
+
+`Config sources (auto): N files (copilot=…, instructions=…, workflows=…); excluded=…`
+
+**Merge:** resolved source set = unique(`sources` + auto-discovered − exclude). Explicit
+`sources` always included even if they would match exclude (explicit wins).
+
+### Severity align with CI gates
+
+After lenses return findings, the **orchestrator** may promote severity when a discovered
+PR-gate workflow (from `conventions.auto`) covers the same theme. This does **not** parse
+every CI step; it matches **workflow basename + theme table**.
+
+```yaml
+severity_align:
+  mode: curated_gates   # off | curated_gates
+  min_severity: P1
+  themes: []            # optional extra rows; see below
+```
+
+**Mode `off`:** no auto promotion (only explicit `severity_overrides`).  
+**Mode `curated_gates`:** for each finding, if any auto-discovered workflow path matches a
+theme row **and** the finding's `smell` or `principle` is in that row, set severity to
+`max(current, theme.severity or min_severity)` and append
+`because: "CI gate: <workflow basename>"` into Coverage / finding evidence.
+
+**Built-in theme map** (workflow basename contains any of `match` tokens, case-insensitive):
+
+| match tokens (workflow name) | smells (architecture / schema) | principles |
+|------------------------------|--------------------------------|------------|
+| `callback` | `callback-hell` | `architecture` |
+| `migration`, `migrations` | (migration / schema smells if present) | `architecture`, `framework-idiom` |
+| `rubocop`, `eslint`, `prettier`, `lint` | — | `framework-idiom`, `convention-over-configuration` |
+| `semgrep`, `brakeman`, `codeql`, `security`, `secret`, `detect-secret` | — | `least-astonishment`, `failure-transparency` (and security-ish notes) |
+| `rspec`, `jest`, `playwright`, `test`, `minitest` | — | (no auto principle; Coverage note only unless themes add one) |
+| `pr-title` | — | (process; Coverage note only) |
+
+Project `severity_align.themes` entries:
+
+```yaml
+- match: [callback]           # substrings of workflow basename
+  smells: [callback-hell]
+  principles: [architecture]
+  severity: P1                # optional; default min_severity
+```
+
+**Order of application (synthesis):**
+
+1. Lens-emitted severity  
+2. **`severity_align`** promotions (if mode on and gate matched)  
+3. Explicit **`severity_overrides`** (always last; win on conflict)  
+
+List promotions in Coverage: `Severity align: #N callback-hell P2→P1 (callback-check.yml)`.
 
 ## Discover project `.intense/` (walk-up)
 
@@ -130,13 +238,14 @@ When no project `.intense/` is found, use defaults — the plugin works out of t
 - **Scalars and maps** (e.g. `confidence_gate`, `lenses.*`, `thresholds.rails.model.max_loc`):
   the project value **replaces** the global value key-by-key. Keys the project omits
   keep the global value.
-- **Lists** (e.g. `conventions.notes`, `patterns.allowed/blocked/approved`): the project
-  list **replaces** the global list — **unless** the owning block sets `extends: true`,
-  in which case the project list is **appended** to the global list. Default is replace
-  (least-astonishing: what you write in the project file is what you get). Only blocks that
-  expose an `extends` flag support append: the `conventions` block does; the
-  `patterns.allowed/blocked/approved` lists are **replace-only** (no `extends` knob), so a
-  project `patterns.yaml` list fully replaces the default — list every entry you want.
+- **Lists** (e.g. `conventions.notes`, `patterns.preferred/allowed/blocked/approved`): the
+  project list **replaces** the global list — **unless** the owning block sets
+  `extends: true`, in which case the project list is **appended** to the global list.
+  Default is replace (least-astonishing: what you write in the project file is what you
+  get). Only blocks that expose an `extends` flag support append: the `conventions` block
+  does; the `patterns.preferred/allowed/blocked/approved` lists are **replace-only** (no
+  `extends` knob), so a project `patterns.yaml` list fully replaces the default — list
+  every entry you want.
 - **`version`**: informational; if a project file's `version` is higher than the plugin
   understands, note it in Coverage and proceed best-effort.
 
@@ -146,15 +255,17 @@ When no project `.intense/` is found, use defaults — the plugin works out of t
 |--------|----------|--------|
 | `lenses.*` | skill lens-selection | `on`/`off`/`auto` decides which lenses run (turn an agent off here) |
 | `tools.architecture` | `ie-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
-| `severity_overrides` | synthesis | remap a finding's severity by principle/smell id. Values may be a severity string (`P1`) or a map `{ severity: P1, because: "…" }` (the `because` string is copied into Coverage / Observations) |
+| `severity_overrides` | synthesis | remap severity by principle/smell id (string or `{ severity, because }`). Applied **after** severity_align. |
+| `severity_align` | synthesis | promote severity when a curated CI gate matches a finding theme (`mode: off\|curated_gates`). See Severity align with CI gates. |
 | `conventions.notes` | `ie-convention-reviewer` | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md) |
-| `conventions.sources` | `ie-convention-reviewer` | path globs for high-authority convention files (review-bot packs, standards, CI policy). Resolve relative globs from the **project base** (see Base directory for `conventions.sources` globs). Authority: **notes > sources > CLAUDE/AGENTS** (Authority order section) |
+| `conventions.sources` | `ie-convention-reviewer` | explicit path globs for high-authority files. Resolve from project base. |
+| `conventions.auto` | `ie-convention-reviewer` + audit | discover Copilot / instructions / PR-gate workflows (`mode: off\|curated\|all`). See Convention auto-sources. |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
 | `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.intense/runs`) |
 | `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/intent-engineering`) |
 | `artifacts.cleanup_runs` | skills | delete the run dir after a successful publish (default `true`) |
 | `report_dir` *(legacy)* | skills | if set **without** `artifacts:`, run scratch under `report_dir/<run-id>/` and published report under `report_dir/<stamp>-…` (sibling of the run dir); `cleanup_runs: false` |
-| `patterns.allowed/blocked/approved/unknown_pattern` | `ie-architecture-reviewer` | classify, flag blocked-in-changed-code, suppress approved, raise unknown |
+| `patterns.preferred/allowed/blocked/approved/unknown_pattern` | `ie-architecture-reviewer` | preferred-over (instead_of), classify, flag blocked-in-changed-code, suppress approved, raise unknown |
 | `thresholds.*` | `ie-architecture-reviewer` | metric limits for structural smells |
 
 ## Artifact paths (orchestrators — shared)

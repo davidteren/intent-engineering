@@ -42,7 +42,7 @@ concrete fixes.
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
-| `/ie-init` | a repo, once | Scaffolds `.intense/` config (lens toggles, pattern policy, thresholds). Optional `calibrate` measures the repo and proposes thresholds with evidence comments. |
+| `/ie-init` | a repo or multi-repo workspace | Setup/upgrade wizard for `.intense/` (placement, auto sources, severity align, pattern preference, thresholds). Modes: fresh, upgrade, calibrate. |
 | `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
@@ -109,16 +109,22 @@ pattern instances.
 
 ## Configuration (`.intense/`)
 
-Run `/ie-init` to scaffold a project config into `.intense/` at your repo root, then commit
-it. Project config **supersedes** the plugin defaults (`config/defaults/`):
+Run `/ie-init` to set up or upgrade project config under `.intense/` (monolith or shared
+workspace config for multi-repo stacks), then commit it. Project config **supersedes**
+the plugin defaults (`config/defaults/`):
 
-- `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides, local
-  conventions the convention lens must honor, confidence gate, and `artifacts.*`
-  (`run_dir`, `report_dir`, `cleanup_runs`).
-- `patterns.yaml` — design-pattern policy: `allowed`, `blocked` (no new use), `approved`
-  (grandfathered paths). The architecture lens enforces it.
+- `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides,
+  `severity_align`, local conventions (`notes`, `sources`, `auto` discovery), confidence
+  gate, and `artifacts.*` (`run_dir`, `report_dir`, `cleanup_runs`).
+- `patterns.yaml` — design-pattern policy: `preferred` (A instead of B), `allowed`,
+  `blocked` (no new use), `approved` (grandfathered paths). The architecture lens
+  enforces it.
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
   service object, …).
+
+**Multi-repo:** put one shared `.intense/` at the workspace root and set
+`conventions.auto.roots` to sibling apps; child cwds inherit via walk-up.
+**Upgrade:** `/ie-init upgrade` merges missing capabilities only (does not wipe notes).
 
 Merge rule: project overrides global key-by-key; lists replace (the `conventions` block can
 opt into append via `extends: true`; pattern lists are replace-only). See
@@ -139,7 +145,7 @@ defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 ## First run
 
 1. Install the plugin (marketplace add + install — see below).
-2. Optional: `/ie-init` to scaffold `.intense/` (defaults work without it).
+2. Optional: `/ie-init` to set up or upgrade `.intense/` (defaults work without it).
 3. Run `/ie-audit` on a path or `/ie-review` on your branch; open the report under
    `docs/intent-engineering/`.
 

@@ -7,6 +7,16 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Added
+- **`/ie-init` setup/upgrade wizard.** One entry point with modes **fresh** (no
+  `.intense/`), **upgrade** (existing config), and **calibrate**. Profiles:
+  **monolith** vs **multi-repo** (detect siblings + confirm). Fresh path covers
+  workspace placement, `conventions.auto` (+ `roots`), `severity_align`, optional
+  interactor-over-service preference, stack-aware multi-namespace thresholds, and a
+  capability preview before write. Upgrade diffs missing capabilities against plugin
+  defaults and merges keys only (never wipes `notes`). README first-run covers both
+  shapes; `ie-init` evals expanded (ids 4–6).
+
 ## [0.7.0] — 2026-07-29
 
 Hardening + discoverability: config walk-up, skill evals, experience greppable smells,

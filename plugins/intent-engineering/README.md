@@ -16,7 +16,7 @@ plan validation, code review, and codebase audit:
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
-| `/ie-init` | a repo, once | Scaffolds `.intense/` config (lens toggles, pattern policy, thresholds). Optional `calibrate` measures the repo and proposes thresholds with evidence comments. |
+| `/ie-init` | a repo or multi-repo workspace | Setup/upgrade wizard for `.intense/` (placement, auto sources, severity align, pattern preference, lens toggles, thresholds). Modes: fresh, upgrade, calibrate. |
 | `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode it applies safe, verified fixes (never pushes). |
@@ -71,17 +71,36 @@ The "Violation smells" section of each doc is the lens's detection checklist.
 
 ## Configuration (`.intense/`)
 
-Run `/ie-init` to scaffold a project config into `.intense/` at your repo root, then
-commit it. Project config **supersedes** the plugin defaults
-(`config/defaults/`):
+Run `/ie-init` once to set up (or later to **upgrade**) project config, then commit
+`.intense/`. Project config **supersedes** the plugin defaults (`config/defaults/`):
 
-- `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides, local
-  conventions the convention lens must honor, the confidence gate, and **`artifacts.*`**
+- `ways-of-working.yaml` — lens toggles (`on`/`off`/`auto`), severity overrides,
+  `severity_align`, local conventions (`notes`, `sources`, **`auto`** discovery of
+  Copilot / instructions / PR gates), the confidence gate, and **`artifacts.*`**
   (`run_dir`, `report_dir`, `cleanup_runs` — two-layer report layout).
-- `patterns.yaml` — design-pattern policy: `allowed`, `blocked` (no new use), and
-  `approved` (grandfathered paths). The architecture lens enforces it.
+- `patterns.yaml` — design-pattern policy: `preferred` (A instead of B), `allowed`,
+  `blocked` (no new use), and `approved` (grandfathered paths). The architecture lens
+  enforces it.
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
   service object, …).
+
+### First-run shapes
+
+**Monolith** (single app repo):
+
+```text
+/ie-init              # or /ie-init all
+/ie-init calibrate p90   # optional, Arch pack stacks
+```
+
+**Multi-repo workspace** (e.g. BE + FE siblings): run from the **workspace root**. The
+wizard places one shared `.intense/` there, sets `conventions.auto.roots` to the sibling
+apps, and scaffolds threshold namespaces for every detected Arch pack stack. Child apps
+inherit via walk-up when you run `/ie-review` from inside them.
+
+**Already have `.intense/`?** `/ie-init upgrade` diffs capabilities against current plugin
+defaults and merges **missing** keys only (never wipes your notes). Optional later:
+`/ie-from-pr-learnings` to mine PR triage into notes/severities.
 
 Merge rule: project overrides global key-by-key; lists replace unless the block sets
 `extends: true`. See `references/config-resolution.md`.

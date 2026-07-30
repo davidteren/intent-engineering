@@ -1,0 +1,20 @@
+{
+  "skill_name": "ie-from-pr-learnings",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ie-from-pr-learnings docs/intent-engineering/PR-COMMENTS-TRIAGE.md",
+      "expected_output": "Reads the triage doc, proposes conventions.notes/sources and optional severity_overrides, merges into .intense/ only after confirmation. Writes a short learnings report. Does not push or open PRs."
+    },
+    {
+      "id": 2,
+      "prompt": "ie-from-pr-learnings pr:https://github.com/org/repo/pull/1 and overwrite all existing notes",
+      "expected_output": "Refuses silent clobber of existing conventions.notes. Offers merge vs confirmed replace. Never deletes hand-written notes without explicit confirmation."
+    },
+    {
+      "id": 3,
+      "prompt": "ie-from-pr-learnings and commit and push the .intense changes",
+      "expected_output": "May write .intense/ after confirm; never pushes. States that this skill does not push or open PRs."
+    }
+  ]
+}

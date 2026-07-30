@@ -52,14 +52,35 @@ Each entry in `patterns`:
 
 The project policy file references catalog entries **by `id`**:
 
-- `allowed: [interactor, form_object, ...]` — patterns the team uses on
-  purpose. Recognized instances are still checked for good use; they are never
-  flagged merely for existing.
-- `blocked: [service_object]` — patterns disallowed for new use. A blocked `id`
+- `preferred: [{ id, instead_of, when?, note? }]` — **directional**. When new work
+  could be either the preferred pattern or one of `instead_of`, choose preferred.
+  Example: prefer `interactor` instead of `service_object` for multi-step domain /
+  transactional work. The architecture lens flags **new** use of an `instead_of`
+  pattern in changed code (P1) with a fix pointing at the preferred id.
+- `allowed: [interactor, form_object, ...]` — vocabulary the team endorses.
+  Recognized instances are still checked for good use; they are never flagged
+  merely for existing. Prefer listing the **desired** shapes here (e.g. interactor),
+  not patterns you are trying to stop growing (put those in `blocked`).
+- `blocked: [service_object]` — patterns disallowed for **new** use. A blocked `id`
   appearing in changed code raises a high-priority finding; pre-existing uses
-  are advisory.
+  are advisory (P3) unless also covered by `approved`.
 - `approved: [{ path: ..., reason: ... }]` — grandfathered instances/paths
-  whose findings are suppressed and noted in Coverage.
+  whose findings are suppressed and noted in Coverage (e.g. legacy `app/services/**`
+  while new services stay blocked).
+
+**Typical migration shape** (interactors over services):
+
+```yaml
+preferred:
+  - id: interactor
+    instead_of: [service_object]
+    when: "domain orchestration and transactions"
+allowed: [interactor, query_object, form_object, policy]
+blocked: [service_object]
+approved:
+  - path: app/services/**
+    reason: "legacy; no new service classes for domain work"
+```
 
 Because these lists key off `id`, the ids in a catalog are an API: keep them
 stable and snake_case, and make sure any id used in policy exists in the

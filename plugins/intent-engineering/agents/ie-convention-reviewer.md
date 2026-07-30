@@ -23,9 +23,12 @@ without reason throws that away.
    violation — even if it differs from the framework norm.
 2. **Then** read resolved project convention config per
    `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (walk-up / `config:` /
-   `INTENSE_CONFIG_DIR`): `conventions.notes` and `conventions.sources`. Honor that
-   doc's **Authority order** and **Base directory for `conventions.sources` globs**
-   sections exactly — do not invent a different precedence or glob base.
+   `INTENSE_CONFIG_DIR`): `conventions.notes`, explicit `conventions.sources`, and
+   **`conventions.auto`** discovery (Copilot packs, `.github/instructions/**` with
+   `applyTo`, PR-gate workflows). Honor that doc's **Authority order**, **Base
+   directory for `conventions.sources` globs**, and **Convention auto-sources**
+   sections exactly — do not invent a different precedence, pack set, or glob base.
+   List resolved auto paths in observations/Coverage.
 3. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
    - `principles/convention-over-configuration.md`
    - the matching `frameworks/<stack>.md` for the diff's stack — read its "Convention

@@ -8,6 +8,13 @@ This file ships inside the installable plugin and tracks the latest release.
 The **full dated history** lives in the development repo:
 <https://github.com/davidteren/intent-engineering/blob/main/CHANGELOG.md>.
 
+## [Unreleased]
+
+### Added
+- **`/ie-init` setup/upgrade wizard** — fresh | upgrade | calibrate; monolith vs
+  multi-repo placement + `auto.roots`; capability questions (`conventions.auto`,
+  `severity_align`, preferred patterns); upgrade merges missing keys only.
+
 ## [0.7.0] — 2026-07-29
 
 Hardening + discoverability release.

@@ -3,18 +3,33 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "ie-init all (no .intense/ yet)",
-      "expected_output": "Scaffolds selected files under .intense/ from defaults (stack-aware thresholds). Reports CREATED paths. Does not commit or push."
+      "prompt": "ie-init all (no .intense/ yet, single-repo monolith)",
+      "expected_output": "Fresh mode. Scaffolds selected files under .intense/ from defaults (stack-aware thresholds). May ask capability questions interactively (auto, severity_align, pattern preference). Reports CREATED paths. Does not commit or push."
     },
     {
       "id": 2,
       "prompt": "ie-init all (with .intense/ways-of-working.yaml already present and edited)",
-      "expected_output": "Reports EXISTS for that file and does not overwrite it without explicit confirmation. Asks overwrite/diff/skip; default skip. Other missing selected files may still be created."
+      "expected_output": "Reports EXISTS for that file and does not overwrite it without explicit confirmation. Asks overwrite/diff/skip; default skip. Other missing selected files may still be created. Prefer upgrade mode when blank args and .intense/ exists."
     },
     {
       "id": 3,
       "prompt": "ie-init calibrate p90",
       "expected_output": "Measures stack metrics, shows distribution table vs defaults, proposes thresholds with evidence comments. Writes only after confirmation; never silent clobber of existing thresholds.yaml."
+    },
+    {
+      "id": 4,
+      "prompt": "ie-init (blank) at multi-repo workspace root with sibling apps, no .intense/",
+      "expected_output": "Detects multi-repo profile (confirm). Places shared .intense/ at workspace root (recommended). Sets conventions.auto.roots to sibling app dirs when accepted. Scaffolds stack-aware thresholds for all Arch pack stacks found under roots. Does not put config only inside one child app without confirmation."
+    },
+    {
+      "id": 5,
+      "prompt": "ie-init upgrade (existing .intense/ with notes but missing severity_align and conventions.auto blocks)",
+      "expected_output": "Shows capability table (present vs missing). Offers to add missing keys only. Never deletes existing conventions.notes. Writes only after confirm. Does not full-overwrite ways-of-working.yaml."
+    },
+    {
+      "id": 6,
+      "prompt": "ie-init fresh with Rails stack; user accepts prefer interactors",
+      "expected_output": "patterns.yaml includes preferred interactor instead_of service_object and blocked service_object when user said yes; optional approved app/services/** if grandfather chosen. Pattern ids must exist in rails catalog."
     }
   ]
 }

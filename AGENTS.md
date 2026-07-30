@@ -108,8 +108,9 @@ intent-engineering/                       dev repo + marketplace
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
 `ie-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
-no artifacts, prose (not findings JSON). `ie-init` scaffolds `.intense/` and may offer
-a `.gitignore` line for `.intense/runs/`.
+no artifacts, prose (not findings JSON). `ie-init` is the setup/upgrade wizard for
+`.intense/` (fresh, upgrade, calibrate; multi-repo placement) and may offer a
+`.gitignore` line for `.intense/runs/`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
 the apply stage), `out:<path>` (override published report path). Path resolution:

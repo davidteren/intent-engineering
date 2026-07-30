@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (v0.7.0) · **Updated:** 2026-07-29
+**State:** ✅ feature-complete · 🚀 published & released (v0.7.0) · **Updated:** 2026-07-30
 
 ### Last session handoff
 
-1. **What this is:** Released **v0.7.0** (walk-up config, evals, UX smells, calibrate, apply-safety).
-2. **What we finished:** PR #31 merged; GitHub release + tag live; landing site points at 0.7.0 / 138 checks.
-3. **What you do next:** Optional smoke install of v0.7.0; continue #23 experience UI dogfood when ready.
+1. **What this is:** Intent Engineering plugin; setup path is the expanded `/ie-init` wizard.
+2. **What we finished:** `/ie-init` fresh + upgrade wizard (multi-repo placement, auto roots, severity_align, pattern preference) on main working tree.
+3. **What you do next:** Dogfood `/ie-init` on a clean app and `/ie-init upgrade` on an existing `.intense/`; commit when ready.
 
 ---
 
@@ -23,7 +23,8 @@ architecture audit for **6 stacks** (Rails, Python (FastAPI), Laravel, Express, 
 - **Lenses:** predictability, simplicity (always-on); convention, experience, architecture
   (conditional — architecture supports Rails, Python (FastAPI), Laravel, Express, Phoenix,
   React; code/audit).
-- **Skills:** `/ie-init`, `/ie-plan-assist`, `/ie-validate-plan`, `/ie-review`, `/ie-audit`.
+- **Skills:** `/ie-init` (fresh/upgrade/calibrate wizard), `/ie-plan-assist`,
+  `/ie-validate-plan`, `/ie-review`, `/ie-audit` (+ `/ie-from-pr-learnings` for PR-mined notes).
 - **Contract layer:** findings schema, subagent template, lens catalog, stack catalog
   (the stack registry), scoring rubric, report template, principle index, config resolution.
 - **Knowledge base:** 9 principle docs, 12 framework docs (incl. `rails-architecture`,
