@@ -137,8 +137,9 @@ thresholds and `patterns/python.yaml`.
 
 - A class over a threshold that is genuinely cohesive (say so; don't flag the number).
 - Patterns/usages the config `allowed` or `approved` covers.
-- Choices the repo `CLAUDE.md`/`AGENTS.md`/`.intense` explicitly endorse (e.g. "we use
-  interactors") — that's the convention here.
+- Choices the repo `CLAUDE.md`/`AGENTS.md` endorse when **pattern policy is silent**
+  (no conflicting preferred/blocked/approved). **`.intense` pattern policy wins** over
+  CLAUDE/AGENTS text when they disagree (same authority order as config-resolution).
 - Prose-level naming/idiom with no structural dimension (convention lens).
 - Behavior surprises (predictability lens) — unless caused by structure (e.g. a callback
   side effect: hand the surprise to predictability, the callback-count smell is yours).

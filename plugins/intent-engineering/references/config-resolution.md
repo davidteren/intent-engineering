@@ -126,8 +126,18 @@ severity_align:
 **Mode `off`:** no auto promotion (only explicit `severity_overrides`).  
 **Mode `curated_gates`:** for each finding, if any auto-discovered workflow path matches a
 theme row **and** the finding matches that row under the rules below, set severity to
-`max(current, theme.severity or min_severity)` and append
+the **more severe** of (current, theme.severity or min_severity) and append
 `because: "CI gate: <workflow basename>"` into Coverage / finding evidence.
+
+**Severity rank** (higher = more severe; never demote):
+
+```
+P0 > P1 > P2 > P3
+```
+
+Define `more_severe(a, b)` as the higher-ranked of the two. Examples:
+`more_severe(P3, P1) = P1`; `more_severe(P0, P1) = P0`; `more_severe(P2, P2) = P2`.
+Do **not** use string/lexicographic `max` (it can yield the milder severity).
 
 **Finding match rules** (apply per theme row after the workflow basename matched):
 
@@ -135,33 +145,34 @@ theme row **and** the finding matches that row under the rules below, set severi
    is in that list. **Do not** promote on `principle` alone when smells are listed
    (avoids promoting every `architecture` finding because a `callback-*.yml` exists).
 2. Else if the row lists **non-empty `principles`**: the finding matches when its
-   `principle` is in that list.
-3. Else (both empty): **Coverage note only** — do not change severity (test / process gates).
+   `principle` is in that list. Use this only for **narrow** project themes — not for
+   broad principles that most findings share.
+3. Else (both empty): **Coverage note only** — do not change severity.
 
 **Built-in theme map** (workflow basename contains any of `match` tokens, case-insensitive):
 
-| match tokens (workflow name) | smells | principles |
-|------------------------------|--------|------------|
-| `callback` | `callback-hell` | (empty — smell-gated) |
-| `migration`, `migrations` | (empty until schema smells exist in schema) | `framework-idiom` only if finding is migration-related; else Coverage note |
-| `rubocop`, `eslint`, `prettier`, `lint` | (empty) | `framework-idiom`, `convention-over-configuration` |
-| `semgrep`, `brakeman`, `codeql`, `security`, `secret`, `detect-secret` | (empty) | Coverage note only unless project `themes` add smells/principles |
-| `rspec`, `jest`, `playwright`, `test`, `minitest` | (empty) | Coverage note only |
-| `pr-title` | (empty) | Coverage note only |
+| match tokens (workflow name) | smells | principles | Effect |
+|------------------------------|--------|------------|--------|
+| `callback` | `callback-hell` | (empty) | Promote when smell matches |
+| `migration`, `migrations` | (empty) | (empty) | Coverage note only until a schema smell id ships |
+| `rubocop`, `eslint`, `prettier`, `lint` | (empty) | (empty) | Coverage note only (do not mass-promote convention findings) |
+| `semgrep`, `brakeman`, `codeql`, `security`, `secret`, `detect-secret` | (empty) | (empty) | Coverage note only unless project `themes` add smells |
+| `rspec`, `jest`, `playwright`, `test`, `minitest` | (empty) | (empty) | Coverage note only |
+| `pr-title` | (empty) | (empty) | Coverage note only |
 
-Project `severity_align.themes` entries:
+Project `severity_align.themes` entries (opt-in promote with explicit smells):
 
 ```yaml
-- match: [callback]           # substrings of workflow basename
-  smells: [callback-hell]     # when non-empty, smell is required (principle alone is not enough)
-  principles: []              # optional; used only when smells is empty
-  severity: P1                # optional; default min_severity
+- match: [callback]
+  smells: [callback-hell]     # non-empty → smell required
+  principles: []              # used only when smells is empty
+  severity: P1                # optional floor; default min_severity
 ```
 
 **Order of application (synthesis):**
 
 1. Lens-emitted severity  
-2. **`severity_align`** promotions (if mode on and gate matched)  
+2. **`severity_align`** promotions (if mode on and gate matched; smell-first + rank above)  
 3. Explicit **`severity_overrides`** (always last; win on conflict)  
 
 List promotions in Coverage: `Severity align: #N callback-hell P2→P1 (callback-check.yml)`.
@@ -174,32 +185,38 @@ at a parent workspace root. Silent fallback to defaults is the failure mode this
 procedure prevents.
 
 ```bash
-# Resolve PROJECT_INTENSE (directory containing the three yaml files)
+# Resolve PROJECT_INTENSE (directory containing at least one of the three yaml files)
 # Precedence: config:<path> arg → INTENSE_CONFIG_DIR → walk-up → empty (defaults only)
-resolve_intense_dir() {
-  if [ -n "$CONFIG_ARG" ]; then
-    case "$CONFIG_ARG" in
-      */.intense|.intense) echo "$CONFIG_ARG" ;;
-      *) if [ -d "$CONFIG_ARG/.intense" ]; then echo "$CONFIG_ARG/.intense"
-         elif [ -f "$CONFIG_ARG/ways-of-working.yaml" ] || [ -f "$CONFIG_ARG/patterns.yaml" ] || [ -f "$CONFIG_ARG/thresholds.yaml" ]; then echo "$CONFIG_ARG"
-         else echo "$CONFIG_ARG/.intense"; fi ;;
-    esac
-    return
+has_intense_yaml() {
+  [ -f "$1/ways-of-working.yaml" ] || [ -f "$1/patterns.yaml" ] || [ -f "$1/thresholds.yaml" ]
+}
+
+# Explicit path: succeed only when the resolved dir exists AND has at least one yaml.
+# Never return a path that would label Coverage as project: while falling back to defaults.
+resolve_explicit_config() {
+  arg="$1"
+  candidate=""
+  case "$arg" in
+    */.intense|.intense) candidate="$arg" ;;
+    *) if [ -d "$arg/.intense" ]; then candidate="$arg/.intense"
+       elif has_intense_yaml "$arg"; then candidate="$arg"
+       fi ;;
+  esac
+  if [ -n "$candidate" ] && [ -d "$candidate" ] && has_intense_yaml "$candidate"; then
+    echo "$candidate"
+    return 0
   fi
-  if [ -n "${INTENSE_CONFIG_DIR:-}" ]; then
-    CONFIG_ARG="$INTENSE_CONFIG_DIR"
-    resolve_intense_dir
-    return
-  fi
+  return 1
+}
+
+resolve_walk_up() {
   dir="$PWD"
   depth=0
-  # Walk up to filesystem root (cap 32). Nearest `.intense` wins — a sub-repo with
-  # its own config shadows a parent workspace; a sub-repo *without* one inherits the
-  # parent workspace's config (the multi-repo workspace case).
+  # Walk up to filesystem root (cap 32). Nearest `.intense` wins.
   while [ -n "$dir" ] && [ "$depth" -lt 32 ]; do
     if [ -d "$dir/.intense" ]; then
       echo "$dir/.intense"
-      return
+      return 0
     fi
     [ "$dir" = "/" ] && break
     dir=$(dirname "$dir")
@@ -208,10 +225,22 @@ resolve_intense_dir() {
   return 1
 }
 
-PROJECT_INTENSE=$(resolve_intense_dir) || PROJECT_INTENSE=""
-DEFAULTS="${CLAUDE_PLUGIN_ROOT}/config/defaults"
+PROJECT_INTENSE=""
 CONFIG_SOURCE="defaults"
-[ -n "$PROJECT_INTENSE" ] && CONFIG_SOURCE="project:$PROJECT_INTENSE"
+EXPLICIT="${CONFIG_ARG:-${INTENSE_CONFIG_DIR:-}}"
+if [ -n "$EXPLICIT" ]; then
+  if PROJECT_INTENSE=$(resolve_explicit_config "$EXPLICIT"); then
+    CONFIG_SOURCE="project:$PROJECT_INTENSE"
+  else
+    # Invalid explicit path: defaults only; never claim project:
+    CONFIG_SOURCE="defaults (invalid config path: $EXPLICIT)"
+    PROJECT_INTENSE=""
+  fi
+else
+  PROJECT_INTENSE=$(resolve_walk_up) || PROJECT_INTENSE=""
+  [ -n "$PROJECT_INTENSE" ] && CONFIG_SOURCE="project:$PROJECT_INTENSE"
+fi
+DEFAULTS="${CLAUDE_PLUGIN_ROOT}/config/defaults"
 # Always record for Coverage (required — never silent about source):
 #   Config: project:/path/to/.intense (walked up from <cwd>)
 #   Config: defaults (no .intense/ found, searched from <cwd> up to filesystem root)

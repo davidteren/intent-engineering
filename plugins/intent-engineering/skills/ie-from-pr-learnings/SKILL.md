@@ -27,6 +27,7 @@ YAML without confirmation.
 | path ending in `.md` | Treat as triage / learnings document (primary). |
 | `pr:<url\|number>` | Fetch review threads with `gh` (read-only). Repeatable. |
 | `stack` / blank with multi-repo cwd | Prefer nearest `.intense/` walk-up; detect BE/FE siblings. |
+| `config:<path>` | Override project config dir (same rules as config-resolution). |
 | `out:<dir>` | Write the summary report under this dir (default: resolved `artifacts.report_dir`). |
 
 ## Procedure

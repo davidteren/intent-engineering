@@ -26,7 +26,7 @@ without reason throws that away.
    `conventions.sources` globs**, and **Convention auto-sources** exactly — do not invent
    a different precedence, pack set, or glob base. List resolved auto paths in
    observations/Coverage.
-3. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
+2. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
    - `principles/convention-over-configuration.md`
    - the matching `frameworks/<stack>.md` for the diff's stack — read its "Convention
      violation smells" section. Resolve stacks from

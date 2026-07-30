@@ -27,14 +27,18 @@ patterns, and a path from PR review into `.intense/`.
   path-scoped `.github/instructions/**` (`applyTo`), and curated PR-gate workflows
   under optional multi-repo `roots`. Generic workflow `exclude` defaults only.
 - **`severity_align`** (defaults + synthesis order). Promote severity when a discovered
-  gate matches a theme under **smell-first** rules (non-empty smells require smell match;
-  no broad promote on principle alone). Explicit `severity_overrides` still win last.
+  gate matches a theme under **smell-first** rules (non-empty smells require smell match).
+  Built-in lint/test/security rows are **Coverage note only** (no mass-promote). Rank is
+  `P0 > P1 > P2 > P3` via `more_severe` (never string max). Explicit `severity_overrides`
+  still win last.
 - **`patterns.preferred`**. Directional "use A instead of B" for new work
   (`instead_of`); architecture lens enforces with blocked/approved.
 
 ### Changed
 - Convention and architecture agents honor auto sources, preferred policy, and
-  authority order from `config-resolution.md`.
+  authority order from `config-resolution.md` (pattern policy wins over CLAUDE text).
+- Explicit `config:` / `INTENSE_CONFIG_DIR` that lack yaml never claim `project:`
+  while using defaults.
 - Orchestrators (`ie-review`, `ie-audit`) document severity_align after lens merge.
 - Landing site, READMEs, and STATUS describe six skills and the wizard first-run.
 - Contract suite **141** checks (was 138) across 12 sections.

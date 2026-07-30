@@ -18,7 +18,7 @@ Each entry in `patterns`:
 
 | Field | Required | Meaning |
 |---|---|---|
-| `id` | yes | snake_case stable key. The contract with `.intense/patterns.yaml` allow / block / approved lists. Never rename casually. |
+| `id` | yes | snake_case stable key. The contract with `.intense/patterns.yaml` preferred / allowed / blocked / approved lists. Never rename casually. |
 | `name` | yes | Human-readable display name used in findings. |
 | `intent` | yes | One sentence: the pattern's purpose. Note here when it is easily confused with another pattern and how to tell them apart. |
 | `recognition` | yes | Heuristics the lens matches against. **Any-of**: any single signal can match; more matching signals raise confidence (gem/include strong, path/suffix weak). |
@@ -71,15 +71,17 @@ The project policy file references catalog entries **by `id`**:
 **Typical migration shape** (interactors over services):
 
 ```yaml
+# Preferred alone is enough: architecture P1s new instead_of use and names the preferred id.
+# Optional: also block + approve for explicit ban + grandfather (agent emits one finding if both fire).
 preferred:
   - id: interactor
     instead_of: [service_object]
     when: "domain orchestration and transactions"
 allowed: [interactor, query_object, form_object, policy]
-blocked: [service_object]
 approved:
   - path: app/services/**
     reason: "legacy; no new service classes for domain work"
+# blocked: [service_object]  # optional; prefer preferred-only unless you want an explicit ban list
 ```
 
 Because these lists key off `id`, the ids in a catalog are an API: keep them

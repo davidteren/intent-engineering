@@ -38,11 +38,13 @@ fails), fall back to a numbered list and wait for the user's reply — never sil
 
 #### 0a. Mode
 
-1. If `$ARGUMENTS` starts with `calibrate` → **calibrate** (optional `p90` / `p75` / `p95`;
-   default **p90**). Jump to Step 2c.
-2. Else if `$ARGUMENTS` contains `upgrade` → **upgrade**. Jump to Step U after a light
+1. If `$ARGUMENTS` starts with token `calibrate` → **calibrate** (optional `p90` /
+   `p75` / `p95`; default **p90**). Jump to Step 2c.
+2. Else if `$ARGUMENTS` has a **whole-token** `upgrade` (space-separated; not a
+   substring of another word) → **upgrade**. If `ways` / `patterns` / `thresholds` also
+   appear, limit upgrade merges to those files only. Jump to Step U after a light
    detect pass (0b–0c still run so the report names stacks/roots).
-3. Else if `$ARGUMENTS` is `fresh` or a file token (`all` / `ways` / `patterns` /
+3. Else if `$ARGUMENTS` has `fresh` or a file token (`all` / `ways` / `patterns` /
    `thresholds`) → **fresh** with that selection.
 4. Else (blank): discover nearest `.intense/` via walk-up
    (`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`).
@@ -210,8 +212,11 @@ ask short questions and write answers into the files. Defaults differ by profile
 
 Non-interactive: scaffold defaults verbatim (auto mode `curated`, severity_align on,
 preferred empty). Set `conventions.auto.roots` when `$ARGUMENTS` includes
-`multi-repo` and/or `roots:a,b,c` (comma-separated sibling dirs). Without those tokens,
-roots stay empty (base only) unless this run already confirmed multi-repo interactively.
+`multi-repo` and/or `roots:a,b,c` (comma-separated sibling dirs). If multi-repo
+**signals** are strong but neither token is present, **do not write** `.intense/` only
+inside a child app: refuse with the required tokens, or write at the detected workspace
+root and print a hard warning in the report. Without tokens and without multi-repo
+signals, place at the current git root (monolith).
 
 ---
 

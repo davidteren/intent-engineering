@@ -151,8 +151,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
       Never demote. Record each promotion in Coverage.
    2. **`severity_overrides`** (always last; wins on conflict): value may be a severity
       string **or** `{ severity:, because: }` map — copy `because` into Coverage.
-   3. Suppress architecture findings on **pre-existing** `approved` paths (note Coverage);
-      keep `blocked` / preferred-`instead_of` introductions in **changed** code at P1.
+   3. Pattern policy: suppress architecture findings only when the path is `approved`
+      **and** the change is not a **net-new** introduction of a blocked / preferred-
+      `instead_of` pattern (grandfather is not a license for new classes). Keep
+      blocked / preferred-`instead_of` introductions in **changed** code at P1.
 5. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
 6. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;

@@ -10,7 +10,7 @@
 #   blocked    — do not introduce in CHANGED code (P1); pre-existing = P3 unless approved.
 #   approved   — grandfather path globs so legacy blocked uses stay quiet.
 #
-# Example: prefer interactors, block new service objects, grandfather app/services/**
+# Example: prefer interactors (instead_of service_object); optional block + approve
 #
 # MERGE: when a project sets one of the lists below, that list REPLACES the global list
 # wholesale (replace-only; no `extends` knob). List every entry you want.
