@@ -38,8 +38,8 @@ Phoenix, React) + per-stack pattern catalogs.
 
 - **Repo (public, MIT):** https://github.com/davidteren/intent-engineering
 - **Landing site:** https://davidteren.github.io/intent-engineering/ (GitHub Pages, `docs/`)
-- **Release:** **v0.8.0** (this branch until tagged) — init wizard, multi-repo placement,
-  auto sources, severity_align, preferred patterns, ie-from-pr-learnings. Prior: `v0.7.0`.
+- **Release:** **`v0.8.0` (Latest)** — init wizard, multi-repo placement, auto sources,
+  severity_align, preferred patterns, ie-from-pr-learnings. Prior: `v0.7.0`.
 - **CI:** `contracts` workflow on every PR + `main`.
 
 Install:
