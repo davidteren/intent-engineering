@@ -354,6 +354,12 @@ end
 # (c) every pattern id named in policy (config defaults) and README examples exists in some catalog
 policy = (YAML.safe_load(read("config/defaults/patterns.yaml")) rescue nil) || {}
 policy_ids = (Array(policy["allowed"]) + Array(policy["blocked"])).select { |x| x.is_a?(String) }
+# preferred: [{ id:, instead_of: [...] }, ...]
+Array(policy["preferred"]).each do |entry|
+  next unless entry.is_a?(Hash)
+  policy_ids << entry["id"] if entry["id"].is_a?(String)
+  Array(entry["instead_of"]).each { |id| policy_ids << id if id.is_a?(String) }
+end
 # README bracketed examples: `allowed: [interactor, form_object, ...]`, `blocked: [service_object]`
 read("resources/patterns/README.md").scan(/(?:allowed|blocked):\s*\[([^\]]*)\]/) do |m|
   m[0].split(",").map(&:strip).each { |id| policy_ids << id unless id.empty? || id == "..." }
@@ -361,7 +367,7 @@ end
 policy_ids.uniq!
 unknown_ids = policy_ids.reject { |id| catalog_ids.include?(id) }
 if unknown_ids.empty?
-  ok "all #{policy_ids.size} pattern ids named in policy/README exist in the rails catalog"
+  ok "all #{policy_ids.size} pattern ids named in policy/README (incl. preferred) exist in a catalog"
 else
   unknown_ids.each { |id| bad "pattern id named in policy/README not in catalog: #{id}" }
 end

@@ -39,10 +39,11 @@ thresholds and `patterns/python.yaml`.
 1. **Resolved config** (the orchestrator passes it, or read it yourself per
    `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`): project `.intense/thresholds.yaml`
    + `.intense/patterns.yaml` + `.intense/ways-of-working.yaml` merged over
-   `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. The thresholds and the allow/block/approved/unknown
-   policy are **authoritative** — use the resolved numbers, not the doc's example numbers. Note
-   the resolved **`tools.architecture`** preference (`enrich`/`prefer`/`report`/`off`) — it
-   governs external-tool handling (see Method).
+   `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. The thresholds and the
+   preferred/allowed/blocked/approved/unknown policy are **authoritative** — use the
+   resolved numbers, not the doc's example numbers. Note the resolved
+   **`tools.architecture`** preference (`enrich`/`prefer`/`report`/`off`) — it governs
+   external-tool handling (see Method).
 2. **Smell heuristics:** `${CLAUDE_PLUGIN_ROOT}/resources/frameworks/<stack>-architecture.md`
    (e.g. `rails-architecture.md`).
 3. **Pattern catalog:** `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` — the
@@ -98,13 +99,31 @@ thresholds and `patterns/python.yaml`.
   (default P3) so a human classifies it or extends the catalog. Only when
   `unknown_pattern.raise` is true.
 - **Policy enforcement** (from `.intense/patterns.yaml`):
+  - **preferred** entries (`id` + `instead_of: [ids…]`, optional `when` / `note`):
+    when **changed** code introduces or substantially grows a pattern listed in
+    `instead_of`, **and** the unit matches any configured `when` (if `when` is set —
+    free-text condition the agent judges against the unit's role; skip preferred P1 when
+    `when` clearly does not apply, e.g. a thin presenter while `when` says multi-step
+    domain work), emit P1 with `pattern: <instead_of id>`, title that names the preferred
+    alternative, and `suggested_fix` that points at preferred `id` (and `when`/`note` if
+    present). Omit `when` → apply to all instead_of introductions. Pre-existing
+    `instead_of` use → P3 unless `approved`. Same audit rule as blocked (no diff →
+    treat as pre-existing / P3).
   - **blocked** pattern in **changed** code → P1 (`smell` omitted, `pattern: <id>`).
     Pre-existing use of a blocked pattern → advisory (P3) unless covered by `approved`.
     **In `audit` context there is no diff** — treat every instance as pre-existing
     (blocked → advisory P3). The P1 "blocked in changed code" rule applies only in
     `review` context, where a changed-files set exists.
-  - **approved** instance/path → suppress the finding; note it in observations.
+  - **One finding per unit:** if the same unit matches both `preferred.instead_of` and
+    `blocked` for the same pattern id, emit **one** finding (preferred framing wins:
+    title + `suggested_fix` name the preferred id). Do not double-report.
+  - **approved** instance/path → suppress findings about **pre-existing** blocked /
+    instead_of use on that path; note in observations. **Net-new files** under an
+    approved path that introduce a blocked pattern still get P1 (grandfather is not a
+    license for new classes of the blocked shape).
   - **allowed** pattern → never flag for merely existing; still check good_use/misuse.
+    Prefer listing **desired** shapes in `allowed` (e.g. interactor), not shapes you
+    are trying to stop growing (those belong in `blocked` + optional `preferred`).
 
 ## Confidence calibration
 
@@ -120,8 +139,9 @@ thresholds and `patterns/python.yaml`.
 
 - A class over a threshold that is genuinely cohesive (say so; don't flag the number).
 - Patterns/usages the config `allowed` or `approved` covers.
-- Choices the repo `CLAUDE.md`/`AGENTS.md`/`.intense` explicitly endorse (e.g. "we use
-  interactors") — that's the convention here.
+- Choices the repo `CLAUDE.md`/`AGENTS.md` endorse when **pattern policy is silent**
+  (no conflicting preferred/blocked/approved). **`.intense` pattern policy wins** over
+  CLAUDE/AGENTS text when they disagree (same authority order as config-resolution).
 - Prose-level naming/idiom with no structural dimension (convention lens).
 - Behavior surprises (predictability lens) — unless caused by structure (e.g. a callback
   side effect: hand the surprise to predictability, the callback-count smell is yours).

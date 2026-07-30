@@ -18,7 +18,7 @@ Each entry in `patterns`:
 
 | Field | Required | Meaning |
 |---|---|---|
-| `id` | yes | snake_case stable key. The contract with `.intense/patterns.yaml` allow / block / approved lists. Never rename casually. |
+| `id` | yes | snake_case stable key. The contract with `.intense/patterns.yaml` preferred / allowed / blocked / approved lists. Never rename casually. |
 | `name` | yes | Human-readable display name used in findings. |
 | `intent` | yes | One sentence: the pattern's purpose. Note here when it is easily confused with another pattern and how to tell them apart. |
 | `recognition` | yes | Heuristics the lens matches against. **Any-of**: any single signal can match; more matching signals raise confidence (gem/include strong, path/suffix weak). |
@@ -52,14 +52,37 @@ Each entry in `patterns`:
 
 The project policy file references catalog entries **by `id`**:
 
-- `allowed: [interactor, form_object, ...]` — patterns the team uses on
-  purpose. Recognized instances are still checked for good use; they are never
-  flagged merely for existing.
-- `blocked: [service_object]` — patterns disallowed for new use. A blocked `id`
+- `preferred: [{ id, instead_of, when?, note? }]` — **directional**. When new work
+  could be either the preferred pattern or one of `instead_of`, choose preferred.
+  Example: prefer `interactor` instead of `service_object` for multi-step domain /
+  transactional work. The architecture lens flags **new** use of an `instead_of`
+  pattern in changed code (P1) with a fix pointing at the preferred id.
+- `allowed: [interactor, form_object, ...]` — vocabulary the team endorses.
+  Recognized instances are still checked for good use; they are never flagged
+  merely for existing. Prefer listing the **desired** shapes here (e.g. interactor),
+  not patterns you are trying to stop growing (put those in `blocked`).
+- `blocked: [service_object]` — patterns disallowed for **new** use. A blocked `id`
   appearing in changed code raises a high-priority finding; pre-existing uses
-  are advisory.
+  are advisory (P3) unless also covered by `approved`.
 - `approved: [{ path: ..., reason: ... }]` — grandfathered instances/paths
-  whose findings are suppressed and noted in Coverage.
+  whose findings are suppressed and noted in Coverage (e.g. legacy `app/services/**`
+  while new services stay blocked).
+
+**Typical migration shape** (interactors over services):
+
+```yaml
+# Preferred alone is enough: architecture P1s new instead_of use and names the preferred id.
+# Optional: also block + approve for explicit ban + grandfather (agent emits one finding if both fire).
+preferred:
+  - id: interactor
+    instead_of: [service_object]
+    when: "domain orchestration and transactions"
+allowed: [interactor, query_object, form_object, policy]
+approved:
+  - path: app/services/**
+    reason: "legacy; no new service classes for domain work"
+# blocked: [service_object]  # optional; prefer preferred-only unless you want an explicit ban list
+```
 
 Because these lists key off `id`, the ids in a catalog are an API: keep them
 stable and snake_case, and make sure any id used in policy exists in the

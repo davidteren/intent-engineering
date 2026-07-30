@@ -7,6 +7,42 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-07-30
+
+Setup that matches real workspaces: multi-repo init, CI-aware conventions, preferred
+patterns, and a path from PR review into `.intense/`.
+
+### Added
+- **`/ie-init` setup/upgrade wizard.** Modes **fresh** | **upgrade** (calibrate remains
+  from 0.7.0, now part of the same entry point). Profiles **monolith** | **multi-repo**
+  (detect siblings + confirm; tokens `multi-repo`, `roots:a,b`). Fresh covers workspace
+  placement, `conventions.auto` (+ `roots`), `severity_align`, optional interactor
+  preference (preferred-only, not double-blocked), multi-stack thresholds, and a
+  capability preview before write. Upgrade diffs missing capabilities vs plugin defaults
+  and merges keys only (never wipes `notes`). Evals expanded (ids 4–6).
+- **`/ie-from-pr-learnings`.** Mine PR triage docs or `pr:` URLs into
+  `conventions.notes` / `sources`, `severity_overrides`, and optional pattern policy.
+  Workspace-aware; never clobbers or pushes.
+- **`conventions.auto`** (defaults + config-resolution). Discover Copilot packs,
+  path-scoped `.github/instructions/**` (`applyTo`), and curated PR-gate workflows
+  under optional multi-repo `roots`. Generic workflow `exclude` defaults only.
+- **`severity_align`** (defaults + synthesis order). Promote severity when a discovered
+  gate matches a theme under **smell-first** rules (non-empty smells require smell match).
+  Built-in lint/test/security rows are **Coverage note only** (no mass-promote). Rank is
+  `P0 > P1 > P2 > P3` via `more_severe` (never string max). Explicit `severity_overrides`
+  still win last.
+- **`patterns.preferred`**. Directional "use A instead of B" for new work
+  (`instead_of`); architecture lens enforces with blocked/approved.
+
+### Changed
+- Convention and architecture agents honor auto sources, preferred policy, and
+  authority order from `config-resolution.md` (pattern policy wins over CLAUDE text).
+- Explicit `config:` / `INTENSE_CONFIG_DIR` that lack yaml never claim `project:`
+  while using defaults.
+- Orchestrators (`ie-review`, `ie-audit`) document severity_align after lens merge.
+- Landing site, READMEs, and STATUS describe six skills and the wizard first-run.
+- Contract suite **141** checks (was 138) across 12 sections.
+
 ## [0.7.0] — 2026-07-29
 
 Hardening + discoverability: config walk-up, skill evals, experience greppable smells,
@@ -359,3 +395,4 @@ single commit at publish time.)
 
 [0.2.0]: https://github.com/davidteren/intent-engineering/releases/tag/v0.2.0
 [0.7.0]: https://github.com/davidteren/intent-engineering/releases/tag/v0.7.0
+[0.8.0]: https://github.com/davidteren/intent-engineering/releases/tag/v0.8.0

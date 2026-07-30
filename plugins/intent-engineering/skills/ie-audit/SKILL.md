@@ -87,23 +87,21 @@ just needs the merged per-lens return.
 
 ## Stage 4 — Merge & score
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
-   (resolved `confidence_gate`, default 75; P0 at 50+ survives) and apply config policy
-   (severity_overrides; suppress `approved` paths; keep `blocked`-pattern findings) as in
-   `ie-review` Stage 5 (no apply — audit is read-only).
+1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
+   policy **before** the confidence gate as in `ie-review` Stage 5: **`severity_align`
+   then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
+   survive), suppress `approved` paths, keep `blocked` / preferred-instead_of findings
+   (no apply — audit is read-only).
 2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the
    product. Omit or mark failed lenses rather than inventing scores.
 3. Collect tensions and observations.
-4. **CI / conventions delta (cheap checklist).** In Observations or Coverage, list:
-   - files that look like CI-enforced policy (required checks, custom gate scripts,
-     review-bot instruction packs under `.github/`, linter configs) that are **not**
-     referenced by `conventions.sources` / `notes` / severity `because` fields;
-   - `conventions.notes` or severity overrides that mention rules with **no** matching
-     CI/source file found.
-   This surfaces drift both ways without parsing every tool. Manual judgment is fine;
-   do not invent a second authority system.
+4. **CI / conventions delta.** In Observations or Coverage, list:
+   - auto-discovered gates/sources (`conventions.auto`) and any promotions from
+     `severity_align`;
+   - explicit notes/overrides that mention rules with **no** matching CI/source file;
+   - high-signal CI files not covered by auto include/exclude (drift either way).
 
 ## Stage 5 — Report
 

@@ -75,7 +75,7 @@ intent-engineering/                       dev repo + marketplace
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
     agents/      ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
-    skills/      ie-{init,plan-assist,validate-plan,review,audit}/SKILL.md
+    skills/      ie-{init,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
     references/  findings-schema.json, subagent-template.md, lens-catalog.md,
                  stack-catalog.md, report-template.md, scoring-rubric.md,
                  principle-index.md, config-resolution.md   (the shared contract layer)
@@ -103,13 +103,15 @@ intent-engineering/                       dev repo + marketplace
    returns compact JSON per the schema, and writes full detail to `$RUN/{lens}.json`.
 4. **Merge / dedup / gate** (`references/report-template.md`): dedup by file+line+title,
    promote findings agreed by 2+ lenses, suppress below the confidence gate (default
-   anchor 75; P0 survives 50+), apply config severity overrides and pattern policy.
+   anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
+   and pattern policy (incl. `preferred`).
 5. **Report** to the published path `$REPORT_PATH` under `docs/intent-engineering/`
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
 `ie-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
-no artifacts, prose (not findings JSON). `ie-init` scaffolds `.intense/` and may offer
-a `.gitignore` line for `.intense/runs/`.
+no artifacts, prose (not findings JSON). `ie-init` is the setup/upgrade wizard for
+`.intense/` (fresh, upgrade, calibrate; multi-repo placement) and may offer a
+`.gitignore` line for `.intense/runs/`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
 the apply stage), `out:<path>` (override published report path). Path resolution:
@@ -188,13 +190,13 @@ The plugin works out of the box with defaults; a repo tunes it via committable
 `.intense/*.yaml` at its root.
 
 - `ways-of-working.yaml` — lens toggles (turn an agent `off`), external-tool preference
-  (`tools.architecture`: `enrich`/`prefer`/`report`/`off` — defer to reek/eslint/phpstan/…
-  instead of duplicating), severity overrides, local conventions, confidence gate, and
-  **`artifacts.*`** (`run_dir`, `report_dir`, `cleanup_runs` — two-layer report layout;
+  (`tools.architecture`: `enrich`/`prefer`/`report`/`off`), severity overrides,
+  **`severity_align`**, local conventions (`notes`, `sources`, **`auto`** discovery),
+  confidence gate, and **`artifacts.*`** (`run_dir`, `report_dir`, `cleanup_runs`;
   see rule 5 and `references/config-resolution.md`).
-- `patterns.yaml` — design-pattern policy: `allowed` / `blocked` (no new use) / `approved`
-  (grandfathered paths). Keys reference **snake_case pattern ids** from
-  `resources/patterns/<stack>.yaml`.
+- `patterns.yaml` — design-pattern policy: `preferred` (A instead of B) / `allowed` /
+  `blocked` (no new use) / `approved` (grandfathered paths). Keys reference
+  **snake_case pattern ids** from `resources/patterns/<stack>.yaml`.
 - `thresholds.yaml` — architecture metric limits, namespaced `rails.<unit>.<metric>`.
 
 **Merge rule:** project overrides global. Scalars/maps replace key-by-key. **Lists
@@ -301,4 +303,5 @@ Adding anything means updating its references in lockstep, or it's orphaned:
 /plugin install intent-engineering
 ```
 
-Then `/ie-init`, `/ie-review`, `/ie-audit`, `/ie-validate-plan`, `/ie-plan-assist`.
+Then `/ie-init`, `/ie-review`, `/ie-audit`, `/ie-validate-plan`, `/ie-plan-assist`,
+`/ie-from-pr-learnings`.

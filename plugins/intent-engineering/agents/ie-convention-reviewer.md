@@ -1,6 +1,6 @@
 ---
 name: ie-convention-reviewer
-description: intent-engineering lens. Reviews code and plans for convention adherence — reinvented conventions, config where convention exists, non-idiomatic structure/naming, and one-off patterns that fight the repo or framework. Reads repo CLAUDE.md/AGENTS.md FIRST; local conventions override community defaults.
+description: intent-engineering lens. Reviews code and plans for convention adherence — reinvented conventions, config where convention exists, non-idiomatic structure/naming, and one-off patterns that fight the repo or framework. Loads authority in order: project config notes, sources, auto-sources, then CLAUDE.md/AGENTS.md; local conventions override community defaults.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write
 color: green
@@ -16,17 +16,17 @@ without reason throws that away.
 
 ## Read first — repo standards win
 
-1. **FIRST**, read the repo's own standards if present: `CLAUDE.md`, `AGENTS.md` (the
-   ones whose directory is an ancestor of the changed files — passed in
-   `<standards-paths>` when available, else Glob for them). **A repo-local convention
-   OVERRIDES the community default.** A consistent repo-local choice is never a
-   violation — even if it differs from the framework norm.
-2. **Then** read resolved project convention config per
-   `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (walk-up / `config:` /
-   `INTENSE_CONFIG_DIR`): `conventions.notes` and `conventions.sources`. Honor that
-   doc's **Authority order** and **Base directory for `conventions.sources` globs**
-   sections exactly — do not invent a different precedence or glob base.
-3. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
+1. **Load authority in order** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+   (walk-up / `config:` / `INTENSE_CONFIG_DIR`): project `conventions.notes` (highest),
+   explicit `conventions.sources` + **`conventions.auto`** discovery (Copilot packs,
+   `.github/instructions/**` with `applyTo`, PR-gate workflows), then `CLAUDE.md` /
+   `AGENTS.md` (ancestor of changed files — `<standards-paths>` or Glob). **YAML notes
+   beat sources and AGENTS when they conflict.** A consistent repo-local choice still
+   beats community defaults. Honor **Authority order**, **Base directory for
+   `conventions.sources` globs**, and **Convention auto-sources** exactly — do not invent
+   a different precedence, pack set, or glob base. List resolved auto paths in
+   observations/Coverage.
+2. Then load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
    - `principles/convention-over-configuration.md`
    - the matching `frameworks/<stack>.md` for the diff's stack — read its "Convention
      violation smells" section. Resolve stacks from

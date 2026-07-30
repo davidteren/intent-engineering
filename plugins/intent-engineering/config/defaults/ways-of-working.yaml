@@ -41,16 +41,61 @@ severity_overrides: {}
   #   severity: P1
   #   because: "blocked by a required CI job"
 
+# --- Severity align with CI gates -------------------------------------------------
+# When conventions.auto discovers PR-gate workflows, promote findings whose theme
+# matches a gate (e.g. callback-hell + callback-check.yml → at least P1).
+# Explicit severity_overrides always win over auto promotion.
+# Full theme table: references/config-resolution.md → "Severity align with CI gates".
+severity_align:
+  mode: curated_gates   # off | curated_gates
+  min_severity: P1      # promote up to this floor when a gate matches (never demote)
+  # Optional extra theme rows (merged with built-in map):
+  # themes:
+  #   - match: [my-custom-gate]
+  #     smells: [fat-model]
+  #     principles: [architecture]
+  #     severity: P1
+  themes: []
+
 # --- Local conventions ------------------------------------------------------------
 # Highest-authority conventions for THIS repo, honored by the convention lens
 # alongside CLAUDE.md / AGENTS.md. Lists REPLACE the global list unless extends: true.
-# sources: path globs of files the convention lens must read (review-bot rules, CI policy
-# docs, engineering standards). notes win over sources when both speak.
+# sources: explicit path globs the convention lens must read. notes win over sources.
+# auto: discover Copilot rules, path-scoped instructions, and PR-gate workflows.
+# Full discovery procedure: references/config-resolution.md → "Convention auto-sources".
 conventions:
   extends: false
   sources: []
   # - .github/instructions/*.md
   # - docs/engineering-standards.md
+  auto:
+    # off      = only explicit `sources` (+ AGENTS/CLAUDE as usual)
+    # curated  = high-signal packs only (default packs below; skip deploy/infra workflows)
+    # all      = every file matching include packs under roots (noisier for workflows)
+    mode: curated
+    # Which packs to expand (omit a pack to skip it). Order is discovery order, not authority.
+    include:
+      - agents          # **/AGENTS.md, **/CLAUDE.md (when not already loaded)
+      - copilot         # **/.github/copilot-instructions.md, **/copilot-instructions.md
+      - instructions    # **/.github/instructions/**  (path-scoped Copilot packs; applyTo frontmatter)
+      - workflows       # **/.github/workflows/* that look like PR gates (see config-resolution)
+    # Multi-repo workspace: search only these roots (relative to project base). Empty = base only.
+    roots: []
+    # - backend
+    # - frontend
+    # Globs to drop after discovery (always applied). Keep this list generic; put
+    # product-specific workflow names in project .intense/ only.
+    exclude:
+      - "**/.github/workflows/*labeler*"
+      - "**/.github/workflows/*team-label*"
+      - "**/.github/workflows/*dependabot*"
+      - "**/.github/workflows/*renovate*"
+      - "**/.github/workflows/*release*"
+      - "**/.github/workflows/*deploy*"
+      - "**/.github/workflows/*staging*"
+      - "**/.github/workflows/*terraform*"
+      - "**/.github/workflows/*container*"
+      - "**/.github/workflows/*docker*"
   notes: []
   # - "Use interactors, not service objects, for multi-step domain operations."
   # - "All money is a Money value object, never a raw integer/float."
