@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 📦 **v0.8.0** on branch `feat/ie-init-wizard-0.8` (tag after merge) · **Updated:** 2026-07-30
+**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-07-30
 
 ### Last session handoff
 
-1. **What this is:** Intent Engineering plugin v0.8.0 (setup wizard + CI-aware config).
-2. **What we finished:** Wizard, pr-learnings, dogfood fixes, version/docs/site on the branch.
-3. **What you do next:** Pre-pr gate, open PR, merge, tag `v0.8.0`, confirm GitHub Pages.
+1. **What this is:** Intent Engineering plugin **v0.8.0** (setup wizard + CI-aware config).
+2. **What we finished:** PR #32 merged; tag and GitHub release `v0.8.0` live.
+3. **What you do next:** Confirm GitHub Pages badges; optional smoke install of v0.8.0.
 
 ---
 
