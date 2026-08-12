@@ -127,6 +127,39 @@ fn norm(s) {
     }
 }
 
+fn last_slash_at(s) {
+    let i = 0;
+    let last = -1;
+    while i < s.len() {
+        if s.sub_string(i, 1) == "/" { last = i; }
+        i += 1;
+    }
+    last
+}
+
+fn is_path_target(raw) {
+    let s = "" + raw;
+    if s == "" { false }
+    else if s.index_of("./") == 0 || s.index_of("../") == 0 || s.index_of("/") == 0 || s.index_of("/../") >= 0 {
+        true
+    } else if s.index_of(".") == 0 && s.index_of("..") != 0 {
+        true
+    } else if s.index_of("..") >= 0 {
+        false
+    } else {
+        let slash = last_slash_at(s);
+        let leaf = s;
+        if slash >= 0 { leaf = s.sub_string(slash + 1, s.len() - slash - 1); }
+        if s.len() > 0 && s.sub_string(s.len() - 1, 1) == "/" {
+            true
+        } else if leaf.index_of(".") >= 0 {
+            true
+        } else {
+            false
+        }
+    }
+}
+
 fn severity_rank(s) {
     if s == "P0" { 0 } else if s == "P1" { 1 } else if s == "P2" { 2 } else { 3 }
 }
@@ -231,19 +264,7 @@ if type_of(run_slug) != "string" || run_slug.len() < 8 {
 }
 let scratch_report = run_slug + "-report.md";
 let diff_text = "";
-let tcheck = "" + target;
-let target_looks_like_path = false;
-if tcheck.index_of("..") >= 0 {
-    target_looks_like_path = false;
-} else if tcheck.index_of("./") == 0 || tcheck.index_of("/") == 0 || tcheck.index_of(".") == 0 {
-    target_looks_like_path = true;
-} else if tcheck.index_of(".rhai") >= 0 || tcheck.index_of(".md") >= 0 || tcheck.index_of(".rb") >= 0 || tcheck.index_of(".yml") >= 0 || tcheck.index_of(".yaml") >= 0 || tcheck.index_of(".json") >= 0 {
-    target_looks_like_path = true;
-} else if tcheck.index_of("/") < 0 {
-    target_looks_like_path = false;
-} else {
-    target_looks_like_path = false;
-}
+let target_looks_like_path = is_path_target(target);
 
 let config_dir = ();
 if args != () && args.config != () {
