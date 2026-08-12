@@ -1,0 +1,24 @@
+.grok/workflows/README.md
+  h_e8a5bb9272fa34 1-32
+.grok/workflows/ie-review.rhai
+  h_e8a5bb9272fa34 1-346
+AGENTS.md
+  h_e8a5bb9272fa34 43-44
+CHANGELOG.md
+  h_e8a5bb9272fa34 10-14
+README.md
+  h_e8a5bb9272fa34 49,153-154,185
+STATUS.md
+  h_e8a5bb9272fa34 7,11-13,36-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7acf9eb285acee06a12cad96795d8910f6a8db63",
+  "prompts": {},
+  "humans": {
+    "h_e8a5bb9272fa34": {
+      "author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
