@@ -19,7 +19,8 @@ for the design see **PLAN.md**.
   default report path.
 - Grok `ie-review` remaining report items: config agent, template-shaped lens
   prompts, normalized dedup plus agreement bump, schema enums, skipped/clean/failed
-  statuses, read-only merge, dedicated publisher, Layer A lens JSON in scratch.
+  statuses, read-only merge, Layer A lens JSON in scratch. No write-capable
+  publisher. Script owns the verdict.
 
 ## [0.8.0] — 2026-07-30
 

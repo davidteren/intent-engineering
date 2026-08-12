@@ -26,6 +26,16 @@ let config_schema = #{
         "scope_mode": #{ "type": "string" },
         "notes": #{ "type": "string" },
         "policy_notes": #{ "type": "string" },
+        "overrides": #{
+            "type": "array",
+            "items": #{
+                "type": "object",
+                "properties": #{
+                    "file_substr": #{ "type": "string" },
+                    "severity": #{ "type": "string" },
+                },
+            },
+        },
     },
 };
 
@@ -213,17 +223,13 @@ if args != () && args.base != () {
     base_ref = args.base;
 }
 
-let run_slug = fingerprint("" + target);
-if type_of(run_slug) == "string" && run_slug.len() >= 8 {
-    run_slug = run_slug.sub_string(0, 8);
-} else {
-    run_slug = "run";
-}
-let scratch_report = run_slug + "-report.md";
-
+let run_slug = "run";
+let scratch_report = "run-report.md";
 let diff_text = "";
-if base_ref != () && base_ref != "" {
-    diff_text = git_diff_since(base_ref);
+let target_looks_like_path = true;
+let tcheck = "" + target;
+if tcheck.index_of("...") >= 0 || tcheck.index_of("..") >= 0 {
+    target_looks_like_path = false;
 }
 
 let config_dir = ();
@@ -279,6 +285,14 @@ let standards_paths = "";
 let intent_text = "Review the target for surprise against intent-engineering lenses.";
 let scope_mode = "path";
 let policy_notes = "";
+let overrides = [];
+if cfg != () && cfg.agent_id != () {
+    let slug = fingerprint("" + cfg.agent_id);
+    if type_of(slug) == "string" && slug.len() >= 8 {
+        run_slug = slug.sub_string(0, 8);
+        scratch_report = run_slug + "-report.md";
+    }
+}
 if cfg != () && cfg.success == true && cfg.output != () && cfg.output.source != () {
     config_ok = true;
     config_source = cfg.output.source;
@@ -293,6 +307,12 @@ if cfg != () && cfg.success == true && cfg.output != () && cfg.output.source != 
     if cfg.output.scope_mode != () { scope_mode = cfg.output.scope_mode; }
     if cfg.output.notes != () { log(cfg.output.notes); }
     if cfg.output.policy_notes != () { policy_notes = cfg.output.policy_notes; }
+    if cfg.output.overrides != () && type_of(cfg.output.overrides) == "array" {
+        overrides = cfg.output.overrides;
+    }
+}
+if base_ref != () && base_ref != "" && !target_looks_like_path {
+    diff_text = git_diff_since(base_ref);
 }
 
 let catalog = [
@@ -471,6 +491,13 @@ for u in unique {
         if u.confidence == 50 { unique[ui2].confidence = 75; }
         else if u.confidence == 75 { unique[ui2].confidence = 100; }
     }
+    for ov in overrides {
+        if ov != () && ov.file_substr != () && ov.severity != () {
+            if unique[ui2].file_key.index_of(norm(ov.file_substr)) >= 0 {
+                unique[ui2].severity = ov.severity;
+            }
+        }
+    }
     ui2 += 1;
 }
 
@@ -548,7 +575,9 @@ if capped.len() > 0 {
         } else {
             let why = "not_real";
             if !harness_ok { why = "verifier_failed"; }
-            rejected.push(#{ finding: capped[vi], why: why });
+            let vreason = "";
+            if harness_ok && v.output.reason != () { vreason = "" + v.output.reason; }
+            rejected.push(#{ finding: capped[vi], why: why, reason: vreason, evidence: ev });
         }
         vi += 1;
     }
@@ -573,8 +602,9 @@ merge_prompt += "Target: ";
 merge_prompt += target;
 merge_prompt += "\nReturn the published markdown in the report field only. The orchestrator will store it.\n";
 merge_prompt += "The confidence gate already ran. Use the confirmed list as-is.\n";
-merge_prompt += "Do not claim Ready or all-clear if any lens status is failed, or if Config source is unresolved.\n";
-merge_prompt += "If confirmed is empty and no lens failed and config resolved, render the all-clear line from the report template.\n";
+merge_prompt += "Do not invent extra findings. List every confirmed title. Do not drop a confirmed finding.\n";
+merge_prompt += "Do not claim Ready or all-clear if any lens status is failed or skipped-after-select, or if Config source is unresolved.\n";
+merge_prompt += "If confirmed is empty and no selected lens failed or skipped and config resolved, render the all-clear line from the report template.\n";
 merge_prompt += "No apply section. No time estimates. No praise.\n";
 merge_prompt += "Include Config source, policy notes, and rejected rows in Coverage.\n";
 merge_prompt += "Policy notes:\n";
@@ -612,14 +642,33 @@ if merged == () || merged.success != true || merged.output == () || merged.outpu
 }
 
 let report_text = merged.output.report;
+let merge_dropped = false;
+for f in confirmed {
+    if report_text.index_of(f.title) < 0 {
+        observations.push("Merge report omitted confirmed title: " + f.title);
+        merge_dropped = true;
+    }
+}
 let scratch = write_scratch_file(scratch_report, report_text);
-let verdict = if merged.output.verdict == () { "Ready with fixes" } else { merged.output.verdict };
-if !config_ok { verdict = "Not ready"; }
 let any_failed = false;
+let selected_skipped = false;
 for s in statuses {
     if s.status == "failed" { any_failed = true; }
 }
-if any_failed { verdict = "Not ready"; }
+for lens in catalog {
+    if lens.selected {
+        for s in statuses {
+            if s.lens == lens.id && s.status == "skipped" { selected_skipped = true; }
+        }
+    }
+}
+let verdict = "Ready with fixes";
+if confirmed.len() == 0 && !any_failed && config_ok && !selected_skipped {
+    verdict = "Ready";
+}
+if any_failed || !config_ok || selected_skipped || merge_dropped {
+    verdict = "Not ready";
+}
 let summary = if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {
