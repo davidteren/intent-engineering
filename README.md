@@ -151,8 +151,10 @@ finding. Merge is read-only. The report is run scratch. Watch progress in
 `/workflows`. This path does **not** apply product-code fixes. Interactive apply
 stays in `/ie-review`.
 
-It is a subset of the skill: no YAML walk-up, no smell-first `severity_align`, no
-pattern policy, no `docs/` write. Full notes: [`.grok/workflows/README.md`](.grok/workflows/README.md).
+It is a subset of the skill. A config agent walks up for `.intense`, then the
+script applies booleans, a confidence gate, and optional file-substring overrides.
+It does not apply smell-first `severity_align` or pattern policy, and it does not
+write `docs/`. Full notes: [`.grok/workflows/README.md`](.grok/workflows/README.md).
 
 ## Reports
 

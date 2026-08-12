@@ -27,7 +27,7 @@ Useful args:
 | `plugin_root` | Plugin dir. Default: `plugins/intent-engineering`. From another repo, pass the absolute path. |
 | `out` | Ignored for tree writes. The report is always run scratch. |
 | `stamp` | Optional label recorded in Coverage. Does not name a repo file. |
-| `base` | Optional git ref. For a branch or `a...b` target, the script also inlines `git_diff_since`. A path target does not get a full-repo diff. |
+| `base` | Optional git ref. Inlined as `git_diff_since` when the target is a branch or a `..` / `...` range. A file or `./` path does not get a full-repo diff. |
 | `config` | Optional `.intense` directory. Same idea as the skill `config:` token. |
 
 At most 16 findings go to verify. They are sorted by severity, then confidence,

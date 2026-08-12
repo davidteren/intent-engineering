@@ -231,11 +231,17 @@ if type_of(run_slug) != "string" || run_slug.len() < 8 {
 }
 let scratch_report = run_slug + "-report.md";
 let diff_text = "";
-let target_looks_like_path = true;
 let tcheck = "" + target;
-if tcheck.index_of("...") >= 0 {
+let target_looks_like_path = false;
+if tcheck.index_of("..") >= 0 {
     target_looks_like_path = false;
-} else if tcheck.index_of("/") < 0 && tcheck.index_of(".") < 0 {
+} else if tcheck.index_of("./") == 0 || tcheck.index_of("/") == 0 || tcheck.index_of(".") == 0 {
+    target_looks_like_path = true;
+} else if tcheck.index_of(".rhai") >= 0 || tcheck.index_of(".md") >= 0 || tcheck.index_of(".rb") >= 0 || tcheck.index_of(".yml") >= 0 || tcheck.index_of(".yaml") >= 0 || tcheck.index_of(".json") >= 0 {
+    target_looks_like_path = true;
+} else if tcheck.index_of("/") < 0 {
+    target_looks_like_path = false;
+} else {
     target_looks_like_path = false;
 }
 
