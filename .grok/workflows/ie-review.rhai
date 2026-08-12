@@ -1,12 +1,12 @@
 let meta = #{
     name: "ie-review",
     description: "Review a target through intent-engineering lenses, then adversarially verify each finding. Writes a published report. Does not apply product-code fixes.",
-    when_to_use: "Review a diff, branch, or path for surprise. Merge is read-only. A publisher writes docs/intent-engineering/<stamp>-review.md only. Does not apply product-code fixes.",
+    when_to_use: "Review a diff, branch, or path for surprise. Merge is read-only. The report is a run scratch file, not a repo write. Does not apply product-code fixes.",
     phases: [
         #{ title: "Config", detail: "resolve .intense and select lenses" },
         #{ title: "Review", detail: "one read-only lens per selected dimension" },
         #{ title: "Verify", detail: "one skeptic per finding" },
-        #{ title: "Report", detail: "read-only merge, then publish" },
+        #{ title: "Report", detail: "read-only merge into scratch" },
     ],
 };
 
@@ -25,6 +25,7 @@ let config_schema = #{
         "intent": #{ "type": "string" },
         "scope_mode": #{ "type": "string" },
         "notes": #{ "type": "string" },
+        "policy_notes": #{ "type": "string" },
     },
 };
 
@@ -63,7 +64,11 @@ let lens_schema = #{
                     "fix_class": #{ "type": "string", "enum": ["gated_auto", "manual", "advisory"] },
                     "suggested_fix": #{ "type": "string" },
                     "evidence": #{ "type": "string" },
+                    "why_it_matters": #{ "type": "string" },
                     "tension": #{ "type": "string" },
+                    "end_line": #{ "type": "integer" },
+                    "smell": #{ "type": "string" },
+                    "pattern": #{ "type": "string" },
                 },
             },
         },
@@ -88,15 +93,6 @@ let report_schema = #{
         "summary": #{ "type": "string" },
         "verdict": #{ "type": "string" },
         "report": #{ "type": "string" },
-    },
-};
-
-let publish_schema = #{
-    "type": "object",
-    "required": ["wrote"],
-    "properties": #{
-        "wrote": #{ "type": "boolean" },
-        "path": #{ "type": "string" },
     },
 };
 
@@ -194,9 +190,10 @@ fn lens_prompt(target, plugin_root, lens_id, agent_file, docs, hunts, base_ref, 
     p += hunts;
     p += "\n</scope>\n";
     p += "<output-contract>\n";
-    p += "Return compact JSON that matches the harness schema. Include evidence on each finding.\n";
-    p += "Do not write project files. The orchestrator writes Layer A scratch from your return.\n";
-    p += "An empty findings list is valid only after you have read the target.\n";
+    p += "Return JSON that matches the harness schema. Include evidence, why_it_matters, smell, and pattern when they apply.\n";
+    p += "Do not write any file. The orchestrator stores your return as Layer A scratch.\n";
+    p += "If the target is a git ref or diff range, run git diff / git show yourself. Do not only read the current workspace.\n";
+    p += "An empty findings list is valid only after you have inspected the target.\n";
     p += "At most 8 findings. Name the broken expectation. Concrete suggested_fix.\n";
     p += "Skip formatter/linter nits. Flag principle tensions instead of picking a side.\n";
     p += "</output-contract>\n";
@@ -216,19 +213,17 @@ if args != () && args.base != () {
     base_ref = args.base;
 }
 
-let report_rel = "";
-if args != () && args.out != () {
-    report_rel = args.out;
-} else if args != () && args.stamp != () {
-    report_rel = "docs/intent-engineering/" + args.stamp + "-review.md";
+let run_slug = fingerprint("" + target);
+if type_of(run_slug) == "string" && run_slug.len() >= 8 {
+    run_slug = run_slug.sub_string(0, 8);
 } else {
-    let slug = fingerprint("" + target);
-    if type_of(slug) == "string" && slug.len() >= 8 {
-        slug = slug.sub_string(0, 8);
-    } else {
-        slug = "run";
-    }
-    report_rel = "docs/intent-engineering/" + slug + "-review.md";
+    run_slug = "run";
+}
+let scratch_report = run_slug + "-report.md";
+
+let diff_text = "";
+if base_ref != () && base_ref != "" {
+    diff_text = git_diff_since(base_ref);
 }
 
 let config_dir = ();
@@ -262,7 +257,7 @@ if base_ref != () && base_ref != "" {
     cfg_prompt += base_ref;
     cfg_prompt += "\n";
 }
-cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (default 75), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, and scope_mode (local-aligned | pr-remote | branch-remote | path | doc).\n";
+cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs — prose, not silent omit).\n";
 cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience on only for a user-facing surface or lenses.experience=on. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += "Use read_file and grep. Do not guess a stack that the catalog does not list.\n";
 
@@ -272,7 +267,8 @@ let cfg = agent(cfg_prompt, #{
     output_schema: config_schema,
 });
 
-let config_source = "defaults";
+let config_source = "unresolved";
+let config_ok = false;
 let gate = 75;
 let run_predictability = true;
 let run_convention = true;
@@ -282,8 +278,10 @@ let run_architecture = false;
 let standards_paths = "";
 let intent_text = "Review the target for surprise against intent-engineering lenses.";
 let scope_mode = "path";
-if cfg != () && cfg.success == true && cfg.output != () {
-    if cfg.output.source != () { config_source = cfg.output.source; }
+let policy_notes = "";
+if cfg != () && cfg.success == true && cfg.output != () && cfg.output.source != () {
+    config_ok = true;
+    config_source = cfg.output.source;
     if cfg.output.confidence_gate != () { gate = cfg.output.confidence_gate; }
     if cfg.output.run_predictability == false { run_predictability = false; }
     if cfg.output.run_convention == false { run_convention = false; }
@@ -294,6 +292,7 @@ if cfg != () && cfg.success == true && cfg.output != () {
     if cfg.output.intent != () { intent_text = cfg.output.intent; }
     if cfg.output.scope_mode != () { scope_mode = cfg.output.scope_mode; }
     if cfg.output.notes != () { log(cfg.output.notes); }
+    if cfg.output.policy_notes != () { policy_notes = cfg.output.policy_notes; }
 }
 
 let catalog = [
@@ -339,8 +338,14 @@ let jobs = [];
 let job_ids = [];
 for lens in catalog {
     if lens.selected {
+        let lp = lens_prompt(target, plugin_root, lens.id, lens.agent, lens.docs, lens.hunts, base_ref, intent_text, scope_mode, standards_paths);
+        if diff_text != "" {
+            lp += "\n<diff>\n";
+            lp += diff_text;
+            lp += "\n</diff>\n";
+        }
         jobs.push(#{
-            prompt: lens_prompt(target, plugin_root, lens.id, lens.agent, lens.docs, lens.hunts, base_ref, intent_text, scope_mode, standards_paths),
+            prompt: lp,
             label: "lens:" + lens.id,
             capability_mode: "read-only",
             output_schema: lens_schema,
@@ -358,6 +363,15 @@ let statuses = [];
 let observations = [];
 let findings = [];
 observations.push("Config source: " + config_source + ". confidence_gate=" + gate.to_string() + ".");
+if args != () && args.stamp != () {
+    observations.push("Run stamp: " + args.stamp);
+}
+if !config_ok {
+    observations.push("Config agent failed or returned no source. Always-on lenses only. Do not treat this as a clean defaults resolve.");
+}
+if policy_notes != "" {
+    observations.push(policy_notes);
+}
 
 let ri = 0;
 for lens in catalog {
@@ -369,8 +383,22 @@ for lens in catalog {
         if r == () || r.success != true || r.output == () || r.output.findings == () || type_of(r.output.findings) != "array" {
             statuses.push(#{ lens: lens.id, status: "failed" });
         } else {
-            statuses.push(#{ lens: lens.id, status: "clean" });
-            write_scratch_file(lens.id + ".json", json_encode(r.output));
+            let lens_status = "clean";
+            if r.output.observations != () {
+                for o in r.output.observations {
+                    if o != () {
+                        observations.push(o);
+                        let ol = "" + o;
+                        ol.to_lower();
+                        if ol.len() >= 8 {
+                            let head = ol.sub_string(0, 8);
+                            if head == "skipped:" { lens_status = "skipped"; }
+                        }
+                    }
+                }
+            }
+            statuses.push(#{ lens: lens.id, status: lens_status });
+            write_scratch_file(run_slug + "-" + lens.id + ".json", json_encode(r.output));
             let fs = r.output.findings;
             for f in fs {
                 if f != () && f.title != () && f.file != () {
@@ -388,17 +416,16 @@ for lens in catalog {
                             severity: if f.severity == () { "P3" } else { f.severity },
                             confidence: if f.confidence == () { 0 } else { f.confidence },
                             line: if f.line == () { 0 } else { f.line },
+                            end_line: if f.end_line == () { 0 } else { f.end_line },
                             fix_class: if f.fix_class == () { "manual" } else { f.fix_class },
                             suggested_fix: if f.suggested_fix == () { "" } else { f.suggested_fix },
                             evidence: if f.evidence == () { "" } else { f.evidence },
+                            why_it_matters: if f.why_it_matters == () { "" } else { f.why_it_matters },
                             tension: if f.tension == () { "" } else { f.tension },
+                            smell: if f.smell == () { "" } else { f.smell },
+                            pattern: if f.pattern == () { "" } else { f.pattern },
                         });
                     }
-                }
-            }
-            if r.output.observations != () {
-                for o in r.output.observations {
-                    if o != () { observations.push(o); }
                 }
             }
         }
@@ -477,77 +504,54 @@ for f in ranked {
     }
 }
 
-let none = [];
-if capped.len() == 0 {
-    let any_failed = false;
-    for s in statuses {
-        if s.status == "failed" { any_failed = true; }
-    }
-    if any_failed {
-        complete(result_map(
-            "No usable findings. One or more lenses failed. Not an all-clear.",
-            "Not ready",
-            "",
-            "",
-            none,
-            0,
-            statuses,
-            observations,
-            none,
-            config_source
-        ));
-    }
-    complete(result_map(
-        "No findings after the lens panel.",
-        "Ready",
-        "",
-        "",
-        none,
-        0,
-        statuses,
-        observations,
-        none,
-        config_source
-    ));
-}
-
-phase("Verify");
-let vjobs = [];
-for f in capped {
-    let blob = json_encode(f);
-    let p = "";
-    p += "Adversarially verify this intent-engineering finding by reading the shipped code.\n";
-    p += "Finding JSON:\n";
-    p += blob;
-    p += "\nSet real=true only with concrete evidence you independently inspected in the file.\n";
-    p += "If you cannot open the file, or the claim is wrong, or evidence is thin, set real=false.\n";
-    p += "Empty evidence requires real=false. Use read_file and grep. Do not trust the JSON alone.\n";
-    vjobs.push(#{
-        prompt: p,
-        label: "verify:" + f.file,
-        capability_mode: "read-only",
-        output_schema: verdict_schema,
-    });
-}
-let verdicts = parallel(vjobs);
-
 let verified = [];
 let rejected = [];
-let vi = 0;
-for v in verdicts {
-    let ev = "";
-    let harness_ok = v != () && v.success == true && v.output != ();
-    if harness_ok && v.output.evidence != () {
-        ev = trimmed(v.output.evidence);
+if capped.len() > 0 {
+    phase("Verify");
+    let vjobs = [];
+    for f in capped {
+        let blob = json_encode(f);
+        let p = "";
+        p += "Adversarially verify this intent-engineering finding against the same target the lenses used.\n";
+        p += "Target: ";
+        p += target;
+        p += "\nScope mode: ";
+        p += scope_mode;
+        p += "\n";
+        if base_ref != () && base_ref != "" {
+            p += "Base ref: ";
+            p += base_ref;
+            p += "\nUse git show / git diff against that base. Do not trust the current workspace alone.\n";
+        }
+        p += "Finding JSON:\n";
+        p += blob;
+        p += "\nSet real=true only with concrete evidence you independently inspected.\n";
+        p += "If you cannot open the file, or the claim is wrong, or evidence is thin, set real=false.\n";
+        p += "Empty evidence requires real=false. Use read_file, grep, and git. Do not trust the JSON alone.\n";
+        vjobs.push(#{
+            prompt: p,
+            label: "verify:" + f.file,
+            capability_mode: "read-only",
+            output_schema: verdict_schema,
+        });
     }
-    if harness_ok && v.output.real == true && ev != "" {
-        verified.push(capped[vi]);
-    } else {
-        let why = "not_real";
-        if !harness_ok { why = "verifier_failed"; }
-        rejected.push(#{ finding: capped[vi], why: why });
+    let verdicts = parallel(vjobs);
+    let vi = 0;
+    for v in verdicts {
+        let ev = "";
+        let harness_ok = v != () && v.success == true && v.output != ();
+        if harness_ok && v.output.evidence != () {
+            ev = trimmed(v.output.evidence);
+        }
+        if harness_ok && v.output.real == true && ev != "" {
+            verified.push(capped[vi]);
+        } else {
+            let why = "not_real";
+            if !harness_ok { why = "verifier_failed"; }
+            rejected.push(#{ finding: capped[vi], why: why });
+        }
+        vi += 1;
     }
-    vi += 1;
 }
 
 let confirmed = [];
@@ -569,9 +573,13 @@ merge_prompt += "Target: ";
 merge_prompt += target;
 merge_prompt += "\nReturn the published markdown in the report field only. The orchestrator will store it.\n";
 merge_prompt += "The confidence gate already ran. Use the confirmed list as-is.\n";
-merge_prompt += "Do not claim Ready or all-clear if any lens status is failed.\n";
+merge_prompt += "Do not claim Ready or all-clear if any lens status is failed, or if Config source is unresolved.\n";
+merge_prompt += "If confirmed is empty and no lens failed and config resolved, render the all-clear line from the report template.\n";
 merge_prompt += "No apply section. No time estimates. No praise.\n";
-merge_prompt += "Include Config source and rejected rows in Coverage.\n";
+merge_prompt += "Include Config source, policy notes, and rejected rows in Coverage.\n";
+merge_prompt += "Policy notes:\n";
+merge_prompt += policy_notes;
+merge_prompt += "\n";
 merge_prompt += "Lens statuses JSON:\n";
 merge_prompt += json_encode(statuses);
 merge_prompt += "\nObservations JSON:\n";
@@ -604,28 +612,17 @@ if merged == () || merged.success != true || merged.output == () || merged.outpu
 }
 
 let report_text = merged.output.report;
-let scratch = write_scratch_file("report.md", report_text);
-let published = "";
-let pub_prompt = "";
-pub_prompt += "Write this exact markdown to this path and to no other path: ";
-pub_prompt += report_rel;
-pub_prompt += "\nDo not edit product code. Overwrite the file if it exists.\n";
-pub_prompt += "Return wrote=true only after a successful Write.\n\n";
-pub_prompt += report_text;
-
-let pub = agent(pub_prompt, #{
-    label: "publish-report",
-    capability_mode: "read-write",
-    output_schema: publish_schema,
-});
-if pub != () && pub.success == true && pub.output != () && pub.output.wrote == true {
-    published = report_rel;
-}
-
+let scratch = write_scratch_file(scratch_report, report_text);
 let verdict = if merged.output.verdict == () { "Ready with fixes" } else { merged.output.verdict };
+if !config_ok { verdict = "Not ready"; }
+let any_failed = false;
+for s in statuses {
+    if s.status == "failed" { any_failed = true; }
+}
+if any_failed { verdict = "Not ready"; }
 let summary = if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {
     merged.output.summary
 };
-complete(result_map(summary, verdict, published, scratch, confirmed, capped.len(), statuses, observations, rejected, config_source));
+complete(result_map(summary, verdict, scratch, scratch, confirmed, capped.len(), statuses, observations, rejected, config_source));
