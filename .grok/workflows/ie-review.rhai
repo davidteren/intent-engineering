@@ -1,7 +1,7 @@
 let meta = #{
     name: "ie-review",
-    description: "Review a target through five intent-engineering lenses, then adversarially verify each finding. Report only.",
-    when_to_use: "Review a diff, branch, or path for surprise. Report only. Does not apply fixes.",
+    description: "Review a target through five intent-engineering lenses, then adversarially verify each finding. Writes a published report. Does not apply product-code fixes.",
+    when_to_use: "Review a diff, branch, or path for surprise. Writes docs/intent-engineering/*.md. Does not apply product-code fixes.",
     phases: [
         #{ title: "Review", detail: "one read-only lens per dimension" },
         #{ title: "Verify", detail: "one skeptic per finding" },
@@ -69,6 +69,34 @@ fn trimmed(s) {
     }
 }
 
+fn severity_rank(s) {
+    if s == "P0" { 0 } else if s == "P1" { 1 } else if s == "P2" { 2 } else { 3 }
+}
+
+fn comes_first(a, b) {
+    let ra = severity_rank(a.severity);
+    let rb = severity_rank(b.severity);
+    if ra != rb { ra < rb } else { a.confidence > b.confidence }
+}
+
+fn passes_gate(f) {
+    if f.confidence >= 75 { true } else if f.severity == "P0" && f.confidence >= 50 { true } else { false }
+}
+
+fn result_map(summary, verdict, path, scratch, confirmed, reviewed, statuses, observations) {
+    #{
+        summary: summary,
+        verdict: verdict,
+        path: path,
+        scratch: scratch,
+        confirmed: confirmed,
+        confirmed_count: confirmed.len(),
+        reviewed: reviewed,
+        statuses: statuses,
+        observations: observations,
+    }
+}
+
 fn lens_prompt(target, plugin_root, lens_id, agent_file, docs, hunts, base_ref) {
     let p = "";
     p += "You are the ";
@@ -118,11 +146,19 @@ if args != () && args.base != () {
     base_ref = args.base;
 }
 
-let report_rel = "docs/intent-engineering/workflow-ie-review.md";
+let report_rel = "";
 if args != () && args.out != () {
     report_rel = args.out;
 } else if args != () && args.stamp != () {
-    report_rel = "docs/intent-engineering/" + args.stamp + "-ie-review.md";
+    report_rel = "docs/intent-engineering/" + args.stamp + "-review.md";
+} else {
+    let slug = fingerprint("" + target);
+    if type_of(slug) == "string" && slug.len() >= 8 {
+        slug = slug.sub_string(0, 8);
+    } else {
+        slug = "run";
+    }
+    report_rel = "docs/intent-engineering/" + slug + "-review.md";
 }
 
 let lenses = [
@@ -181,11 +217,7 @@ for lens in lenses {
         statuses.push(#{ lens: id, status: "failed" });
     } else {
         let fs = r.output.findings;
-        if fs.len() == 0 {
-            statuses.push(#{ lens: id, status: "clean" });
-        } else {
-            statuses.push(#{ lens: id, status: "findings" });
-        }
+        statuses.push(#{ lens: id, status: "clean" });
         for f in fs {
             if f != () && f.title != () && f.file != () {
                 let title = trimmed(f.title);
@@ -193,6 +225,7 @@ for lens in lenses {
                 if title != "" && file != "" {
                     findings.push(#{
                         lens: id,
+                        lenses: [id],
                         title: title,
                         principle: if f.principle == () { "" } else { f.principle },
                         severity: if f.severity == () { "P3" } else { f.severity },
@@ -218,21 +251,61 @@ for lens in lenses {
 
 let unique = [];
 for f in findings {
-    let seen = false;
+    let seen_at = -1;
+    let ui = 0;
     for u in unique {
-        if u.file == f.file && u.title == f.title { seen = true; }
+        let delta = 99;
+        if type_of(u.line) != "()" && type_of(f.line) != "()" {
+            delta = u.line - f.line;
+            if delta < 0 { delta = 0 - delta; }
+        }
+        if u.file == f.file && u.title == f.title && delta <= 3 {
+            seen_at = ui;
+        }
+        ui += 1;
     }
-    if !seen { unique.push(f); }
+    if seen_at < 0 {
+        unique.push(f);
+    } else {
+        let kept = unique[seen_at];
+        if comes_first(f, kept) {
+            let prior = kept.lenses;
+            f.lenses = prior;
+            unique[seen_at] = f;
+            kept = unique[seen_at];
+        }
+        let already = false;
+        for lid in unique[seen_at].lenses {
+            if lid == f.lens { already = true; }
+        }
+        if !already { unique[seen_at].lenses.push(f.lens); }
+    }
 }
 
-if unique.len() > MAX_FINDINGS {
-    let dropped = unique.len() - MAX_FINDINGS;
-    log("Dropped " + dropped.to_string() + " findings before verify (MAX_FINDINGS=" + MAX_FINDINGS.to_string() + ").");
+let ranked = [];
+for f in unique {
+    let placed = false;
+    let next = [];
+    for r in ranked {
+        if !placed && comes_first(f, r) {
+            next.push(f);
+            placed = true;
+        }
+        next.push(r);
+    }
+    if !placed { next.push(f); }
+    ranked = next;
+}
+
+if ranked.len() > MAX_FINDINGS {
+    let dropped = ranked.len() - MAX_FINDINGS;
+    log("Dropped " + dropped.to_string() + " findings before verify (MAX_FINDINGS=" + MAX_FINDINGS.to_string() + "). Kept highest severity first.");
+    observations.push("Dropped " + dropped.to_string() + " findings at MAX_FINDINGS=" + MAX_FINDINGS.to_string() + " after severity sort.");
 }
 
 let capped = [];
 let n = 0;
-for f in unique {
+for f in ranked {
     if n < MAX_FINDINGS {
         capped.push(f);
         n += 1;
@@ -245,19 +318,27 @@ if capped.len() == 0 {
         if s.status == "failed" { any_failed = true; }
     }
     if any_failed {
-        complete(#{
-            summary: "No usable findings. One or more lenses failed. Not an all-clear.",
-            confirmed: [],
-            statuses: statuses,
-            observations: observations,
-        });
+        complete(result_map(
+            "No usable findings. One or more lenses failed. Not an all-clear.",
+            "Not ready",
+            "",
+            "",
+            [],
+            0,
+            statuses,
+            observations
+        ));
     }
-    complete(#{
-        summary: "No findings after the lens panel.",
-        confirmed: [],
-        statuses: statuses,
-        observations: observations,
-    });
+    complete(result_map(
+        "No findings after the lens panel.",
+        "Ready",
+        "",
+        "",
+        [],
+        0,
+        statuses,
+        observations
+    ));
 }
 
 phase("Verify");
@@ -280,23 +361,35 @@ for f in capped {
 }
 let verdicts = parallel(vjobs);
 
-let confirmed = [];
+let verified = [];
+let rejected = [];
 let vi = 0;
 for v in verdicts {
     let ev = "";
-    if v != () && v.success && v.output.evidence != () {
+    let harness_ok = v != () && v.success == true && v.output != ();
+    if harness_ok && v.output.evidence != () {
         ev = trimmed(v.output.evidence);
     }
-    if v != () && v.success && v.output.real == true && ev != "" {
-        confirmed.push(capped[vi]);
+    if harness_ok && v.output.real == true && ev != "" {
+        verified.push(capped[vi]);
+    } else {
+        let why = "not_real";
+        if !harness_ok { why = "verifier_failed"; }
+        rejected.push(#{ finding: capped[vi], why: why });
     }
     vi += 1;
 }
-log(confirmed.len().to_string() + "/" + capped.len().to_string() + " findings survived verification");
+
+let confirmed = [];
+for f in verified {
+    if passes_gate(f) { confirmed.push(f); }
+    else { rejected.push(#{ finding: f, why: "below_confidence_gate" }); }
+}
+log(confirmed.len().to_string() + "/" + capped.len().to_string() + " findings survived verification and the confidence gate");
 
 phase("Report");
 let merge_prompt = "";
-merge_prompt += "You merge a verified intent-engineering review. Context: review. Report only. Do not edit product code.\n";
+merge_prompt += "You merge a verified intent-engineering review. Context: review. Write only the published report. Do not edit product code.\n";
 merge_prompt += "Read ";
 merge_prompt += plugin_root;
 merge_prompt += "/references/report-template.md and ";
@@ -304,17 +397,19 @@ merge_prompt += plugin_root;
 merge_prompt += "/references/findings-schema.json before writing.\n";
 merge_prompt += "Target: ";
 merge_prompt += target;
-merge_prompt += "\nWrite the published markdown report to this path using the Write tool: ";
+merge_prompt += "\nWrite the published markdown report ONLY to this path using the Write tool: ";
 merge_prompt += report_rel;
-merge_prompt += "\nAlso return the same markdown in the report field.\n";
-merge_prompt += "Confidence gate: drop findings below 75 unless severity is P0 and confidence is 50+.\n";
+merge_prompt += "\nDo not edit any other path. Also return the same markdown in the report field.\n";
+merge_prompt += "The confidence gate already ran. Use the confirmed list as-is.\n";
 merge_prompt += "Do not claim Ready or all-clear if any lens status is failed.\n";
 merge_prompt += "No apply section. No time estimates. No praise.\n";
 merge_prompt += "Lens statuses JSON:\n";
 merge_prompt += json_encode(statuses);
 merge_prompt += "\nObservations JSON:\n";
 merge_prompt += json_encode(observations);
-merge_prompt += "\nVerified findings JSON:\n";
+merge_prompt += "\nRejected JSON (verifier_failed / not_real / below_confidence_gate):\n";
+merge_prompt += json_encode(rejected);
+merge_prompt += "\nConfirmed findings JSON:\n";
 merge_prompt += json_encode(confirmed);
 merge_prompt += "\n";
 
@@ -324,23 +419,25 @@ let merged = agent(merge_prompt, #{
     output_schema: report_schema,
 });
 
-if merged != () && merged.success && merged.output.report != () {
+if merged != () && merged.success == true && merged.output != () && merged.output.report != () {
     let report_text = merged.output.report;
     let scratch = write_scratch_file("report.md", report_text);
-    complete(#{
-        summary: merged.output.summary,
-        verdict: merged.output.verdict,
-        path: report_rel,
-        scratch: scratch,
-        confirmed: confirmed.len(),
-        reviewed: capped.len(),
-        statuses: statuses,
-    });
+    let verdict = if merged.output.verdict == () { "Ready with fixes" } else { merged.output.verdict };
+    let summary = if merged.output.summary == () {
+        confirmed.len().to_string() + " confirmed findings."
+    } else {
+        merged.output.summary
+    };
+    complete(result_map(summary, verdict, report_rel, scratch, confirmed, capped.len(), statuses, observations));
 }
 
-complete(#{
-    summary: confirmed.len().to_string() + " confirmed findings; merge did not return a report.",
-    path: report_rel,
-    confirmed: confirmed,
-    statuses: statuses,
-});
+complete(result_map(
+    confirmed.len().to_string() + " confirmed findings; merge did not return a report.",
+    "Not ready",
+    "",
+    "",
+    confirmed,
+    capped.len(),
+    statuses,
+    observations
+));

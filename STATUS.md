@@ -9,8 +9,8 @@ phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 ### Last session handoff
 
 1. **What this is:** Intent Engineering plugin **v0.8.0**, plus an optional Grok runtime for review.
-2. **What we finished:** First-cut Grok workflow `ie-review`: five lenses, then skeptics, no apply.
-3. **What you do next:** Run `/workflow ie-review` from this repo with a real `target`. (`feat/grok-ie-review-workflow`)
+2. **What we finished:** Live `ie-review` run (16 verified findings) and first-cut polish on that report.
+3. **What you do next:** Re-run `/workflow ie-review` from this repo, or say if you want a PR. (`feat/grok-ie-review-workflow`)
 
 ---
 

@@ -6,9 +6,10 @@ Claude Code plugin package. The installable plugin stays under
 
 ## ie-review
 
-Report-only review. Five lenses run together, then one skeptic per finding.
-A finding is kept only when the skeptic returns evidence. Nothing is applied
-to the tree.
+Five lenses run together, then one skeptic per finding. A finding is kept
+only when the skeptic returns evidence and it passes the confidence gate
+(75, or P0 at 50+). The run writes a published report under
+`docs/intent-engineering/`. It does not apply product-code fixes.
 
 From a Grok session in this repo:
 
@@ -22,11 +23,14 @@ Useful args:
 |---|---|
 | `target` | Required. Diff, branch, or path to review. |
 | `plugin_root` | Plugin dir. Default: `plugins/intent-engineering`. From another repo, pass the absolute path. |
-| `out` | Published report path. Default: `docs/intent-engineering/workflow-ie-review.md`. |
-| `stamp` | Used only when `out` is omitted: `docs/intent-engineering/<stamp>-ie-review.md`. |
+| `out` | Published report path. Default: `docs/intent-engineering/<hash>-review.md`. |
+| `stamp` | Used only when `out` is omitted: `docs/intent-engineering/<stamp>-review.md`. |
 | `base` | Optional git ref. Lenses are told to run `git diff` against it. |
+
+At most 16 findings go to verify. They are sorted by severity, then confidence,
+before the cap. Drops are logged and listed in Coverage.
 
 Watch the run in `/workflows`. This dashboard lists runs, not saved files.
 
-Interactive apply stays in the `/ie-review` skill. This workflow does not write
-product code.
+Interactive apply stays in the `/ie-review` skill. This workflow writes the
+published report only. It does not change product code.
