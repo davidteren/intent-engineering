@@ -17,6 +17,9 @@ for the design see **PLAN.md**.
 - Grok `ie-review` after that dogfood pass: one `complete()` shape, severity-ordered
   verify cap, file+line dedup, reject list, in-script confidence gate, unique
   default report path.
+- Grok `ie-review` remaining report items: config agent, template-shaped lens
+  prompts, normalized dedup plus agreement bump, schema enums, skipped/clean/failed
+  statuses, read-only merge, dedicated publisher, Layer A lens JSON in scratch.
 
 ## [0.8.0] — 2026-07-30
 

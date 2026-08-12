@@ -6,10 +6,11 @@ Claude Code plugin package. The installable plugin stays under
 
 ## ie-review
 
-Five lenses run together, then one skeptic per finding. A finding is kept
-only when the skeptic returns evidence and it passes the confidence gate
-(75, or P0 at 50+). The run writes a published report under
-`docs/intent-engineering/`. It does not apply product-code fixes.
+A config agent resolves `.intense` (or plugin defaults) and selects lenses.
+Selected lenses run together using the shared subagent template slots. Then
+one skeptic per finding. A finding is kept only with evidence and after the
+confidence gate. Merge is read-only. A publisher writes
+`docs/intent-engineering/<stamp>-review.md` only. Product code is not edited.
 
 From a Grok session in this repo:
 
@@ -26,6 +27,7 @@ Useful args:
 | `out` | Published report path. Default: `docs/intent-engineering/<hash>-review.md`. |
 | `stamp` | Used only when `out` is omitted: `docs/intent-engineering/<stamp>-review.md`. |
 | `base` | Optional git ref. Lenses are told to run `git diff` against it. |
+| `config` | Optional `.intense` directory. Same idea as the skill `config:` token. |
 
 At most 16 findings go to verify. They are sorted by severity, then confidence,
 before the cap. Drops are logged and listed in Coverage.
