@@ -120,7 +120,7 @@ fn trimmed(s) {
 fn norm(s) {
     let t = trimmed(s);
     if type_of(t) == "string" {
-        t.to_lower();
+        t = t.to_lower();
         t
     } else {
         ""
@@ -233,7 +233,9 @@ let scratch_report = run_slug + "-report.md";
 let diff_text = "";
 let target_looks_like_path = true;
 let tcheck = "" + target;
-if tcheck.index_of("...") >= 0 || tcheck.index_of("..") >= 0 {
+if tcheck.index_of("...") >= 0 {
+    target_looks_like_path = false;
+} else if tcheck.index_of("/") < 0 && tcheck.index_of(".") < 0 {
     target_looks_like_path = false;
 }
 
@@ -401,7 +403,7 @@ if policy_notes != "" {
 let ri = 0;
 for lens in catalog {
     if !lens.selected {
-        statuses.push(#{ lens: lens.id, status: "skipped" });
+        statuses.push(#{ lens: lens.id, status: "not_selected" });
     } else {
         let r = ();
         if ri < results.len() { r = results[ri]; }
@@ -417,7 +419,7 @@ for lens in catalog {
                     if o != () {
                         observations.push(o);
                         let ol = "" + o;
-                        ol.to_lower();
+                        ol = ol.to_lower();
                         if ol.len() >= 8 {
                             let head = ol.sub_string(0, 8);
                             if head == "skipped:" { lens_status = "skipped"; }
@@ -648,7 +650,7 @@ merge_prompt += verdict;
 merge_prompt += "\nReturn the markdown in the report field only. The orchestrator will store it.\n";
 merge_prompt += "The confidence gate already ran. Use the confirmed list as-is.\n";
 merge_prompt += "Do not invent extra findings. List every confirmed title. Do not drop a confirmed finding.\n";
-merge_prompt += "Do not claim Ready or all-clear if any lens status is failed or skipped-after-select, or if Config source is unresolved.\n";
+merge_prompt += "Do not claim Ready or all-clear if any lens status is failed or skipped (selected but declined). Status not_selected means the lens was never run; that is not a failure.\n";
 merge_prompt += "If confirmed is empty and no selected lens failed or skipped and config resolved, render the all-clear line from the report template.\n";
 merge_prompt += "No apply section. No time estimates. No praise.\n";
 merge_prompt += "Include Config source, policy notes, and rejected rows in Coverage.\n";
@@ -694,8 +696,12 @@ for f in confirmed {
         merge_dropped = true;
     }
 }
-let scratch = write_scratch_file(scratch_report, report_text);
-if merge_dropped { verdict = "Not ready"; }
+let scratch = "";
+if merge_dropped {
+    verdict = "Not ready";
+} else {
+    scratch = write_scratch_file(scratch_report, report_text);
+}
 let summary = if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {

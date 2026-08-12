@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-12
 **Context:** review
-**Scope:** `.grok/workflows/ie-review.rhai` (347-line Grok workflow)
+**Scope:** `.grok/workflows/ie-review.rhai` (347-line first-cut revision). This report describes that earlier script, not the hardened workflow in this repo. Line numbers below do not match the current file.
 **Intent:** Find surprise in the Grok first-cut of `/ie-review`. Report only. Do not apply fixes.
 **Stack:** rhai (Grok workflow script)
 **Config:** plugin defaults (no `.intense/` found)
