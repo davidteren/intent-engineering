@@ -46,6 +46,7 @@ concrete fixes.
 | `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
+| `/workflow ie-review` (Grok, optional) | same targets, from a Grok session in this repo | Same five lenses, then a skeptic per finding. Report only. Does not apply fixes. |
 | `/ie-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
 | `/ie-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
 
@@ -149,6 +150,8 @@ defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 2. Optional: `/ie-init` to set up or upgrade `.intense/` (defaults work without it).
 3. Run `/ie-audit` on a path or `/ie-review` on your branch; open the report under
    `docs/intent-engineering/`.
+4. **Grok only (optional):** `/workflow ie-review {"target":"origin/main...HEAD"}`.
+   Watch it in `/workflows`. See [`.grok/workflows/README.md`](.grok/workflows/README.md).
 
 **With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
 correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
@@ -179,6 +182,7 @@ plugins/intent-engineering/         the installable plugin (self-contained)
   config/defaults/  *.yaml           shipped config defaults
   resources/   principles/ frameworks/ agnostic/ patterns/   researched knowledge base + catalog
 AGENTS.md  CLAUDE.md  PLAN.md  STATUS.md  CHANGELOG.md  LICENSE
+.grok/workflows/                    optional Grok runtime (not part of the Claude plugin)
 ```
 
 > **Note on `agents/`:** a common global gitignore excludes `agents/`. The repo

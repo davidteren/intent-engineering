@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-07-30
+**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-08-12
 
 ### Last session handoff
 
-1. **What this is:** Intent Engineering plugin **v0.8.0** (setup wizard + CI-aware config).
-2. **What we finished:** PR #32 merged; tag and GitHub release `v0.8.0` live.
-3. **What you do next:** Confirm GitHub Pages badges; optional smoke install of v0.8.0.
+1. **What this is:** Intent Engineering plugin **v0.8.0**, plus an optional Grok runtime for review.
+2. **What we finished:** First-cut Grok workflow `ie-review`: five lenses, then skeptics, no apply.
+3. **What you do next:** Run `/workflow ie-review` from this repo with a real `target`. (`feat/grok-ie-review-workflow`)
 
 ---
 
@@ -33,6 +33,8 @@ Phoenix, React) + per-stack pattern catalogs.
   architecture packs), 6 agnostic docs (+ UX smell cards), 6 pattern catalogs.
 - **Automated check:** `scripts/check-contracts.rb` — **141** checks across 12 sections.
 - **Two-layer artifacts** — `.intense/runs/` scratch; `docs/intent-engineering/` published.
+- **Optional Grok runtime** — `.grok/workflows/ie-review.rhai`. Report-only. Not shipped
+  inside the Claude plugin dir. See `.grok/workflows/README.md`.
 
 ## Published
 

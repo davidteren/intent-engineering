@@ -7,6 +7,11 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Added
+- **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`). Five
+  read-only lenses, then one skeptic per finding, fail-closed. Report only. Does not
+  replace the `/ie-review` skill or apply fixes.
+
 ## [0.8.0] — 2026-07-30
 
 Setup that matches real workspaces: multi-repo init, CI-aware conventions, preferred

@@ -40,7 +40,8 @@ schemas, and cross-references stay mutually consistent.
    `plugins/intent-engineering/` — `agents/`, `skills/`, `references/`, `config/`,
    `resources/`. A Claude Code plugin only ships what's inside its plugin dir. Never
    move `resources/` or `references/` to the repo root. Edit them in place; they are the
-   single source of truth.
+   single source of truth. Optional Grok runtimes live in repo-root `.grok/workflows/`
+   and must not be moved into the plugin dir.
 3. **Runtime paths use `${CLAUDE_PLUGIN_ROOT}`.** Every cross-file reference inside a
    skill or agent must address shipped files as `${CLAUDE_PLUGIN_ROOT}/<dir>/<file>` —
    never a bare filename or repo-relative path. A lens runs in isolation and can only
