@@ -1,0 +1,18 @@
+.grok/workflows/README.md
+  h_e8a5bb9272fa34 30
+.grok/workflows/ie-review.rhai
+  h_e8a5bb9272fa34 123,236-238,406,422,653,699-704
+docs/intent-engineering/2026-08-12-workflow-ie-review.md
+  h_e8a5bb9272fa34 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3ebba6f51fd25f8007d8a76e7ab62300703e0bad",
+  "prompts": {},
+  "humans": {
+    "h_e8a5bb9272fa34": {
+      "author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
