@@ -1,0 +1,28 @@
+AGENTS.md
+  h_e8a5bb9272fa34 74,76,119-123
+CHANGELOG.md
+  h_e8a5bb9272fa34 18-19
+PLAN.md
+  h_e8a5bb9272fa34 23-24
+README.md
+  h_e8a5bb9272fa34 33-34,137-156,159-160,165-167,176-177,225
+STATUS.md
+  h_e8a5bb9272fa34 7,11-13
+docs/index.html
+  h_e8a5bb9272fa34 142,151,204,211-245,299
+plugins/intent-engineering/README.md
+  h_e8a5bb9272fa34 137-144
+plugins/intent-engineering/skills/ie-review/SKILL.md
+  h_e8a5bb9272fa34 16-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d755e762e10d25c81c58aed75aede7f393fcff8e",
+  "prompts": {},
+  "humans": {
+    "h_e8a5bb9272fa34": {
+      "author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
