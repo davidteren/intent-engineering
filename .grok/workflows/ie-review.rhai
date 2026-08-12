@@ -137,6 +137,38 @@ fn last_slash_at(s) {
     last
 }
 
+fn last_dot_at(s) {
+    let i = 0;
+    let last = -1;
+    while i < s.len() {
+        if s.sub_string(i, 1) == "." { last = i; }
+        i += 1;
+    }
+    last
+}
+
+fn letters_only(s) {
+    if s.len() == 0 { false } else {
+        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let i = 0;
+        let ok = true;
+        while i < s.len() {
+            if letters.index_of(s.sub_string(i, 1)) < 0 { ok = false; }
+            i += 1;
+        }
+        ok
+    }
+}
+
+fn leaf_has_file_extension(leaf) {
+    let dot = last_dot_at(leaf);
+    if dot < 0 { false }
+    else if dot >= leaf.len() - 1 { false }
+    else {
+        letters_only(leaf.sub_string(dot + 1, leaf.len() - dot - 1))
+    }
+}
+
 fn is_path_target(raw) {
     let s = "" + raw;
     if s == "" { false }
@@ -152,7 +184,7 @@ fn is_path_target(raw) {
         if slash >= 0 { leaf = s.sub_string(slash + 1, s.len() - slash - 1); }
         if s.len() > 0 && s.sub_string(s.len() - 1, 1) == "/" {
             true
-        } else if leaf.index_of(".") >= 0 {
+        } else if leaf_has_file_extension(leaf) {
             true
         } else {
             false
