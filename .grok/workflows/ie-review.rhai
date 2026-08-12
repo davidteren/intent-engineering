@@ -1,6 +1,6 @@
 let meta = #{
     name: "ie-review",
-    description: "Review a target through intent-engineering lenses, then adversarially verify each finding. Writes a published report. Does not apply product-code fixes.",
+    description: "Review a target through intent-engineering lenses, then adversarially verify each finding. Stores the report in run scratch. Does not write the git tree or apply product-code fixes.",
     when_to_use: "Review a diff, branch, or path for surprise. Merge is read-only. The report is a run scratch file, not a repo write. Does not apply product-code fixes.",
     phases: [
         #{ title: "Config", detail: "resolve .intense and select lenses" },
@@ -407,6 +407,9 @@ for lens in catalog {
         if ri < results.len() { r = results[ri]; }
         if r == () || r.success != true || r.output == () || r.output.findings == () || type_of(r.output.findings) != "array" {
             statuses.push(#{ lens: lens.id, status: "failed" });
+        } else if r.output.lens != () && r.output.lens != lens.id {
+            statuses.push(#{ lens: lens.id, status: "failed" });
+            observations.push("Lens " + lens.id + " returned identity " + r.output.lens + ".");
         } else {
             let lens_status = "clean";
             if r.output.observations != () {
@@ -425,6 +428,7 @@ for lens in catalog {
             statuses.push(#{ lens: lens.id, status: lens_status });
             write_scratch_file(run_slug + "-" + lens.id + ".json", json_encode(r.output));
             let fs = r.output.findings;
+            let dropped_bad = 0;
             for f in fs {
                 if f != () && f.title != () && f.file != () {
                     let title = trimmed(f.title);
@@ -450,8 +454,15 @@ for lens in catalog {
                             smell: if f.smell == () { "" } else { f.smell },
                             pattern: if f.pattern == () { "" } else { f.pattern },
                         });
+                    } else {
+                        dropped_bad += 1;
                     }
+                } else {
+                    dropped_bad += 1;
                 }
+            }
+            if dropped_bad > 0 {
+                observations.push("Dropped " + dropped_bad.to_string() + " malformed findings from " + lens.id + ".");
             }
         }
         ri += 1;

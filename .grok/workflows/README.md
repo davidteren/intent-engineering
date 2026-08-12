@@ -43,8 +43,10 @@ write product code or docs files. Read the report from `/workflows` scratch.
 This is a Grok runtime, not a second copy of the Claude skill.
 
 - Config is resolved by a read-only agent, then applied as booleans, a
-  confidence gate, optional file-severity overrides, and policy notes.
-  It does not parse `.intense` YAML inside the script.
+  confidence gate, optional file-substring severity overrides, and
+  policy notes in Coverage. It does **not** apply smell-first
+  `severity_align`, principle overrides, pattern policy, or architecture
+  thresholds the way `/ie-review` does. Treat this as a subset.
 - The lens list in the script is a snapshot of `lens-catalog.md`.
 - The JSON schema in the script is a snapshot of `findings-schema.json`.
 - The report lives in run scratch. There is no `docs/` write and no

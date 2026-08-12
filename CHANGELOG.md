@@ -8,10 +8,11 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Added
-- **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`). Five
-  read-only lenses, then one skeptic per finding, fail-closed. Writes a published
-  report. Does not replace the `/ie-review` skill or apply product-code fixes.
-  First live run: `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
+- **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`).
+  Config-selected lenses, then one skeptic per finding, fail-closed. Report
+  goes to run scratch. Does not replace the `/ie-review` skill or apply
+  product-code fixes. First live run:
+  `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
 
 ### Changed
 - Grok `ie-review` after that dogfood pass: one `complete()` shape, severity-ordered
