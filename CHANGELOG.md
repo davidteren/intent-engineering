@@ -15,6 +15,8 @@ for the design see **PLAN.md**.
   `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
 
 ### Changed
+- README, plugin README, AGENTS.md, PLAN.md, and the GitHub Pages site
+  (`docs/index.html`) now describe the optional Grok `ie-review` runtime.
 - Grok `ie-review` after that dogfood pass: one `complete()` shape, severity-ordered
   verify cap, file+line dedup, reject list, in-script confidence gate, unique
   default report path.

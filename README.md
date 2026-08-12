@@ -30,7 +30,8 @@ concrete fixes.
 > **How:** A small set of lenses (each grounded in a researched principle) run as parallel
 > agents. They return scored, deduplicated findings with concrete fixes, written to a
 > report under `docs/intent-engineering/`. The same lenses work in four contexts: planning, plan validation, code
-> review, and codebase audit.
+> review, and codebase audit. Claude Code is the installable plugin. An optional Grok
+> review runtime lives in this repo under `.grok/workflows/`.
 
 > This is the **development repo** for the plugin (and its marketplace). The installable
 > plugin is self-contained under [`plugins/intent-engineering/`](plugins/intent-engineering/README.md).
@@ -46,7 +47,6 @@ concrete fixes.
 | `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
 | `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
-| `/workflow ie-review` (Grok, optional) | same targets, from a Grok session in this repo | Same five lenses, then a skeptic per finding. Report only. Does not apply fixes. |
 | `/ie-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
 | `/ie-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
 
@@ -134,13 +134,36 @@ opt into append via `extends: true`; pattern lists are replace-only). See
 
 ---
 
+## Grok (optional)
+
+The Claude plugin is the product. This repo also ships a Grok review runtime at
+[`.grok/workflows/ie-review.rhai`](.grok/workflows/ie-review.rhai). It is **not**
+inside the installable plugin directory.
+
+From a Grok session in this repo:
+
+```
+/workflow ie-review {"target":"origin/main...HEAD"}
+```
+
+A config agent selects lenses. Those lenses run read-only. One skeptic checks each
+finding. Merge is read-only. The report is run scratch. Watch progress in
+`/workflows`. This path does **not** apply product-code fixes. Interactive apply
+stays in `/ie-review`.
+
+It is a subset of the skill: no YAML walk-up, no smell-first `severity_align`, no
+pattern policy, no `docs/` write. Full notes: [`.grok/workflows/README.md`](.grok/workflows/README.md).
+
 ## Reports
 
-Two layers: ephemeral run scratch under `.intense/runs/<run-id>/` (per-lens JSON;
-deleted after publish by default), and a published report under
+Claude skills use two layers: ephemeral run scratch under `.intense/runs/<run-id>/`
+(per-lens JSON; deleted after publish by default), and a published report under
 `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Override the published path with
 `out:<path>`; set `artifacts.*` in `.intense/ways-of-working.yaml` for permanent
 defaults. Pass `mode:agent` for a single JSON object instead of markdown.
+
+The Grok workflow writes only run scratch. It does not publish under
+`docs/intent-engineering/`.
 
 ---
 
@@ -150,8 +173,8 @@ defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 2. Optional: `/ie-init` to set up or upgrade `.intense/` (defaults work without it).
 3. Run `/ie-audit` on a path or `/ie-review` on your branch; open the report under
    `docs/intent-engineering/`.
-4. **Grok only (optional):** `/workflow ie-review {"target":"origin/main...HEAD"}`.
-   Watch it in `/workflows`. See [`.grok/workflows/README.md`](.grok/workflows/README.md).
+4. **Grok (optional):** from a Grok session in this repo, run
+   `/workflow ie-review {"target":"origin/main...HEAD"}` and watch `/workflows`.
 
 **With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
 correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
@@ -199,6 +222,7 @@ AGENTS.md  CLAUDE.md  PLAN.md  STATUS.md  CHANGELOG.md  LICENSE
 
 - **[AGENTS.md](AGENTS.md)** — contributor/agent guide (load-bearing rules, architecture, how to extend).
 - **[plugins/intent-engineering/README.md](plugins/intent-engineering/README.md)** — end-user usage detail.
+- **[.grok/workflows/README.md](.grok/workflows/README.md)** — optional Grok `ie-review` runtime.
 - **PLAN.md** — design and build plan. **STATUS.md** — current-state snapshot. **CHANGELOG.md** — change history.
 
 ## License

@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-08-12
+**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-08-13
 
 ### Last session handoff
 
-1. **What this is:** Intent Engineering plugin **v0.8.0**, plus an optional Grok runtime for review.
-2. **What we finished:** Remaining `ie-review` report items: config, template slots, Stage 5 in-script, read-only merge.
-3. **What you do next:** Re-run `/workflow ie-review` from this repo, or say if you want a PR. (`feat/grok-ie-review-workflow`)
+1. **What this is:** Intent Engineering plugin **v0.8.0**, plus an optional Grok review runtime.
+2. **What we finished:** README, contributor docs, and the site now describe that Grok path.
+3. **What you do next:** Check PR #33 on GitHub. (`feat/grok-ie-review-workflow`)
 
 ---
 

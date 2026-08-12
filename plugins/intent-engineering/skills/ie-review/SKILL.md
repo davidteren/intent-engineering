@@ -13,6 +13,10 @@ lenses, plus architecture on a supported framework), merges and confidence-gates
 findings, and writes a report. This is the runtime complement
 to the principle docs under `${CLAUDE_PLUGIN_ROOT}/resources/`.
 
+Grok users: this skill is the Claude orchestrator. The source repo also has an
+optional Grok workflow at `.grok/workflows/ie-review.rhai` (subset, report in
+scratch, no apply). See `.grok/workflows/README.md`.
+
 ## Argument parsing
 
 Parse `$ARGUMENTS`; strip recognized tokens before treating the remainder as a PR
