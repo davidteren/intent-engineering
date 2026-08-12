@@ -37,3 +37,15 @@ Watch the run in `/workflows`. This dashboard lists runs, not saved files.
 
 Interactive apply stays in the `/ie-review` skill. This workflow does not
 write product code or docs files. Read the report from `/workflows` scratch.
+
+## Limits (first cut)
+
+This is a Grok runtime, not a second copy of the Claude skill.
+
+- Config is resolved by a read-only agent, then applied as booleans, a
+  confidence gate, optional file-severity overrides, and policy notes.
+  It does not parse `.intense` YAML inside the script.
+- The lens list in the script is a snapshot of `lens-catalog.md`.
+- The JSON schema in the script is a snapshot of `findings-schema.json`.
+- The report lives in run scratch. There is no `docs/` write and no
+  `.intense/runs/` lifecycle.

@@ -223,8 +223,13 @@ if args != () && args.base != () {
     base_ref = args.base;
 }
 
-let run_slug = "run";
-let scratch_report = "run-report.md";
+let run_slug = fingerprint("" + target);
+if type_of(run_slug) != "string" || run_slug.len() < 8 {
+    run_slug = "fallback";
+} else {
+    run_slug = run_slug.sub_string(0, 8);
+}
+let scratch_report = run_slug + "-report.md";
 let diff_text = "";
 let target_looks_like_path = true;
 let tcheck = "" + target;
@@ -590,6 +595,26 @@ for f in verified {
 }
 log(confirmed.len().to_string() + "/" + capped.len().to_string() + " findings survived verification and the confidence gate");
 
+let any_failed = false;
+let selected_skipped = false;
+for s in statuses {
+    if s.status == "failed" { any_failed = true; }
+}
+for lens in catalog {
+    if lens.selected {
+        for s in statuses {
+            if s.lens == lens.id && s.status == "skipped" { selected_skipped = true; }
+        }
+    }
+}
+let verdict = "Ready with fixes";
+if confirmed.len() == 0 && !any_failed && config_ok && !selected_skipped {
+    verdict = "Ready";
+}
+if any_failed || !config_ok || selected_skipped {
+    verdict = "Not ready";
+}
+
 phase("Report");
 let merge_prompt = "";
 merge_prompt += "You merge a verified intent-engineering review. Context: review. Read-only. Do not write any file.\n";
@@ -600,7 +625,16 @@ merge_prompt += plugin_root;
 merge_prompt += "/references/findings-schema.json before you write the markdown.\n";
 merge_prompt += "Target: ";
 merge_prompt += target;
-merge_prompt += "\nReturn the published markdown in the report field only. The orchestrator will store it.\n";
+merge_prompt += "\nIntent: ";
+merge_prompt += intent_text;
+merge_prompt += "\nScope mode: ";
+merge_prompt += scope_mode;
+merge_prompt += "\nRun scratch id: ";
+merge_prompt += run_slug;
+merge_prompt += "\nHeader must include context=review, the target, intent, config source, run scratch id, and one-line reason per lens status.\n";
+merge_prompt += "Verdict line must be exactly: ";
+merge_prompt += verdict;
+merge_prompt += "\nReturn the markdown in the report field only. The orchestrator will store it.\n";
 merge_prompt += "The confidence gate already ran. Use the confirmed list as-is.\n";
 merge_prompt += "Do not invent extra findings. List every confirmed title. Do not drop a confirmed finding.\n";
 merge_prompt += "Do not claim Ready or all-clear if any lens status is failed or skipped-after-select, or if Config source is unresolved.\n";
@@ -650,25 +684,7 @@ for f in confirmed {
     }
 }
 let scratch = write_scratch_file(scratch_report, report_text);
-let any_failed = false;
-let selected_skipped = false;
-for s in statuses {
-    if s.status == "failed" { any_failed = true; }
-}
-for lens in catalog {
-    if lens.selected {
-        for s in statuses {
-            if s.lens == lens.id && s.status == "skipped" { selected_skipped = true; }
-        }
-    }
-}
-let verdict = "Ready with fixes";
-if confirmed.len() == 0 && !any_failed && config_ok && !selected_skipped {
-    verdict = "Ready";
-}
-if any_failed || !config_ok || selected_skipped || merge_dropped {
-    verdict = "Not ready";
-}
+if merge_dropped { verdict = "Not ready"; }
 let summary = if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {
