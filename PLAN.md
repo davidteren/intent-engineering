@@ -20,7 +20,8 @@ parallel agents that produce structured findings and reports.
 > **How:** A small set of "lenses" (each grounded in a researched principle) run as
 > parallel agents. They return scored, deduplicated findings with concrete fixes,
 > written to a report under `docs/intent-engineering/`. The same lenses work in four contexts: planning,
-> plan validation, code review, and codebase audit.
+> plan validation, code review, and codebase audit. Claude Code is the installable
+> plugin. An optional Grok runtime lives at `.grok/workflows/` (subset of `/ie-review`).
 
 ---
 

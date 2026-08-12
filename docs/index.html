@@ -139,6 +139,7 @@
     <nav>
       <a class="hide-sm" href="#lenses">Lenses</a>
       <a class="hide-sm" href="#contexts">Skills</a>
+      <a class="hide-sm" href="#grok">Grok</a>
       <a class="hide-sm" href="#how">How it works</a>
       <a class="ghbtn" href="https://github.com/davidteren/intent-engineering">GitHub →</a>
     </nav>
@@ -147,7 +148,7 @@
 
 <section class="hero" style="border-bottom:1px solid var(--line)">
   <div class="wrap">
-    <div class="eyebrow">A Claude Code plugin · MIT</div>
+    <div class="eyebrow">A Claude Code plugin · optional Grok runtime · MIT</div>
     <h1>Code that behaves the way<br><span class="grad">people already expect.</span></h1>
     <p class="lede"><b>intent engineering</b> — catch surprising code before it ships. Five review lenses run as parallel agents across planning, plan validation, code review, and codebase audit, returning scored findings that each name the broken expectation and propose a concrete fix.</p>
     <div class="cta">
@@ -200,9 +201,44 @@
       <div class="card reveal"><code>/ie-init</code><h4>Set up / upgrade</h4><p>Wizard for <code>.intense/</code> — monolith or multi-repo placement, auto CI/Copilot sources, severity align, pattern preference, thresholds, and <code>calibrate</code>. Upgrade merges missing keys only.</p></div>
       <div class="card reveal"><code>/ie-plan-assist</code><h4>While planning</h4><p>An advisory checklist of the principle decisions to get right now. Non-blocking.</p></div>
       <div class="card reveal"><code>/ie-validate-plan</code><h4>Before coding</h4><p>Dimensional 0–10 ratings on a plan or spec + the design gaps to resolve first.</p></div>
-      <div class="card reveal"><code>/ie-review</code><h4>On a change</h4><p>Findings by severity on a PR, branch, or local diff; applies safe verified fixes — never pushes.</p></div>
+      <div class="card reveal"><code>/ie-review</code><h4>On a change</h4><p>Findings by severity on a PR, branch, or local diff; applies safe verified fixes, never pushes.</p></div>
       <div class="card reveal"><code>/ie-audit</code><h4>On a codebase</h4><p>A posture report — per-dimension scores and the top gaps to fix first.</p></div>
       <div class="card reveal"><code>/ie-from-pr-learnings</code><h4>After review</h4><p>Mine PR triage or PR threads into notes, sources, and severities so the next run enforces what humans already fought for.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="grok">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Optional Grok runtime</div>
+      <h2>Same lenses. A script holds the plan.</h2>
+      <p>Claude Code is the installable plugin. This repo also ships a Grok workflow so a review can run as a background script instead of a chat that orchestrates every turn. It is not inside the plugin package. Marketplace install does not include it.</p>
+    </div>
+    <div class="split">
+      <div class="feat reveal">
+        <h3>What it does</h3>
+        <ul>
+          <li>A config agent picks lenses. Those lenses run read-only.</li>
+          <li>One skeptic checks each finding. Missing evidence is not a yes.</li>
+          <li>Merge is read-only. The report is run scratch. Watch <code>/workflows</code>.</li>
+          <li>It does not apply product-code fixes. Interactive apply stays in <code>/ie-review</code>.</li>
+        </ul>
+      </div>
+      <div class="feat reveal">
+        <h3>How to run it</h3>
+        <ul>
+          <li>Clone the repo. Open a Grok session in that directory.</li>
+          <li>Run <code>/workflow ie-review {"target":"origin/main...HEAD"}</code></li>
+          <li>A read-only config agent walks up for <code>.intense</code>. The script still does not apply smell-first severity align or pattern policy, and it does not write <code>docs/</code>.</li>
+          <li>Details: <a href="https://github.com/davidteren/intent-engineering/blob/main/.grok/workflows/README.md">.grok/workflows/README.md</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="install reveal" style="margin-top:28px;max-width:720px">
+      <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span style="margin-left:6px">grok</span></div>
+<pre><span class="p"># Grok session, this repo</span>
+/workflow ie-review {<span class="c">"target"</span>:<span class="c">"origin/main...HEAD"</span>}</pre>
     </div>
   </div>
 </section>
@@ -260,7 +296,7 @@
       <a href="https://github.com/davidteren/intent-engineering/blob/main/README.md">Docs</a>
       <a href="https://github.com/davidteren/intent-engineering/blob/main/LICENSE">MIT</a>
     </div>
-    <p class="note">Built with Claude Code. The Principle of Least Astonishment, applied to itself.</p>
+    <p class="note">Built with Claude Code. Optional Grok runtime in the source repo. The Principle of Least Astonishment, applied to itself.</p>
   </div>
 </footer>
 

@@ -7,6 +7,24 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Added
+- **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`).
+  Config-selected lenses, then one skeptic per finding, fail-closed. Report
+  goes to run scratch. Does not replace the `/ie-review` skill or apply
+  product-code fixes. First live run:
+  `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
+
+### Changed
+- README, plugin README, AGENTS.md, PLAN.md, and the GitHub Pages site
+  (`docs/index.html`) now describe the optional Grok `ie-review` runtime.
+- Grok `ie-review` after that dogfood pass: one `complete()` shape, severity-ordered
+  verify cap, file+line dedup, reject list, in-script confidence gate, unique
+  default report path.
+- Grok `ie-review` remaining report items: config agent, template-shaped lens
+  prompts, normalized dedup plus agreement bump, schema enums, skipped/clean/failed
+  statuses, read-only merge, Layer A lens JSON in scratch. No write-capable
+  publisher. Script owns the verdict.
+
 ## [0.8.0] — 2026-07-30
 
 Setup that matches real workspaces: multi-repo init, CI-aware conventions, preferred

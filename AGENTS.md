@@ -40,7 +40,8 @@ schemas, and cross-references stay mutually consistent.
    `plugins/intent-engineering/` — `agents/`, `skills/`, `references/`, `config/`,
    `resources/`. A Claude Code plugin only ships what's inside its plugin dir. Never
    move `resources/` or `references/` to the repo root. Edit them in place; they are the
-   single source of truth.
+   single source of truth. Optional Grok runtimes live in repo-root `.grok/workflows/`
+   and must not be moved into the plugin dir.
 3. **Runtime paths use `${CLAUDE_PLUGIN_ROOT}`.** Every cross-file reference inside a
    skill or agent must address shipped files as `${CLAUDE_PLUGIN_ROOT}/<dir>/<file>` —
    never a bare filename or repo-relative path. A lens runs in isolation and can only
@@ -70,7 +71,9 @@ intent-engineering/                       dev repo + marketplace
   .claude-plugin/marketplace.json         marketplace entry (install from repo root)
   scripts/check-contracts.rb              contract-integrity check (the one automated check)
   docs/intent-engineering/                published ie-* reports (date-stamped markdown)
+  docs/index.html                         GitHub Pages site
   .intense/runs/                          gitignored ephemeral lens scratch (cleaned up)
+  .grok/workflows/                        optional Grok runtime (not shipped in the plugin)
   plugins/intent-engineering/             THE INSTALLABLE PLUGIN (self-contained)
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
@@ -112,6 +115,11 @@ intent-engineering/                       dev repo + marketplace
 no artifacts, prose (not findings JSON). `ie-init` is the setup/upgrade wizard for
 `.intense/` (fresh, upgrade, calibrate; multi-repo placement) and may offer a
 `.gitignore` line for `.intense/runs/`.
+
+**Grok optional runtime.** `.grok/workflows/ie-review.rhai` is a Grok script, not a
+Claude skill. It is a subset: agent-resolved config, selected lenses, skeptics,
+script-owned verdict, report in run scratch. It must not move into
+`plugins/intent-engineering/`. See `.grok/workflows/README.md`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
 the apply stage), `out:<path>` (override published report path). Path resolution:

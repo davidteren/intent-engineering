@@ -134,6 +134,14 @@ object (also written under the publish dir as `.json`) for programmatic callers.
 
 Then the `/ie-*` skills and `ie-*-reviewer` agents are available.
 
+## Grok (optional, source repo only)
+
+This installable plugin is Claude Code. The development repo also has a Grok
+workflow at `.grok/workflows/ie-review.rhai`. Marketplace install does **not**
+ship that file. Clone the repo and run `/workflow ie-review` from a Grok
+session. Report is run scratch. No product-code apply. See
+[`.grok/workflows/README.md`](../../.grok/workflows/README.md).
+
 ## Conventions this plugin assumes
 
 - `${CLAUDE_PLUGIN_ROOT}` resolves at runtime (standard in Claude Code) — lenses read
