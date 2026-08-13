@@ -1,0 +1,30 @@
+docs/intent-engineering/2026-08-12-workflow-ie-review.md
+  s_25cf1a1ae3c71d::t_08cce129b8d468 69
+  s_25cf1a1ae3c71d::t_fed2d6a25898fc 104
+  s_25cf1a1ae3c71d::t_7500f2c338eb72 37
+  s_25cf1a1ae3c71d::t_0b5849b416e38b 35
+  s_25cf1a1ae3c71d::t_efa984788c4ce9 67
+  s_25cf1a1ae3c71d::t_be6ffeb49fb2e2 5
+  s_25cf1a1ae3c71d::t_77fe92cbb93ad4 106
+  s_25cf1a1ae3c71d::t_2a4366083f46e4 65
+  s_25cf1a1ae3c71d::t_d1b2b3765c8702 61
+  s_25cf1a1ae3c71d::t_3c66af09679de8 63
+  s_25cf1a1ae3c71d::t_28b7f7da7f3e2d 39
+  s_25cf1a1ae3c71d::t_6b48c9d180f779 27-33,53-59,79-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "85e3d234ce6e737a514fb6f5e763eeb4eac3264d",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
