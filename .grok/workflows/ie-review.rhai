@@ -192,6 +192,13 @@ fn is_path_target(raw) {
     }
 }
 
+fn match_key(s) {
+    let t = "" + s;
+    t.replace("`", "");
+    t = t.to_lower();
+    t
+}
+
 fn severity_rank(s) {
     if s == "P0" { 0 } else if s == "P1" { 1 } else if s == "P2" { 2 } else { 3 }
 }
@@ -748,19 +755,30 @@ if merged == () || merged.success != true || merged.output == () || merged.outpu
 }
 
 let report_text = merged.output.report;
+let report_key = match_key(report_text);
 let merge_dropped = false;
 for f in confirmed {
-    if report_text.index_of(f.title) < 0 {
+    if report_key.index_of(match_key(f.title)) < 0 {
         observations.push("Merge report omitted confirmed title: " + f.title);
         merge_dropped = true;
     }
 }
-let scratch = "";
+// Always store the report. A detected omission flips the verdict to Not ready and
+// annotates the file, but never discards a report the merge agent already produced.
+// The match is deliberately loose (backticks stripped, lowercased) so a benign
+// reformat of a title does not discard a good report; the residual risk runs the
+// other way (a title echoed in unrelated prose could mask a real omission), which is
+// the safer side of that trade-off for a report-only workflow.
 if merge_dropped {
+    let prior_verdict = verdict;
     verdict = "Not ready";
-} else {
-    scratch = write_scratch_file(scratch_report, report_text);
+    // Rewrite the merge agent's dictated verdict line so the stored report does not
+    // contradict the run verdict. On this path confirmed is non-empty, so the prior
+    // verdict is "Ready with fixes" or "Not ready", never a bare "Ready" substring.
+    report_text.replace(prior_verdict, "Not ready");
+    report_text += "\n\n> Integrity: this report omitted one or more confirmed findings. Run verdict is Not ready. See the run result for the full confirmed list.\n";
 }
+let scratch = write_scratch_file(scratch_report, report_text);
 let summary = if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {
