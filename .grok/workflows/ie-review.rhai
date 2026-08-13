@@ -192,6 +192,12 @@ fn is_path_target(raw) {
     }
 }
 
+fn match_key(s) {
+    let t = "" + s;
+    t.replace("`", "");
+    norm(t)
+}
+
 fn severity_rank(s) {
     if s == "P0" { 0 } else if s == "P1" { 1 } else if s == "P2" { 2 } else { 3 }
 }
@@ -748,20 +754,34 @@ if merged == () || merged.success != true || merged.output == () || merged.outpu
 }
 
 let report_text = merged.output.report;
+let report_key = match_key(report_text);
 let merge_dropped = false;
 for f in confirmed {
-    if report_text.index_of(f.title) < 0 {
+    let title_key = match_key(f.title);
+    // An empty normalized key (a title of only backticks/whitespace) would match every
+    // report via index_of, so treat it as an omission rather than a silent pass.
+    if title_key == "" || report_key.index_of(title_key) < 0 {
         observations.push("Merge report omitted confirmed title: " + f.title);
         merge_dropped = true;
     }
 }
-let scratch = "";
+// Always store the report. A detected omission flips the verdict to Not ready and
+// prepends an authoritative override banner, but never discards a report the merge
+// agent already produced. The match is deliberately loose (backticks stripped,
+// lowercased) so a benign reformat of a title does not discard a good report; the
+// residual risk runs the other way (a title echoed in unrelated prose could mask a
+// real omission), which is the safer side of that trade-off for a report-only workflow.
 if merge_dropped {
     verdict = "Not ready";
-} else {
-    scratch = write_scratch_file(scratch_report, report_text);
+    // Prepend the authoritative verdict rather than rewriting the agent's prose. A blind
+    // global replace of the old verdict phrase could reword unrelated sentences; a banner
+    // that supersedes any verdict line below is read first and cannot corrupt the body.
+    report_text = "> Integrity override: this report omitted one or more confirmed findings. The authoritative run verdict is Not ready; any verdict line below is superseded. See the run result for the full confirmed list.\n\n" + report_text;
 }
-let summary = if merged.output.summary == () {
+let scratch = write_scratch_file(scratch_report, report_text);
+let summary = if merge_dropped {
+    "Report omitted confirmed findings; authoritative verdict is Not ready. " + confirmed.len().to_string() + " confirmed."
+} else if merged.output.summary == () {
     confirmed.len().to_string() + " confirmed findings."
 } else {
     merged.output.summary
