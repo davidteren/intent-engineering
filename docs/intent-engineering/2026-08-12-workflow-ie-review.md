@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-12
 **Context:** review
-**Scope:** `.grok/workflows/ie-review.rhai` (347-line first-cut revision). This report describes that earlier script, not the hardened workflow in this repo. Line numbers below do not match the current file.
+**Scope:** `.grok/workflows/ie-review.rhai` (first-cut revision). This report describes that earlier script, not the hardened workflow in this repo. The original line-number references have been removed because they did not match the shipped file; the findings themselves are unchanged.
 **Intent:** Find surprise in the Grok first-cut of `/ie-review`. Report only. Do not apply fixes.
 **Stack:** rhai (Grok workflow script)
 **Config:** plugin defaults (no `.intense/` found)
@@ -24,19 +24,19 @@
 
 | # | File | Issue | Principle | Lens | Conf |
 |---|------|-------|-----------|------|------|
-| 1 | `.grok/workflows/ie-review.rhai:248` | `complete()` changes shape; `confirmed` flips type | api-design | predictability | 100 |
-| 2 | `.grok/workflows/ie-review.rhai:341` | Merge failure still reports a published path | wysiwyg | predictability | 100 |
-| 3 | `.grok/workflows/ie-review.rhai:228` | Cap keeps first 16, so later lenses never verify | least-astonishment | predictability | 100 |
-| 4 | `.grok/workflows/ie-review.rhai:72` | Lens prompts reinvent dispatch instead of using `subagent-template.md` | convention-over-configuration | convention | 100 |
-| 5 | `.grok/workflows/ie-review.rhai:111` | Orchestrator never loads config-resolution or `.intense` defaults | convention-over-configuration | convention | 100 |
-| 6 | `.grok/workflows/ie-review.rhai:219` | Merge dedupes by file+title and skips Stage 5 policy | convention-over-configuration | convention | 100 |
-| 7 | `.grok/workflows/ie-review.rhai:321` | Report phase adds a write-capable merge agent and a second write | kiss | simplicity | 75 |
+| 1 | `.grok/workflows/ie-review.rhai` | `complete()` changes shape; `confirmed` flips type | api-design | predictability | 100 |
+| 2 | `.grok/workflows/ie-review.rhai` | Merge failure still reports a published path | wysiwyg | predictability | 100 |
+| 3 | `.grok/workflows/ie-review.rhai` | Cap keeps first 16, so later lenses never verify | least-astonishment | predictability | 100 |
+| 4 | `.grok/workflows/ie-review.rhai` | Lens prompts reinvent dispatch instead of using `subagent-template.md` | convention-over-configuration | convention | 100 |
+| 5 | `.grok/workflows/ie-review.rhai` | Orchestrator never loads config-resolution or `.intense` defaults | convention-over-configuration | convention | 100 |
+| 6 | `.grok/workflows/ie-review.rhai` | Merge dedupes by file+title and skips Stage 5 policy | convention-over-configuration | convention | 100 |
+| 7 | `.grok/workflows/ie-review.rhai` | Report phase adds a write-capable merge agent and a second write | kiss | simplicity | 75 |
 
-- **#1** -- Early exits return `confirmed` as `[]` plus observations (lines 248-260). Success returns `confirmed` as `confirmed.len()` (a number), plus verdict, path, and scratch, and it omits observations (lines 330-338). Merge failure returns `confirmed` as the finding array and a path, with no verdict (lines 341-346). A caller cannot treat `complete()` as one object. Fix: use one `complete()` object on every exit. Always include summary, verdict, path (empty when unpublished), scratch, `confirmed` (always an array), `confirmed_count`, reviewed, statuses, and observations. On the success path, pass the confirmed array plus a separate count.
+- **#1** -- Early exits return `confirmed` as `[]` plus observations. Success returns `confirmed` as `confirmed.len()` (a number), plus verdict, path, and scratch, and it omits observations. Merge failure returns `confirmed` as the finding array and a path, with no verdict. A caller cannot treat `complete()` as one object. Fix: use one `complete()` object on every exit. Always include summary, verdict, path (empty when unpublished), scratch, `confirmed` (always an array), `confirmed_count`, reviewed, statuses, and observations. On the success path, pass the confirmed array plus a separate count.
 
-- **#2** -- Merge failure (lines 341-346) still sets `path: report_rel`. Success (line 333) also sets that path without checking that the merge agent wrote the file. A stale file from an earlier run then looks like this run's report. Fix: on merge failure, set path to an empty string (or omit it) and do not name `report_rel`. On success, write `report_text` from this script and set path only when that write succeeds.
+- **#2** -- Merge failure still sets `path: report_rel`. Success also sets that path without checking that the merge agent wrote the file. A stale file from an earlier run then looks like this run's report. Fix: on merge failure, set path to an empty string (or omit it) and do not name `report_rel`. On success, write `report_text` from this script and set path only when that write succeeds.
 
-- **#3** -- `MAX_FINDINGS` is 16 (line 61). `unique` keeps lens order (predictability, then convention, then simplicity, experience, architecture). The cap loop (lines 235-239) takes the first 16. Each lens schema allows 8 findings, so two full early lenses fill the cap. Later lenses never reach Verify. Fix: sort unique by severity (P0, P1, P2, P3) then confidence descending before the cap. Push an observation that names how many findings were dropped. Pass that observation into the merge prompt. Do not cap by insertion order.
+- **#3** -- `MAX_FINDINGS` is 16. `unique` keeps lens order (predictability, then convention, then simplicity, experience, architecture). The cap loop takes the first 16. Each lens schema allows 8 findings, so two full early lenses fill the cap. Later lenses never reach Verify. Fix: sort unique by severity (P0, P1, P2, P3) then confidence descending before the cap. Push an observation that names how many findings were dropped. Pass that observation into the merge prompt. Do not cap by insertion order.
 
 - **#4** -- `lens_prompt()` builds a short custom prompt (read these files, Target, Hunt for). It never fills `subagent-template.md` slots: intent, scope_mode, standards_paths, run_artifact_dir, or the artifact-write output-contract. AGENTS.md and ie-review Stage 4 require dispatch from that template. Fix: replace `lens_prompt()` with a fill of `plugins/intent-engineering/references/subagent-template.md`. Bind `run_artifact_dir` to a per-run dir under `artifacts.run_dir`. Pass Context: review, a 2-3 line intent, scope mode, and ancestor AGENTS.md/CLAUDE.md paths. Keep Grok `output_schema` as the machine wrapper only.
 
@@ -50,23 +50,23 @@
 
 | # | File | Issue | Principle | Lens | Conf |
 |---|------|-------|-----------|------|------|
-| 8 | `.grok/workflows/ie-review.rhai:223` | Dedup by file plus title hides other lenses and lines | least-astonishment | predictability | 100 |
-| 9 | `.grok/workflows/ie-review.rhai:290` | Verifier rejects vanish with no rejected list | error-handling | predictability | 75 |
-| 10 | `.grok/workflows/ie-review.rhai:321` | Report-only merge agent still has full write access | least-astonishment | predictability | 75 |
-| 11 | `.grok/workflows/ie-review.rhai:310` | `confirmed` count is pre-gate, not what the report keeps | wysiwyg | predictability | 75 |
-| 12 | `.grok/workflows/ie-review.rhai:121` | Default report path overwrites the last review | least-astonishment | predictability | 100 |
-| 13 | `.grok/workflows/ie-review.rhai:121` | Default report path ignores stamp-skill two-layer convention | convention-over-configuration | convention | 100 |
-| 14 | `.grok/workflows/ie-review.rhai:185` | Lens status uses `findings` instead of report-template skipped/clean | convention-over-configuration | convention | 100 |
+| 8 | `.grok/workflows/ie-review.rhai` | Dedup by file plus title hides other lenses and lines | least-astonishment | predictability | 100 |
+| 9 | `.grok/workflows/ie-review.rhai` | Verifier rejects vanish with no rejected list | error-handling | predictability | 75 |
+| 10 | `.grok/workflows/ie-review.rhai` | Report-only merge agent still has full write access | least-astonishment | predictability | 75 |
+| 11 | `.grok/workflows/ie-review.rhai` | `confirmed` count is pre-gate, not what the report keeps | wysiwyg | predictability | 75 |
+| 12 | `.grok/workflows/ie-review.rhai` | Default report path overwrites the last review | least-astonishment | predictability | 100 |
+| 13 | `.grok/workflows/ie-review.rhai` | Default report path ignores stamp-skill two-layer convention | convention-over-configuration | convention | 100 |
+| 14 | `.grok/workflows/ie-review.rhai` | Lens status uses `findings` instead of report-template skipped/clean | convention-over-configuration | convention | 100 |
 
-- **#8** -- Lines 219-226: if `u.file == f.file && u.title == f.title` then `seen = true`. The first lens that emitted that pair wins. The `/ie-review` skill dedups on file + line(+/-3) + title and records agreeing lenses. Same title at a different line is dropped. A second lens that agreed is dropped. Fix: dedup on file + line + trimmed title. On a match, keep the higher severity and confidence and append the new lens id to a `lenses` list on the kept finding. Do not drop a same-title finding at a different line. Do not drop a second lens that agreed.
+- **#8** -- If `u.file == f.file && u.title == f.title` then `seen = true`. The first lens that emitted that pair wins. The `/ie-review` skill dedups on file + line(+/-3) + title and records agreeing lenses. Same title at a different line is dropped. A second lens that agreed is dropped. Fix: dedup on file + line + trimmed title. On a match, keep the higher severity and confidence and append the new lens id to a `lenses` list on the kept finding. Do not drop a same-title finding at a different line. Do not drop a second lens that agreed.
 
-- **#9** -- Lines 285-294 keep a finding only when `v.success && real == true` and evidence is non-empty. Everything else is dropped. The merge prompt (lines 317-318) receives only `confirmed`. The user-facing signal is one log line (line 295). A harness failure looks the same as `real=false`. Fix: for every verdict, store `{finding, real, reason, evidence, harness_ok}`. Pass rejected findings and harness failures to the merge prompt as Coverage. Treat `v.success != true` as `verifier_failed`, not as `real=false`.
+- **#9** -- The verify loop keeps a finding only when `v.success && real == true` and evidence is non-empty. Everything else is dropped. The merge prompt receives only `confirmed`. The user-facing signal is one log line. A harness failure looks the same as `real=false`. Fix: for every verdict, store `{finding, real, reason, evidence, harness_ok}`. Pass rejected findings and harness failures to the merge prompt as Coverage. Treat `v.success != true` as `verifier_failed`, not as `real=false`.
 
-- **#10** -- `meta.when_to_use` (line 4): "Report only. Does not apply fixes." Merge is spawned with `capability_mode: read-write` (line 323) and told to Write the published report (lines 307-308). The only "do not edit product code" guard is prompt text (line 299). Fix: pick one contract and make it visible. Either keep read-write and change `meta.when_to_use` to name the tree write (published report under `docs/intent-engineering/`; no code fixes), or set the merge agent to read-only and write the report in this script. Do not pair "Report only / Does not apply fixes" with an unbounded write agent.
+- **#10** -- `meta.when_to_use`: "Report only. Does not apply fixes." Merge is spawned with `capability_mode: read-write` and told to Write the published report. The only "do not edit product code" guard is prompt text. Fix: pick one contract and make it visible. Either keep read-write and change `meta.when_to_use` to name the tree write (published report under `docs/intent-engineering/`; no code fixes), or set the merge agent to read-only and write the report in this script. Do not pair "Report only / Does not apply fixes" with an unbounded write agent.
 
-- **#11** -- Line 310 tells the merge agent to drop findings below 75 unless P0 at 50+. Line 335 then reports `confirmed: confirmed.len()`, which is the post-verify, pre-gate list from lines 290-291. The dashboard count can be larger than the published table. Fix: apply the confidence gate in this script (drop below 75 unless severity is P0 and confidence is 50+). Pass only gated findings to the merge prompt and to `complete()`. If a pre-gate count is needed, name it `verified_count`, not `confirmed`.
+- **#11** -- The merge prompt tells the agent to drop findings below 75 unless P0 at 50+. The result then reports `confirmed: confirmed.len()`, which is the post-verify, pre-gate list. The dashboard count can be larger than the published table. Fix: apply the confidence gate in this script (drop below 75 unless severity is P0 and confidence is 50+). Pass only gated findings to the merge prompt and to `complete()`. If a pre-gate count is needed, name it `verified_count`, not `confirmed`.
 
-- **#12** -- Lines 121-126: `report_rel` starts as `docs/intent-engineering/workflow-ie-review.md`. `stamp` only changes the path when `out` is absent. The `/ie-review` skill defaults to a stamped published file so runs do not clobber each other. Two default runs overwrite the same file. Fix: when `args.out` is omitted, set `report_rel` to `docs/intent-engineering/<stamp>-ie-review.md`. Generate stamp from the host date plus a short target slug when `args.stamp` is also omitted. Do not default to a single reusable filename.
+- **#12** -- `report_rel` starts as `docs/intent-engineering/workflow-ie-review.md`. `stamp` only changes the path when `out` is absent. The `/ie-review` skill defaults to a stamped published file so runs do not clobber each other. Two default runs overwrite the same file. Fix: when `args.out` is omitted, set `report_rel` to `docs/intent-engineering/<stamp>-ie-review.md`. Generate stamp from the host date plus a short target slug when `args.stamp` is also omitted. Do not default to a single reusable filename.
 
 - **#13** -- `report_rel` defaults to `docs/intent-engineering/workflow-ie-review.md`; stamp yields `<stamp>-ie-review.md`; scratch is `write_scratch_file("report.md")`. AGENTS.md rule 5 and config-resolution `CANONICAL_ORCHESTRATOR_PATHS` require `.intense/runs/<run-id>/` plus `docs/intent-engineering/<stamp>-<skill>[-scope].md` with skill slug `review`. Fix: default Layer B to `docs/intent-engineering/<stamp>-review.md` (`SKILL_SLUG` review). Keep `args.out` as the override. Write lens JSON under `.intense/runs/<run-id>/` (or a Grok scratch that mirrors that layout). Stop using a fixed `workflow-ie-review.md` name that overwrites the last run.
 
@@ -76,8 +76,8 @@
 
 | # | File | Issue | Principle | Lens | Conf |
 |---|------|-------|-----------|------|------|
-| 15 | `.grok/workflows/ie-review.rhai:11` | Inline lens schema omits findings-schema enums | convention-over-configuration | convention | 75 |
-| 16 | `.grok/workflows/ie-review.rhai:61` | `MAX_FINDINGS=16` is an unpublished drop cap | convention-over-configuration | convention | 100 |
+| 15 | `.grok/workflows/ie-review.rhai` | Inline lens schema omits findings-schema enums | convention-over-configuration | convention | 75 |
+| 16 | `.grok/workflows/ie-review.rhai` | `MAX_FINDINGS=16` is an unpublished drop cap | convention-over-configuration | convention | 100 |
 
 - **#15** -- `lens_schema` types `lens`, `principle`, `severity`, and `fix_class` as plain strings and `confidence` as integer, with no enums. `findings-schema.json` is the single contract and constrains those fields. The merge prompt later tells the writer to read that file, so two contracts exist. Invalid values can pass the harness. Fix: build `output_schema` from `plugins/intent-engineering/references/findings-schema.json`. Copy the enums for `lens`, `principle`, `severity`, `confidence`, and `fix_class` into the Rhai map so invalid values cannot pass the harness.
 
@@ -101,9 +101,9 @@ Name the two sides. Do not pick one here.
 
 - Experience and architecture always run. A not-applicable empty return is marked `clean`, not `skipped`. A backend-only target can look like five clean lenses.
 - Always running experience and architecture is simpler than copying lens-catalog selection. Those agents already return zero findings when the surface or stack is absent. Residual tension: YAGNI (skip unused agents) versus KISS (do not reimplement selection).
-- Lens status is set from the raw findings array length (line 184) before empty title or file rows are dropped. Status `findings` can pair with zero accepted items.
+- Lens status is set from the raw findings array length before empty title or file rows are dropped. Status `findings` can pair with zero accepted items.
 - `plugin_root` defaults to the repo-relative path `plugins/intent-engineering`. Another repo must pass an absolute path, or lenses read the wrong tree. That default is the Grok-runtime convention. `${CLAUDE_PLUGIN_ROOT}` applies inside the plugin, not this file.
-- The failed-lens early exit (lines 247-253) correctly refuses all-clear when no usable findings remain.
+- The failed-lens early exit correctly refuses all-clear when no usable findings remain.
 - Two notes conflict on `trimmed()`. One says Rhai `trim` mutates in place, so `trimmed()` is not a discarded-return bug. The other says `s.trim()` returns a new string, so the helper is an identity and a predictability bug. This is not in the verified list. Residual risk: confirm the Rhai runtime, then drop the helper or keep a real trim.
 - `lens_schema` is a loosened inline copy of `findings-schema.json`. The Grok runtime needs an inline schema. `scripts/check-contracts.rb` does not cover this file, so the copy can drift.
 - Documented first-cut deviations, treated as reasoned not findings: report-only, no apply, one skeptic per finding, five lenses together. The first cut correctly skipped apply, config walk-up, and `severity_align`. That thinning is earned. Dedup is still file+title first-wins, not the skill's file+line window with highest severity.
