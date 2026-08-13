@@ -9,10 +9,11 @@ Claude Code plugin package. The installable plugin stays under
 A config agent resolves `.intense` (or plugin defaults) and selects lenses.
 Selected lenses run together using the shared subagent template slots. Then
 one skeptic per finding. A finding is kept only with evidence and after the
-confidence gate. Merge is read-only. The report is always stored as run scratch
-(`<hash>-report.md`); a produced report is never discarded. If the merge output
-drops a confirmed finding, the verdict flips to Not ready and the stored report
-gets an authoritative override banner at the top. This workflow does not write
+confidence gate. Merge is read-only. Any report the merge step produces is stored
+as run scratch (`<hash>-report.md`) and never discarded. If the merge output drops
+a confirmed finding, the verdict flips to Not ready and the stored report gets an
+authoritative override banner at the top. If the merge step returns no report at
+all, the run reports Not ready with no scratch file. This workflow does not write
 into the git tree. Product code is not edited.
 
 From a Grok session in this repo:
