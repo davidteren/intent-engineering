@@ -1,0 +1,19 @@
+.grok/workflows/README.md
+  s_25cf1a1ae3c71d::t_59d9f5a7ada06b 12-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f035220a890121d175904dbfadbe57dd3f5abf07",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
