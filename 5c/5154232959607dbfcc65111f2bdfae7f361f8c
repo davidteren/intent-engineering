@@ -1,0 +1,22 @@
+.grok/workflows/README.md
+  s_25cf1a1ae3c71d::t_3ef2eb49a53d21 12-16
+.grok/workflows/ie-review.rhai
+  s_25cf1a1ae3c71d::t_4e37548913e6d2 198
+  s_25cf1a1ae3c71d::t_bbee7ddbd7f51c 760-763,769-773,776-779,782-784
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5c5154232959607dbfcc65111f2bdfae7f361f8c",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
