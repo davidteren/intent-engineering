@@ -8,6 +8,13 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Added
+- **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
+  read-only on a real Hotwire/Rails app (ongela) and folded the false positives
+  back into `resources/agnostic/ux-interaction-smells.md`: sibling-consistency
+  and framework-default guards, a Hotwire caveat on the double-submit signal, a
+  backdrop-click carve-out, a nested-attributes delete carve-out, and a
+  three-tier error-path model. Report:
+  `docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md`.
 - **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`).
   Config-selected lenses, then one skeptic per finding, fail-closed. Report
   goes to run scratch. Does not replace the `/ie-review` skill or apply
