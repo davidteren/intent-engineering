@@ -7,9 +7,10 @@ Experience failures are often **structural** — missing states and non-semantic
 not taste. This doc lists greppable / inspectable signals the experience lens uses, so
 UX review can approach architecture-pack rigor without inventing pixel scores.
 
-> Calibrated against a real Hotwire/Rails app (ongela) on 2026-08-14. The sibling-check,
+> Calibrated against a real Hotwire/Rails app on 2026-08-14. The sibling-check,
 > framework-default, and error-tier guards below come from folding that run's false
-> positives back in. See `docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md`.
+> positives back in. (The dogfood report lives in the development repo, not the installed
+> plugin.)
 
 ## Detectable smells
 
@@ -32,8 +33,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   finding there; a missing `turbo_submits_with` is a separate, minor *feedback* advisory
   (no visible pending state), not a double-submit gap. Rails-UJS does **not** auto-disable:
   it needs `data-disable-with` (or equivalent), so verify that mechanism is present before
-  clearing a UJS form. Anywhere the in-flight disable is absent, the double-submit gap is
-  real.
+  clearing a UJS form. The Turbo auto-disable covers form *submitters* only — a
+  state-changing `link_to ... data: { turbo_method: ... }` is not a form submit and is not
+  disabled, so it still needs its own guard. Anywhere the in-flight disable is absent, the
+  double-submit gap is real.
 - No **focus** style on custom controls (and no visible focus on native ones after CSS reset).
 - Success path with no confirmation when the action is not obvious from navigation alone.
 
@@ -89,8 +92,8 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - **Framework-default guard** — before scoring, check whether the stack *actually*
   supplies the state in this instance, not whether it could. Turbo's submit-disable is
   automatic; but `form_with` does not render errors unless the view does, and a native
-  `<dialog>` is modal only when opened with `showModal()`. Score ≤25 only when you confirm
-  the default is in effect here; otherwise score the gap on its own merits.
+  `<dialog>` is modal only when opened with `showModal()`. Score ≤25 (suppress) only when
+  you confirm the default is in effect here; otherwise score the gap on its own merits.
 
 ## What this is not
 
