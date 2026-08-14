@@ -17,10 +17,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - Interactive control with no **loading** state while async work runs (button that stays
   enabled and unlabeled during fetch).
 - List/detail region with no **empty** state (blank panel when length is 0). Check the
-  actual zero-item render path first: does the region render a *meaningful* empty state — a
-  message that the list is empty, ideally with the next action — via an inline branch, a
-  shared empty-state partial, or a component fallback? A bare heading, filter bar, or empty
-  wrapper does not count. If nothing meaningful renders, that is the finding. Then use
+  actual zero-item render path first: does the region render a *meaningful* empty state — at
+  minimum a message that the list is empty, plus the next action where one applies — via an
+  inline branch, a shared empty-state partial, or a component fallback? A bare heading,
+  filter bar, or empty wrapper does not count. If nothing meaningful renders, that is the finding. Then use
   sibling consistency to *adjust* confidence — a
   lone outlier among guarded siblings is stronger; a whole directory missing it is a
   broader gap — not as a precondition for flagging.
