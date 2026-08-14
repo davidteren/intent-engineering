@@ -17,20 +17,23 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - Interactive control with no **loading** state while async work runs (button that stays
   enabled and unlabeled during fetch).
 - List/detail region with no **empty** state (blank panel when length is 0). Check the
-  actual zero-item render path first: does the region show anything when the collection is
-  empty (an inline branch, a shared empty-state partial, a component fallback)? If nothing
-  renders, that is the finding. Then use sibling consistency to *adjust* confidence — a
+  actual zero-item render path first: does the region render a *meaningful* empty state — a
+  message that the list is empty, ideally with the next action — via an inline branch, a
+  shared empty-state partial, or a component fallback? A bare heading, filter bar, or empty
+  wrapper does not count. If nothing meaningful renders, that is the finding. Then use
+  sibling consistency to *adjust* confidence — a
   lone outlier among guarded siblings is stronger; a whole directory missing it is a
   broader gap — not as a precondition for flagging.
 - Form or mutation path with no **error** state (submit fails with no field or form
   message in the UI tree).
 - No **disabled** / pending guard while a request is in flight (double-submit). Keep the
-  two concerns separate. On Hotwire (Turbo Drive) and Rails-UJS the framework disables the
-  submitting control by default, so double-submit is already prevented — do not raise a
-  double-submit finding on a standard Turbo/UJS form. A missing `turbo_submits_with` or
-  loading-label is a separate, minor *feedback* advisory (no visible pending state), not a
-  double-submit gap. Outside those frameworks, absence of any in-flight disable is the
-  real double-submit finding.
+  two concerns separate. Turbo Drive disables the submitting control by default, so on a
+  standard Turbo form double-submit is already prevented — do not raise a double-submit
+  finding there; a missing `turbo_submits_with` is a separate, minor *feedback* advisory
+  (no visible pending state), not a double-submit gap. Rails-UJS does **not** auto-disable:
+  it needs `data-disable-with` (or equivalent), so verify that mechanism is present before
+  clearing a UJS form. Anywhere the in-flight disable is absent, the double-submit gap is
+  real.
 - No **focus** style on custom controls (and no visible focus on native ones after CSS reset).
 - Success path with no confirmation when the action is not obvious from navigation alone.
 
@@ -56,8 +59,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   undo, or soft-delete recovery. Raise confidence when a sibling destructive control in
   the same file/scope does confirm and this one does not (local inconsistency). The Rails
   nested-attributes mark-for-delete pattern (a `_destroy` checkbox/button applied on a
-  later bulk save) is exempt *only after you verify* the marked row stays visible and
-  reversible before that save (for example a strike-through the user can un-check). If the
+  later bulk save) is exempt *only after you verify* the row carries an observable
+  pending-delete indication (a strike-through, a "will be removed" label) **and** a clear,
+  understandable un-mark control before the save. Technically-reversible-but-invisible does
+  not qualify. If the
   markup or JS hides the row, or there is no un-mark path, it is not reversible — keep the
   finding.
 - Required fields with no visible required marker and no client/server error association.
