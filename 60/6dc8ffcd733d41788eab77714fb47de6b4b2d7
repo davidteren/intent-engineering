@@ -1,0 +1,24 @@
+plugins/intent-engineering/resources/agnostic/ux-interaction-smells.md
+  s_25cf1a1ae3c71d::t_b68e40761b1983 19-24
+  s_25cf1a1ae3c71d::t_2f4e1ba47bba24 57-62
+  s_25cf1a1ae3c71d::t_55ab464ccffae7 84-88
+  s_25cf1a1ae3c71d::t_595d58af7f1df2 27-33
+docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md
+  s_25cf1a1ae3c71d::t_f4acaaae9f6887 37-38,40,42,44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "606dc8ffcd733d41788eab77714fb47de6b4b2d7",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
