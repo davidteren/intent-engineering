@@ -34,14 +34,14 @@ This is the point of the dogfood. Each false positive below is a place a naive c
 
 | Over-fire on ongela | Why it was wrong | Card change |
 |---|---|---|
-| ~15 `.each` loops flagged as "no empty state" | Most primary lists in the app *do* guard; the signal is the one outlier, not every loop | Empty-state bullet: check siblings first; a lone `.each` with no `.empty?` is not enough |
-| Every `button_to` flagged for "no disabled guard" | Turbo Drive disables the submitting control by default | Disabled/pending bullet: on Hotwire/Rails-UJS the default covers it; check for `turbo_submits_with`, not `disabled` |
+| ~15 `.each` loops flagged as "no empty state" | Most primary lists in the app *do* guard; the signal is the one outlier, not every loop | Empty-state bullet: check the actual zero-item render path first, then use sibling consistency to adjust confidence (not as a precondition) |
+| Every `button_to` flagged for "no disabled guard" | Turbo Drive already prevents the double-submit by disabling the control | Disabled/pending bullet: do not flag double-submit on a Turbo/UJS form; a missing `turbo_submits_with` is a separate minor feedback advisory |
 | Mobile-nav backdrop `div` flagged as non-semantic clickable | An Escape handler and an explicit toggle button already make the drawer keyboard-operable | Clickable bullet: downgrade backdrop-click-to-dismiss when a keyboard-equivalent close exists in the same controller |
-| Nested-attributes `_destroy` checkboxes flagged as "destructive without confirm" | The mark-for-delete is visible and reversible before the bulk save | Destructive bullet: carve out the deferred, visibly-marked, reversible-before-save pattern |
+| Nested-attributes `_destroy` checkboxes flagged as "destructive without confirm" | The mark-for-delete is visible and reversible before the bulk save | Destructive bullet: exempt only *after verifying* the marked row stays visible and reversible before save |
 | Page-level flash forms flagged as "no error path" | A `role="alert"` flash is a real (if weaker) middle tier, not an absence | Error bullet: three named tiers (none / page-flash / field-level); flag page-flash only as advisory |
-| Two P3 empty-state edges (household/memberships lists) | A signed-in user always has ≥1 member/household, so the state is unreachable | Covered by the sibling-check + framework-default guard |
+| Two P3 empty-state edges (household/memberships lists) | A signed-in user always has ≥1 member/household, so the state is unreachable | Covered by the zero-item-path check + framework-default guard |
 
-Two cross-cutting guards were added from these: a **sibling-consistency** rule (a gap is stronger when the app's own convention is locally inconsistent) and a **framework-default guard** in the confidence anchors (a default-covered gap scores ≤25 unless a sibling does it and this one does not).
+Two cross-cutting guards were added from these: a **sibling-consistency** rule (a gap is stronger when the app's own convention is locally inconsistent, applied *after* checking the real zero-item/behavior path) and a **framework-default guard** in the confidence anchors (a gap scores ≤25 only when the default is confirmed in effect here — Turbo submit-disable is automatic, but `form_with` errors and native `<dialog>` modality are not).
 
 ## Coverage
 

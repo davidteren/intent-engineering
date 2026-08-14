@@ -16,16 +16,21 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 ### Missing interaction states
 - Interactive control with no **loading** state while async work runs (button that stays
   enabled and unlabeled during fetch).
-- List/detail region with no **empty** state (blank panel when length is 0). In
-  partial/component-driven apps, check siblings first: flag only when other list views
-  in the same directory consistently render an empty state and this one does not. A lone
-  `.each` with no adjacent `.empty?` is not enough on its own.
+- List/detail region with no **empty** state (blank panel when length is 0). Check the
+  actual zero-item render path first: does the region show anything when the collection is
+  empty (an inline branch, a shared empty-state partial, a component fallback)? If nothing
+  renders, that is the finding. Then use sibling consistency to *adjust* confidence — a
+  lone outlier among guarded siblings is stronger; a whole directory missing it is a
+  broader gap — not as a precondition for flagging.
 - Form or mutation path with no **error** state (submit fails with no field or form
   message in the UI tree).
-- No **disabled** / pending guard while a request is in flight (double-submit). On
-  Hotwire (Turbo Drive) and Rails-UJS the framework disables the submitting control by
-  default, so a missing `disabled` attribute is not the signal. Check instead for
-  `turbo_submits_with` or a loading-label swap; absence of *those* is the real gap.
+- No **disabled** / pending guard while a request is in flight (double-submit). Keep the
+  two concerns separate. On Hotwire (Turbo Drive) and Rails-UJS the framework disables the
+  submitting control by default, so double-submit is already prevented — do not raise a
+  double-submit finding on a standard Turbo/UJS form. A missing `turbo_submits_with` or
+  loading-label is a separate, minor *feedback* advisory (no visible pending state), not a
+  double-submit gap. Outside those frameworks, absence of any in-flight disable is the
+  real double-submit finding.
 - No **focus** style on custom controls (and no visible focus on native ones after CSS reset).
 - Success path with no confirmation when the action is not obvious from navigation alone.
 
@@ -49,10 +54,12 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   specific field that should carry the message.
 - Destructive action (`delete`, `destroy`, `remove`, `reset`) without confirm dialog,
   undo, or soft-delete recovery. Raise confidence when a sibling destructive control in
-  the same file/scope does confirm and this one does not (local inconsistency). Carve out
-  the Rails nested-attributes mark-for-delete pattern (a `_destroy` checkbox/button applied
-  on a later bulk save): it is visible and reversible before submit, so it needs no
-  per-row confirm.
+  the same file/scope does confirm and this one does not (local inconsistency). The Rails
+  nested-attributes mark-for-delete pattern (a `_destroy` checkbox/button applied on a
+  later bulk save) is exempt *only after you verify* the marked row stays visible and
+  reversible before that save (for example a strike-through the user can un-check). If the
+  markup or JS hides the row, or there is no un-mark path, it is not reversible — keep the
+  finding.
 - Required fields with no visible required marker and no client/server error association.
 
 ### Feedback & progress
@@ -74,10 +81,11 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - **50** — incomplete state set suspected but sibling components may supply it
   (advisory until checked).
 - **≤25** — pure visual preference; suppress.
-- **Framework-default guard** — before scoring, check whether the stack already supplies
-  the state by default (Turbo submit-disable, `form_with` flash/error rendering, native
-  `<dialog>`, sibling empty-state partials). A default-covered gap scores ≤25 unless the
-  app's own convention is locally inconsistent (a sibling does it, this one does not).
+- **Framework-default guard** — before scoring, check whether the stack *actually*
+  supplies the state in this instance, not whether it could. Turbo's submit-disable is
+  automatic; but `form_with` does not render errors unless the view does, and a native
+  `<dialog>` is modal only when opened with `showModal()`. Score ≤25 only when you confirm
+  the default is in effect here; otherwise score the gap on its own merits.
 
 ## What this is not
 
