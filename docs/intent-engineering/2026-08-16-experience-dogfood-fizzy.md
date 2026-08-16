@@ -61,6 +61,15 @@ Patterns ongela did not have, now named in the cards:
 
 **Held from ongela (no change):** the sibling-consistency, framework-default, and error-tier guards all behaved correctly on fizzy — no regression, and they caught real inconsistencies (steps delete, the onboarding 500).
 
+## PR-history learnings
+
+Beyond reading the current code, I mined fizzy's own merged PR history (the `ie-from-pr-learnings` idea: enforce what human reviewers already fought for). Two findings changed the cards:
+
+- **A merged PR fixed drafted-card autosave** so it persists via JSON and stops dropping keystrokes typed while a save is in flight (the earlier code POSTed with a default `Accept: text/html` to a `turbo_stream`/`json`-only action, getting a silent **406** — edits never persisted). This validates the new "autosave that cannot observe failure by design" smell and sharpened it: the card now names the two real failure modes (wrong request format answered by a silent 406, and in-flight keystroke loss), not just "no spinner".
+- **A merged PR deliberately removed input autofocus from the mobile jump menu.** That is the signal that *moving focus in on open* is a **modal** expectation, not a blanket one. The focus bullet now carves out non-modal drawers/menus that intentionally do not autofocus, so the lens will not flag a deliberate choice.
+
+Reverts in the history (e.g. a "Go to board" button in the card perma view, a filter-clear navigation change) confirm the team treats these interaction details as contested design decisions — the kind of context that keeps the lens from flagging intentional choices as defects.
+
 ## Verdict
 
 **Second fold-back complete.** The tightened cards held on an independent, larger Hotwire app, and fizzy earned six new named smells plus a cross-surface guard. Two real apps, same dogfood loop the architecture packs used — the experience half is now calibrated, not just principled.

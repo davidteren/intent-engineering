@@ -40,6 +40,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `data: { turbo: false }` likewise forfeits the auto-disable. Anywhere the in-flight
   disable is absent, the double-submit gap is real.
 - No **focus** style on custom controls (and no visible focus on native ones after CSS reset).
+  Note: *moving* focus into the surface on open is a **modal** expectation (a `role="dialog"`
+  with `aria-modal` and a focus trap). A non-modal drawer or menu that deliberately does not
+  autofocus is not a finding — autofocus there often harms screen-reader and mobile users and
+  is intentionally removed.
 - Success path with no confirmation when the action is not obvious from navigation alone.
 - Drag/gesture-only reordering or state change with **no keyboard path**. Before flagging,
   check whether the same *mutation* is reachable through a different route/view/controller
@@ -79,10 +83,11 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `render`/`redirect_to ... alert:` on that branch — Turbo (or a native post) then shows a
   blank dead-end page. Grep `head :` on controller form/submit paths.
 - Implicit-submit-only control: a form with no visible `<button type="submit">`, submitting
-  only via a JS key/paste handler or native Enter. This is mainly a **discoverability /
-  convention** gap, not an operability one — native implicit submission still works for a
-  single-field form. Raise it where the affordance is genuinely expected, or where multiple
-  fields mean Enter will not reliably submit.
+  only via a JS key/paste handler or native Enter. For a form whose single field is a text
+  `input`, native Enter submits, so this is mainly a **discoverability / convention** gap.
+  But native implicit submission does **not** fire from a `textarea`, `select`, or when
+  multiple fields are present — there the missing button is a real **operability** gap, not
+  just discoverability. Score by which case applies.
 - Destructive action (`delete`, `destroy`, `remove`, `reset`) without confirm dialog,
   undo, or soft-delete recovery. Raise confidence when a sibling destructive control in
   the same file/scope does confirm and this one does not (local inconsistency). The Rails
@@ -99,15 +104,21 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 ### Feedback & progress
 - Long-running action (upload, export, multi-step save) with no progress or busy indicator.
 - Action that changes server state with no visible result and no navigation change.
-- Live-updating region (an ActionCable / `turbo_stream` broadcast target) with no live
-  semantics on the target **or** an ancestor: screen-reader users get no signal the region
-  changed. Accept an explicit `aria-live` or an implicit live role (`role="status"`,
-  `role="alert"`, `role="log"`) on the replaced element itself or a wrapping container.
-  Grep `broadcast_*_to` / `turbo_stream_from` targets, then check the target and its
-  ancestor chain.
+- Live-updating region (an ActionCable / `turbo_stream` broadcast target) with no **stable**
+  live region announcing the change: screen-reader users get no signal. The live semantics
+  (`aria-live`, or an implicit `role="status"` / `"alert"` / `"log"`) must sit on a wrapper
+  that persists across the update — a `turbo_stream.replace` that swaps the target itself
+  will not announce even if the new node carries `aria-live`, because the live region has to
+  exist before its contents change (`append`/`prepend` into a stable live container is the
+  reliable pattern). Grep `broadcast_*_to` / `turbo_stream_from` targets, then check for a
+  stable live ancestor, not just an attribute on the replaced node.
 - Fire-and-forget autosave that **cannot observe failure by design** (the response is
   deliberately ignored to avoid clobbering in-flight input): it needs an alternate failure
   signal — a `beforeunload` guard, periodic reconciliation, or a visible "not saved" mark.
+  Two real failure modes to check, not just "no spinner": the autosave endpoint must accept
+  the request's format (a wrong `Accept` header answered by a `turbo_stream`/`json`-only
+  action returns a silent 406 and the edits never persist), and an in-flight save must not
+  drop input typed while it is pending. (Grounded in a real fix on a dogfooded app.)
 
 ### Stack-thin recognition notes
 - **React / TSX:** `onClick` on non-interactive tags; `disabled` missing next to
@@ -135,7 +146,8 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   for the same mutation; a distant or partial alternative does not clear it. For a *thin
   empty state*: a persistent global affordance elsewhere lowers the "only door in"
   severity, but it does **not** excuse a missing empty-state *message* — the user still
-  faces a blank panel, so keep that as a finding, capped rather than suppressed.
+  faces a blank panel. Keep it as a finding capped at **confidence 50 (advisory), severity
+  P3** — reportable, below the act-now bar, not suppressed at the gate.
 
 ## What this is not
 
