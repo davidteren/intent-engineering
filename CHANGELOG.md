@@ -15,6 +15,13 @@ for the design see **PLAN.md**.
   backdrop-click carve-out, a nested-attributes delete carve-out, and a
   three-tier error-path model. Report:
   `docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md`.
+- **Second experience-lens dogfood on a larger app** (fizzy, issue #23). Confirmed
+  the ongela guards held and added six new smells plus a cross-surface guard:
+  bodyless `head :4xx` dead-ends, live regions with no `aria-live`, accessible
+  name/action mismatch, static-role-vs-conditional-behavior drift, autosave that
+  cannot observe failure, implicit-submit-only controls, and a cross-surface /
+  affordance confidence guard. Report:
+  `docs/intent-engineering/2026-08-16-experience-dogfood-fizzy.md`.
 - **Optional Grok `ie-review` workflow** (`.grok/workflows/ie-review.rhai`).
   Config-selected lenses, then one skeptic per finding, fail-closed. Report
   goes to run scratch. Does not replace the `/ie-review` skill or apply
