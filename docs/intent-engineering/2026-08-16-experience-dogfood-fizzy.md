@@ -27,7 +27,7 @@ Reported to fizzy's owner; not part of this PR.
 | 8 | `app/views/events/event/attachments/_attachment.html.erb:6` | Attachment/remote images have no `alt` at all | a11y name | 100 |
 | 9 | `app/views/cards/steps/edit.html.erb:13` | Step delete has no confirm while every sibling destroy does | destructive / inconsistency | 75 |
 | 10 | `app/views/reactions/_reaction.html.erb:14` | `role="button"` hardcoded for all reactions, but operability is added by JS only for the author | role vs behavior drift | 75 |
-| 11 | `app/views/cards/container/_content.html.erb:11` | Draft-card autosave is fire-and-forget with no saving/error signal; a fast navigate-away can drop the last edit | autosave / no failure signal | 75 |
+| 11 | `app/views/cards/container/_content.html.erb:11` | Draft-card autosave ignores its response **by design** (cannot observe a failure), and its navigate-away submit is not awaited, so a fast navigation can still drop the last edit. A prior merged PR already fixed the earlier 406 / in-flight keystroke loss (see PR-history below); this is the residual design gap | autosave / no failure signal | 75 |
 | 12 | `app/views/sessions/magic_links/show.html.erb:11` | Magic-link code entry has no visible submit button (Enter/paste only) | implicit-submit-only | 75 |
 
 ## False positives / where the hardened cards still over-fired → the fold-back
@@ -37,7 +37,7 @@ Every row below is a place the already-tightened cards mis-fired on fizzy. Each 
 | Over-fire on fizzy | Why it was wrong | Card change |
 |---|---|---|
 | Drag/drop reorder flagged as "no keyboard alternative" | The keyboard path is a `role="radiogroup"` of buttons three navigation hops away, in a different controller/route | New drag/gesture bullet: check cross-surface equivalence (same mutation via another route/view), not just the same file |
-| Empty-state copy "Drag cards here" flagged for naming only the drag modality | A persistent global "Add a card" button is on the same screen | Cross-surface & affordance guard: ≤50 / advisory when a global affordance for the same outcome is visible elsewhere |
+| Empty-state copy "Drag cards here" flagged for naming only the drag modality | A persistent global "Add a card" button is on the same screen | Cross-surface & affordance guard: a visible global affordance caps the finding to advisory (confidence 50 / P3), reportable not suppressed — and it does not excuse a genuinely missing empty-state *message* |
 | `role="radio"` on individually-tabbable buttons flagged as broken | Each option is a real, Tab-and-Enter-operable `<button>`; only the announced pattern differs | Toggle bullet: do not flag many tab stops in `role=radio` unless arrow-key nav is advertised or operability breaks |
 | Icon-only buttons using `title:` flagged as unnamed | `title` is a valid accessible name; fizzy leans on it | Icon-only bullet: `title` added to the accepted-name list |
 | Reversible unsave/unpin toggles flagged as "destructive without confirm" | A one-click toggle whose inverse renders right back is not data loss | Destructive bullet: second exemption for pure reversible state toggles |
