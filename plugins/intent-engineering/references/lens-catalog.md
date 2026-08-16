@@ -49,8 +49,8 @@ when no architecture-supported stack is present.
 **Config overrides selection.** The `.intense/ways-of-working.yaml` `lenses:` block
 (merged over the plugin default per `config-resolution.md`) is authoritative: `on`
 forces a lens on, `off` forces it off (turn an agent off entirely), `auto` applies the
-judgment rules above (experience = user-facing surface present, including any
-template/partial/component/client-controller path in scope; architecture = supported
+judgment rules above (experience = user-facing surface present, including a
+template/view/component/client-controller path for the stack in scope; architecture = supported
 framework present; convention = stack/standards/siblings present). The `tools.architecture`
 preference (`enrich`/`prefer`/`report`/`off`) further controls whether the architecture lens
 defers to an installed external static-analysis tool instead of duplicating it. Resolve config

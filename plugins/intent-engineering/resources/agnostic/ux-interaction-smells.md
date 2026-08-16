@@ -135,8 +135,9 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `isLoading` / `isPending`; icon buttons without `aria-label`.
 - **Hotwire / ERB / Stimulus:** `data-action=.*click` on `div`/`span`; forms without an
   `error` partial or flash; `button_to` destroy without `data-turbo-confirm`; `head :4xx`
-  on a form post (dead-end); a `broadcast_*_to` / `turbo_stream_from` live region; `role`
-  in ERB with behavior added in a Stimulus `connect()`; `data: { turbo: false }` forms.
+  on a form post (dead-end); a `broadcast_*_to` / `turbo_stream_from` update with a missing
+  or non-persisting live region; `role` in ERB with behavior added in a Stimulus
+  `connect()`; `data: { turbo: false }` forms.
   (Quick greppable pointers — the full carve-outs live in the cards above.)
 - **CLI UX:** commands that mutate state with no confirmation flag and no dry-run.
 
