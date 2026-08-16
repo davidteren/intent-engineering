@@ -116,8 +116,12 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `turbo_stream.replace` that swaps the live node itself: the new node's `aria-live` does not
   announce, because the region must exist before its contents change. Exception: a
   `role="alert"` / `aria-live="assertive"` region is announced even when freshly inserted or
-  replaced (browsers/AT special-case alerts), so do not flag those. Grep `broadcast_*_to` /
-  `turbo_stream_from` targets and check that an ordinary live element persists rather than being replaced.
+  replaced (browsers/AT special-case alerts), so do not flag those. Which streams warrant
+  announcement: updates the user is waiting on or would otherwise miss — a chat/inbox message,
+  a notification, a search/filter result, a status or progress change. Incidental or cosmetic
+  streamed updates (reordering, presence dots, view counts) do not need a live region. Grep
+  `broadcast_*_to` / `turbo_stream_from` targets, decide if the update is one the user must
+  hear, then check that an ordinary live element persists rather than being replaced.
 - Fire-and-forget autosave that **cannot observe failure by design** (the response is
   deliberately ignored to avoid clobbering in-flight input): it needs an alternate failure
   signal — a `beforeunload` guard, periodic reconciliation, or a visible "not saved" mark.
@@ -130,13 +134,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - **React / TSX:** `onClick` on non-interactive tags; `disabled` missing next to
   `isLoading` / `isPending`; icon buttons without `aria-label`.
 - **Hotwire / ERB / Stimulus:** `data-action=.*click` on `div`/`span`; forms without an
-  `error` partial or flash; `button_to` destroy without `data-turbo-confirm`; a controller
-  action answering only `turbo_stream`/`json` that `head :4xx`s a form post (bodyless
-  dead-end); a `broadcast_*_to` / `turbo_stream_from` stream of *notifications or status*
-  with no stable live region (ordinary content streams do not need one — see the
-  live-region smell for when announcement is actually required);
-  `role` set in ERB while `tabindex`/handlers are added conditionally in a Stimulus
-  `connect()`; `data: { turbo: false }` forms (no auto-disable — guard manually).
+  `error` partial or flash; `button_to` destroy without `data-turbo-confirm`; `head :4xx`
+  on a form post (dead-end); a `broadcast_*_to` / `turbo_stream_from` live region; `role`
+  in ERB with behavior added in a Stimulus `connect()`; `data: { turbo: false }` forms.
+  (Quick greppable pointers — the full carve-outs live in the cards above.)
 - **CLI UX:** commands that mutate state with no confirmation flag and no dry-run.
 
 ## Confidence anchors (experience lens)

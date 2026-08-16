@@ -7,15 +7,6 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
-### Changed
-- **Experience lens: per-stack notes + template-diff auto-selection** (issue #38,
-  follow-up to #23). The Hotwire recognition notes in `ux-interaction-smells.md` now
-  name the concrete signals the dogfoods surfaced (`head :4xx` dead-ends, live-region
-  targets, role/behavior drift, `turbo: false` forms). The authoritative selection rule
-  in `lens-catalog.md` now treats a surface as present whenever the diff touches a
-  template/partial/component/client-controller path, so a mixed backend+frontend change
-  no longer skips experience review.
-
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
   read-only on a real Hotwire/Rails app (ongela) and folded the false positives
@@ -38,6 +29,12 @@ for the design see **PLAN.md**.
   `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
 
 ### Changed
+- **Experience lens: per-stack notes + template-diff auto-selection** (issue #38,
+  follow-up to #23). Hotwire recognition notes name the concrete signals the dogfoods
+  surfaced; the authoritative selection rule in `lens-catalog.md` now treats a surface as
+  present whenever the diff touches a template/view/component/client-controller path for
+  any architecture-supported stack, so a mixed backend+frontend change no longer skips
+  experience review.
 - README, plugin README, AGENTS.md, PLAN.md, and the GitHub Pages site
   (`docs/index.html`) now describe the optional Grok `ie-review` runtime.
 - Grok `ie-review` after that dogfood pass: one `complete()` shape, severity-ordered
