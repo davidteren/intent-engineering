@@ -132,7 +132,9 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - **Hotwire / ERB / Stimulus:** `data-action=.*click` on `div`/`span`; forms without an
   `error` partial or flash; `button_to` destroy without `data-turbo-confirm`; a controller
   action answering only `turbo_stream`/`json` that `head :4xx`s a form post (bodyless
-  dead-end); a `broadcast_*_to` / `turbo_stream_from` target with no stable live region;
+  dead-end); a `broadcast_*_to` / `turbo_stream_from` stream of *notifications or status*
+  with no stable live region (ordinary content streams do not need one — see the
+  live-region smell for when announcement is actually required);
   `role` set in ERB while `tabindex`/handlers are added conditionally in a Stimulus
   `connect()`; `data: { turbo: false }` forms (no auto-disable — guard manually).
 - **CLI UX:** commands that mutate state with no confirmation flag and no dry-run.

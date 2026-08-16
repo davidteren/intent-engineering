@@ -27,11 +27,13 @@ code already exists to be consistent with (almost always — default on for code
 **`ie-experience-reviewer`** runs when there is a user-facing surface: UI components,
 frontend files, user flows, screens/views, CLI UX, or a plan that describes any of
 these. In review/audit, treat a surface as present whenever the diff or scope touches a
-template, partial, view component, or client controller — `app/views/**`, `*.erb`,
-`*.html.*`, `*.jsx` / `*.tsx` / `*.vue`, `app/components/**`, `app/javascript/controllers/**`
-— **even in an otherwise backend-heavy change**; a mixed backend+frontend diff must not
-skip the lens. Skip only when there is no user-facing surface at all (pure
-backend/library/infra).
+template, partial, view component, or client controller **for any stack** — e.g.
+`app/views/**` + `*.erb` and `app/components/**` (Rails), `resources/views/**/*.blade.php`
+(Laravel), `lib/*_web/**` with `*.heex` / function components (Phoenix),
+`*.jsx` / `*.tsx` / `*.vue` and component dirs (React / JS / Vue),
+`app/javascript/controllers/**` (Stimulus), plus CLI help/prompt text — **even in an
+otherwise backend-heavy change**; a mixed backend+frontend diff must not skip the lens.
+Skip only when there is no user-facing surface at all (pure backend/library/infra).
 
 **`ie-architecture-reviewer`** runs when a supported framework is detected. The supported
 stacks, their detection signals, and the rule-pack files each loads are listed in
