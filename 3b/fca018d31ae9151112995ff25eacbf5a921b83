@@ -1,0 +1,26 @@
+plugins/intent-engineering/config/defaults/ways-of-working.yaml
+  s_25cf1a1ae3c71d::t_8e0c862f8f40aa 16-17
+CHANGELOG.md
+  s_25cf1a1ae3c71d::t_c9845f95a6ca87 10-18
+plugins/intent-engineering/references/lens-catalog.md
+  s_25cf1a1ae3c71d::t_f747b2f23b68c5 29-34
+  s_25cf1a1ae3c71d::t_4fd2d12744adf7 47-48
+plugins/intent-engineering/resources/agnostic/ux-interaction-smells.md
+  s_25cf1a1ae3c71d::t_5aad3c8b9bce54 132-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3bfca018d31ae9151112995ff25eacbf5a921b83",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
