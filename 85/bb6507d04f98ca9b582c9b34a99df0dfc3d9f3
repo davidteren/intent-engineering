@@ -1,0 +1,21 @@
+plugins/intent-engineering/resources/agnostic/ux-interaction-smells.md
+  s_25cf1a1ae3c71d::t_1e25e5af86f6e4 44-48
+  s_25cf1a1ae3c71d::t_da7aa5f11a7ce8 89-93
+  s_25cf1a1ae3c71d::t_e6a59129380286 110-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "85bb6507d04f98ca9b582c9b34a99df0dfc3d9f3",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
