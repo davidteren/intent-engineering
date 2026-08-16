@@ -40,12 +40,11 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `data: { turbo: false }` likewise forfeits the auto-disable. Anywhere the in-flight
   disable is absent, the double-submit gap is real.
 - No **focus** style on custom controls (and no visible focus on native ones after CSS reset).
-  Note: *moving* focus into the surface on open is a **modal** expectation (a `role="dialog"`
-  with `aria-modal` and a focus trap) and a **menu** expectation (a `role="menu"` menu-button
-  moves focus to the first item). But a plain non-modal **disclosure drawer/panel** that
-  deliberately does not autofocus is not a finding — autofocus there often harms screen-reader
-  and mobile users and is intentionally removed. Distinguish a real `role="menu"` widget
-  (focus expected) from a disclosure region (focus optional).
+- Focus not moved into a surface that expects it on open: a modal (`role="dialog"` +
+  `aria-modal` + a focus trap) or a `role="menu"` (the menu-button pattern moves focus to the
+  first item). A plain non-modal **disclosure drawer/panel** that deliberately does not
+  autofocus is not a finding — autofocus there often harms screen-reader and mobile users.
+  Distinguish a real `role="menu"` widget (focus expected) from a disclosure region (optional).
 - Success path with no confirmation when the action is not obvious from navigation alone.
 - Drag/gesture-only reordering or state change with **no keyboard path**. Before flagging,
   check whether the same *mutation* is reachable through a different route/view/controller
@@ -89,8 +88,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   `input`, native Enter submits, so this is mainly a **discoverability / convention** gap
   (one text input plus non-text controls like a `select`, checkbox, or hidden field still
   submits on Enter). But implicit submission does **not** fire when the form has **two or
-  more single-line text inputs**, or when the only field is a `textarea` / `select` — there
-  the missing button is a real **operability** gap, not just discoverability. Score by case.
+  more text-entry inputs** (`text`, `search`, `email`, `url`, `tel`, `password`, `number`,
+  `date`, and similar single-line types all count), or when the only field is a `textarea` /
+  `select` — there the missing button is a real **operability** gap, not just discoverability.
+  Score by case.
 - Destructive action (`delete`, `destroy`, `remove`, `reset`) without confirm dialog,
   undo, or soft-delete recovery. Raise confidence when a sibling destructive control in
   the same file/scope does confirm and this one does not (local inconsistency). The Rails
@@ -113,8 +114,10 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   target itself or an ancestor, **as long as that element survives the update** — a target
   that receives `append`/`prepend` and carries `aria-live` is valid. The failure is a
   `turbo_stream.replace` that swaps the live node itself: the new node's `aria-live` does not
-  announce, because the region must exist before its contents change. Grep `broadcast_*_to` /
-  `turbo_stream_from` targets and check that the live element persists rather than being replaced.
+  announce, because the region must exist before its contents change. Exception: a
+  `role="alert"` / `aria-live="assertive"` region is announced even when freshly inserted or
+  replaced (browsers/AT special-case alerts), so do not flag those. Grep `broadcast_*_to` /
+  `turbo_stream_from` targets and check that an ordinary live element persists rather than being replaced.
 - Fire-and-forget autosave that **cannot observe failure by design** (the response is
   deliberately ignored to avoid clobbering in-flight input): it needs an alternate failure
   signal — a `beforeunload` guard, periodic reconciliation, or a visible "not saved" mark.
