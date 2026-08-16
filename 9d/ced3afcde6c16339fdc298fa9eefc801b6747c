@@ -1,0 +1,20 @@
+docs/intent-engineering/2026-08-16-experience-dogfood-fizzy.md
+  s_25cf1a1ae3c71d::t_673327431aa89a 40
+  s_25cf1a1ae3c71d::t_08351637da8e79 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9dced3afcde6c16339fdc298fa9eefc801b6747c",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
