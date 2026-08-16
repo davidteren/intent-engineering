@@ -1,0 +1,30 @@
+plugins/intent-engineering/resources/agnostic/ux-interaction-smells.md
+  s_25cf1a1ae3c71d::t_b3557c99061808 39-41
+  s_25cf1a1ae3c71d::t_74771db19328ea 55,59-70
+  s_25cf1a1ae3c71d::t_fe18a3e80b3460 44-47
+  s_25cf1a1ae3c71d::t_ed1742abd5a471 10-14
+  s_25cf1a1ae3c71d::t_3324f044471c5d 100-106
+  s_25cf1a1ae3c71d::t_14c66f54167ec9 128-132
+  s_25cf1a1ae3c71d::t_23e28b014fae23 77-83
+  s_25cf1a1ae3c71d::t_966d024c887dd0 93-94
+docs/intent-engineering/2026-08-16-experience-dogfood-fizzy.md
+  s_25cf1a1ae3c71d::t_250a75e62ac1af 1-66
+CHANGELOG.md
+  s_25cf1a1ae3c71d::t_acc3f8b002e04c 18-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "983f48d76896c7b2195492c5b6899b37ca1b33b7",
+  "prompts": {},
+  "sessions": {
+    "s_25cf1a1ae3c71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4ae6ec3-dd81-4f47-882a-babde3b96c15",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
