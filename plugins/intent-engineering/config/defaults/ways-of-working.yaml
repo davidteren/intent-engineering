@@ -13,7 +13,8 @@ lenses:
   predictability: on
   convention: on
   simplicity: on
-  experience: auto      # auto = on only when a user-facing surface is detected
+  experience: auto      # auto = on when a user-facing surface is present, including any
+                        # template/partial/component/client-controller path in the diff
   architecture: auto    # auto = on only when a supported framework (e.g. Rails) is detected
 
 # --- External tool preference -----------------------------------------------------

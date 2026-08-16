@@ -26,7 +26,17 @@ code already exists to be consistent with (almost always — default on for code
 
 **`ie-experience-reviewer`** runs when there is a user-facing surface: UI components,
 frontend files, user flows, screens/views, CLI UX, or a plan that describes any of
-these. Skip for pure backend/library/infra changes with no user-facing surface.
+these. In review/audit, treat a surface as present whenever the diff or scope touches a
+template, view, partial, component, or client controller **for the detected stack** —
+e.g. `app/views/**` + `*.erb` and `app/components/**` (Rails), `templates/**/*.html` /
+Jinja (Python: Django/Flask), `views/**/*.ejs` / `*.pug` / `*.hbs` (Express),
+`resources/views/**/*.blade.php` (Laravel), `lib/*_web/**` with `*.heex` / function
+components (Phoenix), `*.jsx` / `*.tsx` / `*.vue` and component dirs (React / JS / Vue),
+`app/javascript/controllers/**` (Stimulus), plus CLI help/prompt text — **even in an
+otherwise backend-heavy change**; a mixed backend+frontend diff must not skip the lens.
+The list is illustrative, not exhaustive: any file that renders or drives UI for the
+stack counts. Skip only when there is no user-facing surface at all (pure
+backend/library/infra).
 
 **`ie-architecture-reviewer`** runs when a supported framework is detected. The supported
 stacks, their detection signals, and the rule-pack files each loads are listed in
@@ -39,7 +49,8 @@ when no architecture-supported stack is present.
 **Config overrides selection.** The `.intense/ways-of-working.yaml` `lenses:` block
 (merged over the plugin default per `config-resolution.md`) is authoritative: `on`
 forces a lens on, `off` forces it off (turn an agent off entirely), `auto` applies the
-judgment rules above (experience = user-facing surface present; architecture = supported
+judgment rules above (experience = user-facing surface present, including a
+template/view/component/client-controller path for the stack in scope; architecture = supported
 framework present; convention = stack/standards/siblings present). The `tools.architecture`
 preference (`enrich`/`prefer`/`report`/`off`) further controls whether the architecture lens
 defers to an installed external static-analysis tool instead of duplicating it. Resolve config

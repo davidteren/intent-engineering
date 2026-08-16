@@ -49,7 +49,8 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
 - Predictability + simplicity always on.
 - Convention on when stack/repo standards exist (catalog Convention doc and/or
   `CLAUDE.md`/`AGENTS.md`).
-- Experience on only if the target has user-facing surfaces.
+- Experience on when the target has user-facing surfaces — any template / view /
+  component / client-controller path counts (see `lens-catalog.md`).
 - **Architecture on when a detected stack has Arch pack ✅** in the stack catalog
   (and the audit target includes structural code). This is usually the highest-value
   pass in a codebase audit. Pass the resolved `thresholds` + pattern policy + the
