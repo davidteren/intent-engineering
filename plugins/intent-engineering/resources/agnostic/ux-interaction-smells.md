@@ -78,9 +78,11 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   bodyless `head :unprocessable_entity` / `head :too_many_requests` with no
   `render`/`redirect_to ... alert:` on that branch — Turbo (or a native post) then shows a
   blank dead-end page. Grep `head :` on controller form/submit paths.
-- Implicit-submit-only control: a form whose only submit path is a keyboard or paste event
-  handler, with no `<button type="submit">` in the markup. Keyboard and screen-reader
-  users get no visible, operable way to submit.
+- Implicit-submit-only control: a form with no visible `<button type="submit">`, submitting
+  only via a JS key/paste handler or native Enter. This is mainly a **discoverability /
+  convention** gap, not an operability one — native implicit submission still works for a
+  single-field form. Raise it where the affordance is genuinely expected, or where multiple
+  fields mean Enter will not reliably submit.
 - Destructive action (`delete`, `destroy`, `remove`, `reset`) without confirm dialog,
   undo, or soft-delete recovery. Raise confidence when a sibling destructive control in
   the same file/scope does confirm and this one does not (local inconsistency). The Rails
@@ -97,10 +99,12 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 ### Feedback & progress
 - Long-running action (upload, export, multi-step save) with no progress or busy indicator.
 - Action that changes server state with no visible result and no navigation change.
-- Live-updating region (an ActionCable / `turbo_stream` broadcast target) whose replaced
-  content sits in no `aria-live` / `role="status"` ancestor: screen-reader users get no
-  signal the region changed. Grep `broadcast_*_to` / `turbo_stream_from` targets, then
-  check the target id's ancestor chain.
+- Live-updating region (an ActionCable / `turbo_stream` broadcast target) with no live
+  semantics on the target **or** an ancestor: screen-reader users get no signal the region
+  changed. Accept an explicit `aria-live` or an implicit live role (`role="status"`,
+  `role="alert"`, `role="log"`) on the replaced element itself or a wrapping container.
+  Grep `broadcast_*_to` / `turbo_stream_from` targets, then check the target and its
+  ancestor chain.
 - Fire-and-forget autosave that **cannot observe failure by design** (the response is
   deliberately ignored to avoid clobbering in-flight input): it needs an alternate failure
   signal — a `beforeunload` guard, periodic reconciliation, or a visible "not saved" mark.
@@ -125,11 +129,13 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   automatic; but `form_with` does not render errors unless the view does, and a native
   `<dialog>` is modal only when opened with `showModal()`. Score ≤25 (suppress) only when
   you confirm the default is in effect here; otherwise score the gap on its own merits.
-- **Cross-surface & affordance guard** — before flagging a missing keyboard path or a thin
-  empty state, check the rest of the app, not just the file: score ≤50 / advisory when the
-  same mutation is reachable through another route or view, or when a persistent global
-  affordance for the same outcome is visible elsewhere on screen. Reserve 75+ for the only
-  door in.
+- **Cross-surface & affordance guard** — check the rest of the app, not just the file, but
+  keep the two cases distinct. For a *missing keyboard path*: downgrade to ≤50 / advisory
+  only when another route or view offers an **equivalent, in-context** keyboard operation
+  for the same mutation; a distant or partial alternative does not clear it. For a *thin
+  empty state*: a persistent global affordance elsewhere lowers the "only door in"
+  severity, but it does **not** excuse a missing empty-state *message* — the user still
+  faces a blank panel, so keep that as a finding, capped rather than suppressed.
 
 ## What this is not
 
