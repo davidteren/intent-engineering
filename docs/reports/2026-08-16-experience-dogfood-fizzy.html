@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experience lens dogfood — fizzy (Hotwire/Rails, second app) — intent-engineering</title>
+<meta name="description" content="Second Hotwire/Rails dogfood. New smells: bodyless error dead-ends, live regions, name/action mismatch." />
+<link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports/2026-08-16-experience-dogfood-fizzy.html" />
+<meta property="og:title" content="Experience lens dogfood — fizzy (Hotwire/Rails, second app)" />
+<meta property="og:description" content="Second Hotwire/Rails dogfood. New smells: bodyless error dead-ends, live regions, name/action mismatch." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports/2026-08-16-experience-dogfood-fizzy.html" />
+<meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Experience lens dogfood — fizzy (Hotwire/Rails, second app)" />
+<meta name="twitter:description" content="Second Hotwire/Rails dogfood. New smells: bodyless error dead-ends, live regions, name/action mismatch." />
+<meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23121820'/%3E%3Crect x='6' y='18' width='20' height='6' fill='%23e2a04a'/%3E%3C/svg%3E" />
+<script>
+(function(){
+  var t=null;
+  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.style.colorScheme=t;
+})();
+</script>
+<link rel="stylesheet" href="../assets/site.css?v=6eff7847ac" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="../"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg> intent-engineering</a>
+    <nav class="nav-links" aria-label="Page">
+      <a href="../#lenses">Lenses</a>
+      <a href="../#skills">Skills</a>
+      <a href="../#how">How it works</a>
+      <a href="../reports.html">Reports</a>
+    </nav>
+    <div class="nav-end">
+      <details class="nav-more">
+        <summary>Menu</summary>
+        <div class="menu">
+          <a href="../#lenses">Lenses</a>
+          <a href="../#skills">Skills</a>
+          <a href="../#how">How it works</a>
+          <a href="../reports.html">Reports</a>
+          <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+        </div>
+      </details>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.5Zm0 10.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 12Zm6.5-4a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.25 8Zm8.84-4.59a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.67 10.83a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm6.16 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.67 5.17a.75.75 0 0 1-1.06 0l-.7-.7A.75.75 0 0 1 4.97 3.4l.7.7a.75.75 0 0 1 0 1.06ZM8 5.25A2.75 2.75 0 1 1 8 10.75 2.75 2.75 0 0 1 8 5.25Z"/></svg></button>
+      <a class="gh" href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <article class="wrap prose">
+    <p class="crumb"><a href="../">Home</a> / <a href="../reports.html">Reports</a> / 2026-08-16</p>
+    <h1 id="experience-lens-dogfood--fizzy-hotwirerails-second-app">Experience lens dogfood — fizzy (Hotwire/Rails, second app)</h1>
+
+    <dl class="report-meta"><dt>Date</dt><dd>2026-08-16</dd><dt>Context</dt><dd>review (experience lens only)</dd><dt>Scope</dt><dd><code>fizzy</code> — a large, independently-authored Hotwire/Rails Kanban app (341 ERB views, 63 Stimulus controllers). Three read-only lens passes: boards/cards, forms/destructive/auth, and lists/notifications.</dd><dt>Intent</dt><dd>Second calibration of the experience lens. The cards were hardened against a first app (ongela, 2026-08-14); this run tests whether the tightened cards still over-fire on a different author&#39;s conventions and scale, and what new interaction patterns a bigger app exposes. Part of issue #23.</dd><dt>Config</dt><dd>plugin defaults.</dd><dt>Product code</dt><dd>not edited. fizzy is third-party OSS; findings are advisory to its owner and are not filed.</dd></dl>
+
+    
+<h2 id="why-a-second-app">Why a second app</h2>
+
+<p>ongela earned the first five guards. fizzy is the same stack but a different codebase: drag-and-drop boards, inline card edit, real-time notification broadcasts, magic-link auth, and a much larger Stimulus surface. It confirms the ongela guards held and, more importantly, exposes patterns ongela did not have — which is where the new cards come from.</p>
+
+<h2 id="confirmed-findings-real-in-fizzy">Confirmed findings (real, in fizzy)</h2>
+
+<p>Reported to fizzy’s owner; not part of this PR.</p>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Issue</th>
+      <th>Smell</th>
+      <th>Conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><code>app/controllers/signups_controller.rb:19</code></td>
+      <td>Invalid signup replies <code>head :unprocessable_entity</code> on a <code>turbo: false</code> form — the browser lands on a blank dead-end page</td>
+      <td>error state / dead-end</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>app/controllers/join_codes_controller.rb:37</code></td>
+      <td>Same bodyless-<code>head</code> pattern blanks the join-by-code screen</td>
+      <td>error state / dead-end</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>app/controllers/users/joins_controller.rb:10</code></td>
+      <td>Onboarding uses <code>update!</code>; a whitespace-only name passes HTML5 <code>required</code> but fails the model, raising an unhandled 500 (a sibling action handles it)</td>
+      <td>error state</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>app/models/notification.rb:25</code></td>
+      <td>Real-time notification broadcasts prepend to regions with no <code>aria-live</code>; screen-reader users get no signal</td>
+      <td>live region / announce</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>app/views/my/access_tokens/_access_token.html.erb:10</code></td>
+      <td>Revoke button’s screen-reader name says “Edit”; the accessible name lies about a destructive action</td>
+      <td>name/action mismatch</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>app/views/tags/index.html.erb:3</code></td>
+      <td>“All tags” list has no empty state</td>
+      <td>empty state</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>app/views/my/pins/index.html.erb:12</code></td>
+      <td><code>/my/pins</code> full-page route has no empty state (the tray toggle guards, the route does not)</td>
+      <td>empty state</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>app/views/events/event/attachments/_attachment.html.erb:6</code></td>
+      <td>Attachment/remote images have no <code>alt</code> at all</td>
+      <td>a11y name</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>app/views/cards/steps/edit.html.erb:13</code></td>
+      <td>Step delete has no confirm while every sibling destroy does</td>
+      <td>destructive / inconsistency</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><code>app/views/reactions/_reaction.html.erb:14</code></td>
+      <td><code>role="button"</code> hardcoded for all reactions, but operability is added by JS only for the author</td>
+      <td>role vs behavior drift</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><code>app/views/cards/container/_content.html.erb:11</code></td>
+      <td>Draft-card autosave ignores its response <strong>by design</strong> (cannot observe a failure), and its navigate-away submit is not awaited, so a fast navigation can still drop the last edit. A prior merged PR already fixed the earlier 406 / in-flight keystroke loss (see PR-history below); this is the residual design gap</td>
+      <td>autosave / no failure signal</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><code>app/views/sessions/magic_links/show.html.erb:11</code></td>
+      <td>Magic-link code entry has no visible submit button (Enter/paste only)</td>
+      <td>implicit-submit-only</td>
+      <td>75</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<h2 id="false-positives--where-the-hardened-cards-still-over-fired--the-fold-back">False positives / where the hardened cards still over-fired → the fold-back</h2>
+
+<p>Every row below is a place the already-tightened cards mis-fired on fizzy. Each is now guarded.</p>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Over-fire on fizzy</th>
+      <th>Why it was wrong</th>
+      <th>Card change</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Drag/drop reorder flagged as “no keyboard alternative”</td>
+      <td>The keyboard path is a <code>role="radiogroup"</code> of buttons three navigation hops away, in a different controller/route</td>
+      <td>New drag/gesture bullet: check cross-surface equivalence (same mutation via another route/view), not just the same file</td>
+    </tr>
+    <tr>
+      <td>Empty-state copy “Drag cards here” flagged for naming only the drag modality</td>
+      <td>A persistent global “Add a card” button is on the same screen</td>
+      <td>Cross-surface &amp; affordance guard: a visible global affordance caps the finding to advisory (confidence 50 / P3), reportable not suppressed — and it does not excuse a genuinely missing empty-state <em>message</em></td>
+    </tr>
+    <tr>
+      <td><code>role="radio"</code> on individually-tabbable buttons flagged as broken</td>
+      <td>Each option is a real, Tab-and-Enter-operable <code>&lt;button&gt;</code>; only the announced pattern differs</td>
+      <td>Toggle bullet: do not flag many tab stops in <code>role=radio</code> unless arrow-key nav is advertised or operability breaks</td>
+    </tr>
+    <tr>
+      <td>Icon-only buttons using <code>title:</code> flagged as unnamed</td>
+      <td><code>title</code> is a valid accessible name; fizzy leans on it</td>
+      <td>Icon-only bullet: <code>title</code> added to the accepted-name list</td>
+    </tr>
+    <tr>
+      <td>Reversible unsave/unpin toggles flagged as “destructive without confirm”</td>
+      <td>A one-click toggle whose inverse renders right back is not data loss</td>
+      <td>Destructive bullet: second exemption for pure reversible state toggles</td>
+    </tr>
+    <tr>
+      <td>Mobile unread red dot flagged as color-only signal</td>
+      <td>The signal is the dot’s presence/absence (shape), not its hue</td>
+      <td>Handled by the “color must be the <em>only</em> differentiator” reading; not flagged</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<h2 id="new-smells-added-fizzy-earned-these">New smells added (fizzy earned these)</h2>
+
+<p>Patterns ongela did not have, now named in the cards:</p>
+
+<ul>
+  <li><strong>Bodyless error dead-end</strong> — <code>head :4xx</code> with no <code>render</code>/<code>redirect_to ... alert:</code> on a form path (findings 1, 2).</li>
+  <li><strong>Live-updating region with no <code>aria-live</code></strong> — a broadcast/<code>turbo_stream</code> target replaced with no announced ancestor (finding 4).</li>
+  <li><strong>Accessible name that contradicts the action</strong> — an sr-only/label verb disagreeing with the real effect (finding 5).</li>
+  <li><strong>Role set in markup, operability added conditionally by JS</strong> — role/behavior drift between server and client render (finding 10).</li>
+  <li><strong>Fire-and-forget autosave that cannot observe failure by design</strong> — needs an alternate failure signal (finding 11).</li>
+  <li><strong>Implicit-submit-only control</strong> — only a key/paste submit path, no button (finding 12).</li>
+  <li><strong>Cross-surface &amp; affordance guard</strong> in the confidence anchors — check other routes/views before scoring a missing keyboard path or thin empty state.</li>
+</ul>
+
+<h2 id="coverage">Coverage</h2>
+
+<p><strong>Reviewed:</strong> boards, cards, columns, reactions, tags, account, users, sessions, signups, join_codes, filters, prompts, client_configurations, my, activities, notifications, events, event_summaries, searches, bar, entropy, plus the Stimulus controllers, controllers, and models needed to confirm each finding. Read-only.</p>
+
+<p><strong>Held from ongela (no change):</strong> the sibling-consistency, framework-default, and error-tier guards all behaved correctly on fizzy — no regression, and they caught real inconsistencies (steps delete, the onboarding 500).</p>
+
+<h2 id="pr-history-learnings">PR-history learnings</h2>
+
+<p>Beyond reading the current code, I mined fizzy’s own merged PR history (the <code>ie-from-pr-learnings</code> idea: enforce what human reviewers already fought for). Two findings changed the cards:</p>
+
+<ul>
+  <li><strong>A merged PR fixed drafted-card autosave</strong> so it persists via JSON and stops dropping keystrokes typed while a save is in flight (the earlier code POSTed with a default <code>Accept: text/html</code> to a <code>turbo_stream</code>/<code>json</code>-only action, getting a silent <strong>406</strong> — edits never persisted). This validates the new “autosave that cannot observe failure by design” smell and sharpened it: the card now names the two real failure modes (wrong request format answered by a silent 406, and in-flight keystroke loss), not just “no spinner”.</li>
+  <li><strong>A merged PR deliberately removed input autofocus from the mobile jump menu.</strong> That is the signal that <em>moving focus in on open</em> is a <strong>modal</strong> expectation, not a blanket one. The focus bullet now carves out non-modal drawers/menus that intentionally do not autofocus, so the lens will not flag a deliberate choice.</li>
+</ul>
+
+<p>Reverts in the history (e.g. a “Go to board” button in the card perma view, a filter-clear navigation change) confirm the team treats these interaction details as contested design decisions — the kind of context that keeps the lens from flagging intentional choices as defects.</p>
+
+<h2 id="verdict">Verdict</h2>
+
+<p><strong>Second fold-back complete.</strong> The tightened cards held on an independent, larger Hotwire app, and fizzy earned six new named smells plus a cross-surface guard. Two real apps, same dogfood loop the architecture packs used — the experience half is now calibrated, not just principled.</p>
+
+    <p class="note">Source: <a href="https://github.com/davidteren/intent-engineering/blob/main/docs/intent-engineering/2026-08-16-experience-dogfood-fizzy.md">docs/intent-engineering/2026-08-16-experience-dogfood-fizzy.md</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="../">intent-engineering</a>
+      <span class="sp"></span>
+      <a href="../reports.html">Reports</a>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=6eff7847ac"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dogfood — intent-engineering v0.8.0 (plugin on itself) — intent-engineering</title>
+<meta name="description" content="Contract suite plus self-review of the init wizard, severity align, and PR learnings." />
+<link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports/2026-07-30-v0.8.0-dogfood.html" />
+<meta property="og:title" content="Dogfood — intent-engineering v0.8.0 (plugin on itself)" />
+<meta property="og:description" content="Contract suite plus self-review of the init wizard, severity align, and PR learnings." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports/2026-07-30-v0.8.0-dogfood.html" />
+<meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Dogfood — intent-engineering v0.8.0 (plugin on itself)" />
+<meta name="twitter:description" content="Contract suite plus self-review of the init wizard, severity align, and PR learnings." />
+<meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23121820'/%3E%3Crect x='6' y='18' width='20' height='6' fill='%23e2a04a'/%3E%3C/svg%3E" />
+<script>
+(function(){
+  var t=null;
+  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.style.colorScheme=t;
+})();
+</script>
+<link rel="stylesheet" href="../assets/site.css?v=6eff7847ac" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="../"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg> intent-engineering</a>
+    <nav class="nav-links" aria-label="Page">
+      <a href="../#lenses">Lenses</a>
+      <a href="../#skills">Skills</a>
+      <a href="../#how">How it works</a>
+      <a href="../reports.html">Reports</a>
+    </nav>
+    <div class="nav-end">
+      <details class="nav-more">
+        <summary>Menu</summary>
+        <div class="menu">
+          <a href="../#lenses">Lenses</a>
+          <a href="../#skills">Skills</a>
+          <a href="../#how">How it works</a>
+          <a href="../reports.html">Reports</a>
+          <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+        </div>
+      </details>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.5Zm0 10.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 12Zm6.5-4a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.25 8Zm8.84-4.59a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.67 10.83a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm6.16 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.67 5.17a.75.75 0 0 1-1.06 0l-.7-.7A.75.75 0 0 1 4.97 3.4l.7.7a.75.75 0 0 1 0 1.06ZM8 5.25A2.75 2.75 0 1 1 8 10.75 2.75 2.75 0 0 1 8 5.25Z"/></svg></button>
+      <a class="gh" href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <article class="wrap prose">
+    <p class="crumb"><a href="../">Home</a> / <a href="../reports.html">Reports</a> / 2026-07-30</p>
+    <h1 id="dogfood--intent-engineering-v080-plugin-on-itself">Dogfood — intent-engineering v0.8.0 (plugin on itself)</h1>
+
+    <dl class="report-meta"><dt>Date</dt><dd>2026-07-30</dd><dt>Branch</dt><dd><code>feat/ie-init-wizard-0.8</code></dd><dt>Scope</dt><dd>new setup surface (ie-init wizard, conventions.auto, severity_align, patterns.preferred, ie-from-pr-learnings) + release docs/site</dd><dt>Method</dt><dd>contract suite + IE self-review (predictability/convention/simplicity) + compound-engineering style doc review (coherence / feasibility / product)</dd></dl>
+
+    
+<h2 id="results">Results</h2>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Check</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ruby scripts/check-contracts.rb</code></td>
+      <td><strong>PASS — 141 checks, 0 failures</strong></td>
+    </tr>
+    <tr>
+      <td>Defaults vs wizard promises (keys, evals, versions)</td>
+      <td><strong>DOGFOOD_OK</strong></td>
+    </tr>
+    <tr>
+      <td>IE dogfood (explore subagent)</td>
+      <td>Fixes applied for P1/P2</td>
+    </tr>
+    <tr>
+      <td>CE doc review (headless)</td>
+      <td>Fixes applied for P1/P2</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<h2 id="findings-fixed-before-pr">Findings fixed before PR</h2>
+
+<ol>
+  <li><strong>severity_align over-broad match</strong> — require smell match when a theme lists smells;
+drop bare <code>architecture</code> promote on callback/migration gates alone.</li>
+  <li><strong>Product-specific default <code>exclude</code> globs</strong> — replaced with generic
+labeler/dependabot/deploy/terraform-style noise only.</li>
+  <li><strong>Preferred + blocked double findings</strong> — init sets preferred-only for interactor
+stance; architecture agent emits one finding when both would fire.</li>
+  <li><strong>Init required vs optional</strong> — plugin README states defaults work without <code>/ie-init</code>.</li>
+  <li><strong>Non-interactive multi-repo</strong> — tokens <code>multi-repo</code> and <code>roots:a,b</code>.</li>
+  <li><strong>Doc drift</strong> — six skills in layout/maps; framework doc count 15; calibrate not
+re-credited as new; dogfood report path real; convention authority order clarified.</li>
+  <li><strong>Site copy</strong> — six skills framed as four review contexts + setup + PR learnings.</li>
+</ol>
+
+<h2 id="residual--post-merge">Residual / post-merge</h2>
+
+<ul>
+  <li>GitHub release tag <code>v0.8.0</code> and site release links go live after merge + tag.</li>
+  <li>STATUS may say release candidate until the tag exists; version numbers already 0.8.0.</li>
+  <li>Full interactive <code>/ie-init</code> on a throwaway multi-repo sandbox is still useful after install.</li>
+</ul>
+
+<h2 id="verdict">Verdict</h2>
+
+<p><strong>Ready for PR</strong> on the 0.8.0 feature set after the fixes above. Contract suite green;
+setup path is documented for monolith, multi-repo, and upgrade.</p>
+
+    <p class="note">Source: <a href="https://github.com/davidteren/intent-engineering/blob/main/docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md">docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="../">intent-engineering</a>
+      <span class="sp"></span>
+      <a href="../reports.html">Reports</a>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=6eff7847ac"></script>
+</body>
+</html>

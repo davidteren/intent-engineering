@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ie-review: Grok workflow orchestrator — intent-engineering</title>
+<meta name="description" content="Read-only review of the first-cut Grok ie-review runtime. Report only." />
+<link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports/2026-08-12-workflow-ie-review.html" />
+<meta property="og:title" content="ie-review: Grok workflow orchestrator" />
+<meta property="og:description" content="Read-only review of the first-cut Grok ie-review runtime. Report only." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports/2026-08-12-workflow-ie-review.html" />
+<meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ie-review: Grok workflow orchestrator" />
+<meta name="twitter:description" content="Read-only review of the first-cut Grok ie-review runtime. Report only." />
+<meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23121820'/%3E%3Crect x='6' y='18' width='20' height='6' fill='%23e2a04a'/%3E%3C/svg%3E" />
+<script>
+(function(){
+  var t=null;
+  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.style.colorScheme=t;
+})();
+</script>
+<link rel="stylesheet" href="../assets/site.css?v=6eff7847ac" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="../"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg> intent-engineering</a>
+    <nav class="nav-links" aria-label="Page">
+      <a href="../#lenses">Lenses</a>
+      <a href="../#skills">Skills</a>
+      <a href="../#how">How it works</a>
+      <a href="../reports.html">Reports</a>
+    </nav>
+    <div class="nav-end">
+      <details class="nav-more">
+        <summary>Menu</summary>
+        <div class="menu">
+          <a href="../#lenses">Lenses</a>
+          <a href="../#skills">Skills</a>
+          <a href="../#how">How it works</a>
+          <a href="../reports.html">Reports</a>
+          <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+        </div>
+      </details>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.5Zm0 10.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 12Zm6.5-4a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.25 8Zm8.84-4.59a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.67 10.83a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm6.16 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.67 5.17a.75.75 0 0 1-1.06 0l-.7-.7A.75.75 0 0 1 4.97 3.4l.7.7a.75.75 0 0 1 0 1.06ZM8 5.25A2.75 2.75 0 1 1 8 10.75 2.75 2.75 0 0 1 8 5.25Z"/></svg></button>
+      <a class="gh" href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <article class="wrap prose">
+    <p class="crumb"><a href="../">Home</a> / <a href="../reports.html">Reports</a> / 2026-08-12</p>
+    <h1 id="ie-review-grok-workflow-orchestrator">ie-review: Grok workflow orchestrator</h1>
+
+    <dl class="report-meta"><dt>Date</dt><dd>2026-08-12</dd><dt>Context</dt><dd>review</dd><dt>Scope</dt><dd><code>.grok/workflows/ie-review.rhai</code> (first-cut revision). This report describes that earlier script, not the hardened workflow in this repo. The original line-number references have been removed because they did not match the shipped file; the findings themselves are unchanged.</dd><dt>Intent</dt><dd>Find surprise in the Grok first-cut of <code>/ie-review</code>. Report only. Do not apply fixes.</dd><dt>Stack</dt><dd>rhai (Grok workflow script)</dd><dt>Config</dt><dd>plugin defaults (no <code>.intense/</code> found)</dd><dt>run_id</dt><dd>none (this workflow does not allocate <code>.intense/runs/&lt;run-id&gt;/</code>)</dd></dl>
+
+    
+<h3 id="lens-team">Lens team</h3>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Lens</th>
+      <th>Why it ran</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>predictability</td>
+      <td>Always-on.</td>
+    </tr>
+    <tr>
+      <td>convention</td>
+      <td>Code review. Always-on for this surface.</td>
+    </tr>
+    <tr>
+      <td>simplicity</td>
+      <td>Always-on.</td>
+    </tr>
+    <tr>
+      <td>experience</td>
+      <td>This workflow always runs all five. Catalog would skip: no user-facing surface.</td>
+    </tr>
+    <tr>
+      <td>architecture</td>
+      <td>This workflow always runs all five. Catalog would skip: no Arch pack for rhai.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<h2 id="findings">Findings</h2>
+
+<h3 id="p1--high-impact-normal-use">P1 – High-impact (normal use)</h3>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Issue</th>
+      <th>Principle</th>
+      <th>Lens</th>
+      <th>Conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td><code>complete()</code> changes shape; <code>confirmed</code> flips type</td>
+      <td>api-design</td>
+      <td>predictability</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Merge failure still reports a published path</td>
+      <td>wysiwyg</td>
+      <td>predictability</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Cap keeps first 16, so later lenses never verify</td>
+      <td>least-astonishment</td>
+      <td>predictability</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Lens prompts reinvent dispatch instead of using <code>subagent-template.md</code></td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Orchestrator never loads config-resolution or <code>.intense</code> defaults</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Merge dedupes by file+title and skips Stage 5 policy</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Report phase adds a write-capable merge agent and a second write</td>
+      <td>kiss</td>
+      <td>simplicity</td>
+      <td>75</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<ul>
+  <li>
+    <p><strong>#1</strong> – Early exits return <code>confirmed</code> as <code>[]</code> plus observations. Success returns <code>confirmed</code> as <code>confirmed.len()</code> (a number), plus verdict, path, and scratch, and it omits observations. Merge failure returns <code>confirmed</code> as the finding array and a path, with no verdict. A caller cannot treat <code>complete()</code> as one object. Fix: use one <code>complete()</code> object on every exit. Always include summary, verdict, path (empty when unpublished), scratch, <code>confirmed</code> (always an array), <code>confirmed_count</code>, reviewed, statuses, and observations. On the success path, pass the confirmed array plus a separate count.</p>
+  </li>
+  <li>
+    <p><strong>#2</strong> – Merge failure still sets <code>path: report_rel</code>. Success also sets that path without checking that the merge agent wrote the file. A stale file from an earlier run then looks like this run’s report. Fix: on merge failure, set path to an empty string (or omit it) and do not name <code>report_rel</code>. On success, write <code>report_text</code> from this script and set path only when that write succeeds.</p>
+  </li>
+  <li>
+    <p><strong>#3</strong> – <code>MAX_FINDINGS</code> is 16. <code>unique</code> keeps lens order (predictability, then convention, then simplicity, experience, architecture). The cap loop takes the first 16. Each lens schema allows 8 findings, so two full early lenses fill the cap. Later lenses never reach Verify. Fix: sort unique by severity (P0, P1, P2, P3) then confidence descending before the cap. Push an observation that names how many findings were dropped. Pass that observation into the merge prompt. Do not cap by insertion order.</p>
+  </li>
+  <li>
+    <p><strong>#4</strong> – <code>lens_prompt()</code> builds a short custom prompt (read these files, Target, Hunt for). It never fills <code>subagent-template.md</code> slots: intent, scope_mode, standards_paths, run_artifact_dir, or the artifact-write output-contract. AGENTS.md and ie-review Stage 4 require dispatch from that template. Fix: replace <code>lens_prompt()</code> with a fill of <code>plugins/intent-engineering/references/subagent-template.md</code>. Bind <code>run_artifact_dir</code> to a per-run dir under <code>artifacts.run_dir</code>. Pass Context: review, a 2-3 line intent, scope mode, and ancestor AGENTS.md/CLAUDE.md paths. Keep Grok <code>output_schema</code> as the machine wrapper only.</p>
+  </li>
+  <li>
+    <p><strong>#5</strong> – Runtime setup sets <code>plugin_root</code>, <code>base_ref</code>, and <code>report_rel</code> from args only. There is no walk-up, no <code>INTENSE_CONFIG_DIR</code>, and no merge of <code>ways-of-working.yaml</code>. AGENTS.md How a run works step 1: load resolved config always before lens selection. Fix: before <code>let lenses</code>, resolve config per <code>plugins/intent-engineering/references/config-resolution.md</code>. Walk up for <code>.intense/</code>, else use <code>plugins/intent-engineering/config/defaults/</code>. Apply <code>lenses.*</code>, <code>confidence_gate</code>, <code>artifacts.*</code>, <code>conventions.*</code>, and <code>severity_align</code>. Pass <code>Config: &lt;source&gt;</code> into the merge Coverage block.</p>
+  </li>
+  <li>
+    <p><strong>#6</strong> – <code>unique[]</code> treats two findings as the same only when <code>u.file == f.file &amp;&amp; u.title == f.title</code>. No line window, no normalize, no cross-lens promotion, no <code>severity_align</code>. The merge agent is only told to drop confidence below 75. Skill Stage 5 and AGENTS.md say dedup by file+line+title, then policy, then the gate. Fix: before Verify, implement ie-review Stage 5 in Rhai. Dedup by <code>normalize(file)+line(+/-3)+normalize(title)</code>. Keep highest severity and confidence. Promote one confidence step when 2+ lenses agree. Apply <code>severity_align</code> then <code>severity_overrides</code>. Gate at <code>confidence_gate</code> 75 (P0 at 50+). Do not leave the gate as merge-prompt prose only.</p>
+  </li>
+  <li>
+    <p><strong>#7</strong> – The merge prompt tells the agent to Write the published report, return the same markdown, then the workflow writes it again via <code>write_scratch_file</code>. The agent is <code>capability_mode: read-write</code> only for that extra hop. Fix: keep the merge agent read-only and have it return markdown only. Write <code>report_rel</code> and the scratch file in this workflow from <code>merged.output.report</code>. Remove the Write-tool instruction from the merge prompt.</p>
+  </li>
+</ul>
+
+<h3 id="p2--moderate">P2 – Moderate</h3>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Issue</th>
+      <th>Principle</th>
+      <th>Lens</th>
+      <th>Conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>8</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Dedup by file plus title hides other lenses and lines</td>
+      <td>least-astonishment</td>
+      <td>predictability</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Verifier rejects vanish with no rejected list</td>
+      <td>error-handling</td>
+      <td>predictability</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Report-only merge agent still has full write access</td>
+      <td>least-astonishment</td>
+      <td>predictability</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td><code>confirmed</code> count is pre-gate, not what the report keeps</td>
+      <td>wysiwyg</td>
+      <td>predictability</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Default report path overwrites the last review</td>
+      <td>least-astonishment</td>
+      <td>predictability</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Default report path ignores stamp-skill two-layer convention</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Lens status uses <code>findings</code> instead of report-template skipped/clean</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<ul>
+  <li>
+    <p><strong>#8</strong> – If <code>u.file == f.file &amp;&amp; u.title == f.title</code> then <code>seen = true</code>. The first lens that emitted that pair wins. The <code>/ie-review</code> skill dedups on file + line(+/-3) + title and records agreeing lenses. Same title at a different line is dropped. A second lens that agreed is dropped. Fix: dedup on file + line + trimmed title. On a match, keep the higher severity and confidence and append the new lens id to a <code>lenses</code> list on the kept finding. Do not drop a same-title finding at a different line. Do not drop a second lens that agreed.</p>
+  </li>
+  <li>
+    <p><strong>#9</strong> – The verify loop keeps a finding only when <code>v.success &amp;&amp; real == true</code> and evidence is non-empty. Everything else is dropped. The merge prompt receives only <code>confirmed</code>. The user-facing signal is one log line. A harness failure looks the same as <code>real=false</code>. Fix: for every verdict, store <code>{finding, real, reason, evidence, harness_ok}</code>. Pass rejected findings and harness failures to the merge prompt as Coverage. Treat <code>v.success != true</code> as <code>verifier_failed</code>, not as <code>real=false</code>.</p>
+  </li>
+  <li>
+    <p><strong>#10</strong> – <code>meta.when_to_use</code>: “Report only. Does not apply fixes.” Merge is spawned with <code>capability_mode: read-write</code> and told to Write the published report. The only “do not edit product code” guard is prompt text. Fix: pick one contract and make it visible. Either keep read-write and change <code>meta.when_to_use</code> to name the tree write (published report under <code>docs/intent-engineering/</code>; no code fixes), or set the merge agent to read-only and write the report in this script. Do not pair “Report only / Does not apply fixes” with an unbounded write agent.</p>
+  </li>
+  <li>
+    <p><strong>#11</strong> – The merge prompt tells the agent to drop findings below 75 unless P0 at 50+. The result then reports <code>confirmed: confirmed.len()</code>, which is the post-verify, pre-gate list. The dashboard count can be larger than the published table. Fix: apply the confidence gate in this script (drop below 75 unless severity is P0 and confidence is 50+). Pass only gated findings to the merge prompt and to <code>complete()</code>. If a pre-gate count is needed, name it <code>verified_count</code>, not <code>confirmed</code>.</p>
+  </li>
+  <li>
+    <p><strong>#12</strong> – <code>report_rel</code> starts as <code>docs/intent-engineering/workflow-ie-review.md</code>. <code>stamp</code> only changes the path when <code>out</code> is absent. The <code>/ie-review</code> skill defaults to a stamped published file so runs do not clobber each other. Two default runs overwrite the same file. Fix: when <code>args.out</code> is omitted, set <code>report_rel</code> to <code>docs/intent-engineering/&lt;stamp&gt;-ie-review.md</code>. Generate stamp from the host date plus a short target slug when <code>args.stamp</code> is also omitted. Do not default to a single reusable filename.</p>
+  </li>
+  <li>
+    <p><strong>#13</strong> – <code>report_rel</code> defaults to <code>docs/intent-engineering/workflow-ie-review.md</code>; stamp yields <code>&lt;stamp&gt;-ie-review.md</code>; scratch is <code>write_scratch_file("report.md")</code>. AGENTS.md rule 5 and config-resolution <code>CANONICAL_ORCHESTRATOR_PATHS</code> require <code>.intense/runs/&lt;run-id&gt;/</code> plus <code>docs/intent-engineering/&lt;stamp&gt;-&lt;skill&gt;[-scope].md</code> with skill slug <code>review</code>. Fix: default Layer B to <code>docs/intent-engineering/&lt;stamp&gt;-review.md</code> (<code>SKILL_SLUG</code> review). Keep <code>args.out</code> as the override. Write lens JSON under <code>.intense/runs/&lt;run-id&gt;/</code> (or a Grok scratch that mirrors that layout). Stop using a fixed <code>workflow-ie-review.md</code> name that overwrites the last run.</p>
+  </li>
+  <li>
+    <p><strong>#14</strong> – Empty arrays become status <code>clean</code>; non-empty become status <code>findings</code>. <code>report-template.md</code> Lens status allows only <code>failed</code>, <code>skipped</code>, and <code>clean</code>. <code>clean</code> already covers both zero findings and listed findings. <code>skipped</code> is never assigned. A caller that reads statuses cannot apply the all-clear rule. Fix: emit only <code>failed</code>, <code>skipped</code>, or <code>clean</code>. A successful lens with findings is <code>clean</code> (findings listed in the report). Use <code>skipped</code> when lens-catalog or config did not select the lens. Delete the <code>findings</code> status.</p>
+  </li>
+</ul>
+
+<h3 id="p3--minor">P3 – Minor</h3>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Issue</th>
+      <th>Principle</th>
+      <th>Lens</th>
+      <th>Conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>15</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td>Inline lens schema omits findings-schema enums</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td><code>.grok/workflows/ie-review.rhai</code></td>
+      <td><code>MAX_FINDINGS=16</code> is an unpublished drop cap</td>
+      <td>convention-over-configuration</td>
+      <td>convention</td>
+      <td>100</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<ul>
+  <li>
+    <p><strong>#15</strong> – <code>lens_schema</code> types <code>lens</code>, <code>principle</code>, <code>severity</code>, and <code>fix_class</code> as plain strings and <code>confidence</code> as integer, with no enums. <code>findings-schema.json</code> is the single contract and constrains those fields. The merge prompt later tells the writer to read that file, so two contracts exist. Invalid values can pass the harness. Fix: build <code>output_schema</code> from <code>plugins/intent-engineering/references/findings-schema.json</code>. Copy the enums for <code>lens</code>, <code>principle</code>, <code>severity</code>, <code>confidence</code>, and <code>fix_class</code> into the Rhai map so invalid values cannot pass the harness.</p>
+  </li>
+  <li>
+    <p><strong>#16</strong> – <code>const MAX_FINDINGS = 16</code>; unique findings are copied in arrival order and the rest are dropped with a log line. ie-review <code>SKILL.md</code> has no such cap. The README does not mention it. A late P0 can drop because a P3 arrived first. Fix: delete <code>MAX_FINDINGS</code> and the first-N drop, or sort by severity then confidence before the cap and document the budget in <code>.grok/workflows/README.md</code>. Do not drop P0s because they arrived after P3s in lens order.</p>
+  </li>
+</ul>
+
+<h2 id="tensions">Tensions</h2>
+
+<p>Name the two sides. Do not pick one here.</p>
+
+<ol>
+  <li><strong>#4</strong> – Grok <code>parallel(jobs)</code> needs a prompt string and cannot spawn Claude Agent tools, versus the repo rule that every ie-review orchestrator fills <code>subagent-template.md</code>.</li>
+  <li><strong>#6</strong> – Full Stage 5 in Rhai, versus the documented first-cut skeptic pipeline that does not replace <code>/ie-review</code>.</li>
+  <li><strong>#7</strong> – KISS (template or one writer in Rhai), versus convention (an LLM can follow <code>report-template.md</code> more closely than a Rhai string).</li>
+  <li><strong>#9</strong> – Fail-closed verification (drop anything unverified), versus error-handling transparency (show rejects and harness failures).</li>
+  <li><strong>#10</strong> – Least-astonishment (capability matches “Report only”), versus the product rule that orchestrators publish under <code>docs/intent-engineering/</code>.</li>
+  <li><strong>#13</strong> – The workflow README documents the fixed default path, versus AGENTS.md two-layer stamp convention that wins on conflict.</li>
+  <li><strong>#14</strong> – README says five lenses run together (so skip-as-not-selected is unused), versus report-template all-clear rules that treat <code>skipped</code> and <code>clean</code> as different.</li>
+  <li><strong>#15</strong> – Grok <code>output_schema</code> must be an inline map, versus one <code>findings-schema.json</code> as the only contract.</li>
+  <li><strong>#16</strong> – Repo ie-review has no drop cap, versus a Grok agent-budget cap that may be required to finish Verify.</li>
+</ol>
+
+<h2 id="observations">Observations</h2>
+
+<ul>
+  <li>Experience and architecture always run. A not-applicable empty return is marked <code>clean</code>, not <code>skipped</code>. A backend-only target can look like five clean lenses.</li>
+  <li>Always running experience and architecture is simpler than copying lens-catalog selection. Those agents already return zero findings when the surface or stack is absent. Residual tension: YAGNI (skip unused agents) versus KISS (do not reimplement selection).</li>
+  <li>Lens status is set from the raw findings array length before empty title or file rows are dropped. Status <code>findings</code> can pair with zero accepted items.</li>
+  <li><code>plugin_root</code> defaults to the repo-relative path <code>plugins/intent-engineering</code>. Another repo must pass an absolute path, or lenses read the wrong tree. That default is the Grok-runtime convention. <code>${CLAUDE_PLUGIN_ROOT}</code> applies inside the plugin, not this file.</li>
+  <li>The failed-lens early exit correctly refuses all-clear when no usable findings remain.</li>
+  <li>Two notes conflict on <code>trimmed()</code>. One says Rhai <code>trim</code> mutates in place, so <code>trimmed()</code> is not a discarded-return bug. The other says <code>s.trim()</code> returns a new string, so the helper is an identity and a predictability bug. This is not in the verified list. Residual risk: confirm the Rhai runtime, then drop the helper or keep a real trim.</li>
+  <li><code>lens_schema</code> is a loosened inline copy of <code>findings-schema.json</code>. The Grok runtime needs an inline schema. <code>scripts/check-contracts.rb</code> does not cover this file, so the copy can drift.</li>
+  <li>Documented first-cut deviations, treated as reasoned not findings: report-only, no apply, one skeptic per finding, five lenses together. The first cut correctly skipped apply, config walk-up, and <code>severity_align</code>. That thinning is earned. Dedup is still file+title first-wins, not the skill’s file+line window with highest severity.</li>
+  <li>This file is a Grok workflow orchestrator, not a user-facing surface. It defines meta, five parallel lens jobs, verify, and merge. There is no UI component, view, template, form, or interactive control. <code>pause</code>, <code>phase</code>, and <code>complete</code> are runtime status hooks for the <code>/workflows</code> dashboard. They are not a designed interface with loading, empty, error, focus, or keyboard states. Experience hunts do not apply. Report look-and-feel is out of scope in this file (the merge agent writes that later from <code>report-template.md</code>).</li>
+  <li>No <code>resources/frameworks</code> doc for Rhai or Grok. Stack-idiom checks skipped.</li>
+</ul>
+
+<h2 id="coverage">Coverage</h2>
+
+<p><strong>Reviewed:</strong> <code>.grok/workflows/ie-review.rhai</code> (one file, full read). Detected stack is rhai (Grok workflow script).</p>
+
+<p><strong>Config:</strong> defaults (no <code>.intense/</code> found). Config sources (auto): 3 files (<code>agents</code> = <code>AGENTS.md</code> + <code>CLAUDE.md</code>, <code>copilot</code> = 0, <code>instructions</code> = 0, <code>workflows</code> = <code>.github/workflows/contracts.yml</code>); excluded = 0.</p>
+
+<p><strong>Sampling / remote:</strong> none. No untracked paths. No Layer A run dir (this workflow does not write <code>.intense/runs/&lt;run-id&gt;/</code>).</p>
+
+<p><strong>Confidence gate:</strong> applied at merge. Drop below 75 unless severity is P0 and confidence is 50+. 16 verified findings presented; 0 dropped by the gate. Workflow <code>confirmed</code> count is pre-gate (see #11).</p>
+
+<p><strong>Per-lens status:</strong></p>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Lens</th>
+      <th>Workflow status</th>
+      <th>Report status</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>predictability</td>
+      <td>findings</td>
+      <td>clean</td>
+      <td>Findings listed above. <code>findings</code> is not a report-template status (see #14).</td>
+    </tr>
+    <tr>
+      <td>convention</td>
+      <td>findings</td>
+      <td>clean</td>
+      <td>Findings listed above.</td>
+    </tr>
+    <tr>
+      <td>simplicity</td>
+      <td>findings</td>
+      <td>clean</td>
+      <td>Findings listed above.</td>
+    </tr>
+    <tr>
+      <td>experience</td>
+      <td>clean</td>
+      <td>clean</td>
+      <td>Analyzed. No user-facing surface. Zero findings after the gate.</td>
+    </tr>
+    <tr>
+      <td>architecture</td>
+      <td>clean</td>
+      <td>skipped</td>
+      <td><code>SKIPPED: no architecture rule pack for rhai</code>. Catalog Arch packs cover rails, python, laravel, express, phoenix, and react only. <code>ruby</code> exists in the catalog but the Arch pack is empty. No matching <code>frameworks/&lt;stack&gt;-architecture.md</code> or <code>patterns/&lt;stack&gt;.yaml</code>.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No selected lens <strong>failed</strong>.</p>
+
+<h2 id="verdict">Verdict</h2>
+
+<p><strong>Ready with fixes.</strong></p>
+
+<p>16 findings remain: 7 P1, 7 P2, 2 P3. No P0. No failed lens. Architecture is skipped (no rhai pack). Experience is clean (no UI). Do not treat this as all-clear.</p>
+
+<p>Highest-impact fixes first: one <code>complete()</code> shape (#1), honest publish path (#2), severity-ordered cap or no cap (#3, #16), then Stage 5 merge plus config load (#5, #6) and a read-only merge writer (#7, #10).</p>
+
+    <p class="note">Source: <a href="https://github.com/davidteren/intent-engineering/blob/main/docs/intent-engineering/2026-08-12-workflow-ie-review.md">docs/intent-engineering/2026-08-12-workflow-ie-review.md</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="../">intent-engineering</a>
+      <span class="sp"></span>
+      <a href="../reports.html">Reports</a>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=6eff7847ac"></script>
+</body>
+</html>

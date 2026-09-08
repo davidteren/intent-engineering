@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experience lens dogfood — ongela (Hotwire/Rails) — intent-engineering</title>
+<meta name="description" content="First experience-lens calibration on a real Rails app. False positives folded back into the smell cards." />
+<link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports/2026-08-14-experience-dogfood-ongela.html" />
+<meta property="og:title" content="Experience lens dogfood — ongela (Hotwire/Rails)" />
+<meta property="og:description" content="First experience-lens calibration on a real Rails app. False positives folded back into the smell cards." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports/2026-08-14-experience-dogfood-ongela.html" />
+<meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Experience lens dogfood — ongela (Hotwire/Rails)" />
+<meta name="twitter:description" content="First experience-lens calibration on a real Rails app. False positives folded back into the smell cards." />
+<meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23121820'/%3E%3Crect x='6' y='18' width='20' height='6' fill='%23e2a04a'/%3E%3C/svg%3E" />
+<script>
+(function(){
+  var t=null;
+  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.style.colorScheme=t;
+})();
+</script>
+<link rel="stylesheet" href="../assets/site.css?v=6eff7847ac" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="../"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg> intent-engineering</a>
+    <nav class="nav-links" aria-label="Page">
+      <a href="../#lenses">Lenses</a>
+      <a href="../#skills">Skills</a>
+      <a href="../#how">How it works</a>
+      <a href="../reports.html">Reports</a>
+    </nav>
+    <div class="nav-end">
+      <details class="nav-more">
+        <summary>Menu</summary>
+        <div class="menu">
+          <a href="../#lenses">Lenses</a>
+          <a href="../#skills">Skills</a>
+          <a href="../#how">How it works</a>
+          <a href="../reports.html">Reports</a>
+          <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+        </div>
+      </details>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.5Zm0 10.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 12Zm6.5-4a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.25 8Zm8.84-4.59a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.67 10.83a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm6.16 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.67 5.17a.75.75 0 0 1-1.06 0l-.7-.7A.75.75 0 0 1 4.97 3.4l.7.7a.75.75 0 0 1 0 1.06ZM8 5.25A2.75 2.75 0 1 1 8 10.75 2.75 2.75 0 0 1 8 5.25Z"/></svg></button>
+      <a class="gh" href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <article class="wrap prose">
+    <p class="crumb"><a href="../">Home</a> / <a href="../reports.html">Reports</a> / 2026-08-14</p>
+    <h1 id="experience-lens-dogfood--ongela-hotwirerails">Experience lens dogfood — ongela (Hotwire/Rails)</h1>
+
+    <dl class="report-meta"><dt>Date</dt><dd>2026-08-14</dd><dt>Context</dt><dd>review (experience lens only)</dd><dt>Scope</dt><dd><code>ongela</code> — a real Hotwire/Rails app (97 ERB views, 13 Stimulus controllers). Three read-only lens passes: chat/widget, forms/destructive, and list/dashboard surfaces.</dd><dt>Intent</dt><dd>Earn the experience half of the product to architecture-pack parity: run the greppable UX-interaction smells against real code, then fold the false positives back into the smell cards. Closes the remaining ask on issue #23.</dd><dt>Config</dt><dd>plugin defaults.</dd><dt>Product code</dt><dd>not edited. ongela is the dogfood target, not a change target. Findings are advisory to that app&#39;s owner.</dd></dl>
+
+    
+<h2 id="what-ran">What ran</h2>
+
+<p>The <code>ie-experience-reviewer</code> lens read <code>ux-interaction-smells.md</code> and <code>accessibility.md</code>, then inspected the actual views, Stimulus controllers, controllers, and models. Each finding carries a confidence and an explicit false-positive judgment (did a sibling partial, a shared flash, or a framework default already supply the state).</p>
+
+<h2 id="confirmed-findings-real-in-ongela">Confirmed findings (real, in ongela)</h2>
+
+<p>These are genuine gaps in ongela, kept after the false-positive check. They are reported to ongela’s owner; they are not the point of this dogfood, but they show the cards find real things.</p>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>File</th>
+      <th>Issue</th>
+      <th>Smell</th>
+      <th>Conf</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><code>app/views/relationships/index.html.erb:57</code></td>
+      <td>“Revoke” invite has no <code>data-turbo-confirm</code>, while the sibling “Remove” member button (line 43) does</td>
+      <td>destructive without confirm</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>app/views/council_sessions/show.html.erb:35</code></td>
+      <td>“Running” deliberation has no progress/auto-poll; only a manual Refresh link</td>
+      <td>feedback &amp; progress</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>app/views/widget/_widget.html.erb:32</code></td>
+      <td>“Report” tabpanel has no <code>aria-live</code> wrapper, unlike the sibling “Ask” panel; screen-reader users hear neither the error nor the success</td>
+      <td>announced result</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>app/views/budgets/_want_list.html.erb:38</code></td>
+      <td>Goal quick-add <code>label</code>/<code>target</code> are model-required but carry no required marker</td>
+      <td>required without marker</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>app/views/registrations/new.html.erb:19</code></td>
+      <td>Required <code>name</code> field has no required marker, while the adjacent <code>email</code> field does</td>
+      <td>required without marker</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>app/views/dashboard/_financial_health.html.erb:20</code></td>
+      <td>Fallback copy tells non-admin household members to “set a link in Admin” — an internal instruction they cannot act on</td>
+      <td>system/real-world match</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>app/views/investments/index.html.erb:28</code></td>
+      <td>Investments list has no explicit empty state, unlike every sibling list view</td>
+      <td>empty state</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>app/controllers/goals_controller.rb:16</code></td>
+      <td>Failed goal quick-add on the budget sheet redirects with a flash and discards the typed input, unlike the sibling path just below</td>
+      <td>error state / input loss</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>app/views/obligations/index.html.erb:60</code></td>
+      <td>“Log payment” amount has no required marker and its failure path drops the typed amount/date/note</td>
+      <td>required + error state</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><code>app/views/widget/_widget.html.erb:12</code></td>
+      <td>Panel has <code>role="dialog"</code> but no modal enforcement (no focus move-in, no trap, no <code>aria-modal</code>)</td>
+      <td>ARIA role vs behavior</td>
+      <td>75</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<h2 id="false-positives--the-fold-back">False positives → the fold-back</h2>
+
+<p>This is the point of the dogfood. Each false positive below is a place a naive card over-fired on real Hotwire code. Every one is now guarded in <code>ux-interaction-smells.md</code>.</p>
+
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Over-fire on ongela</th>
+      <th>Why it was wrong</th>
+      <th>Card change</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>~15 <code>.each</code> loops flagged as “no empty state”</td>
+      <td>Most primary lists in the app <em>do</em> guard; the signal is the one outlier, not every loop</td>
+      <td>Empty-state bullet: check the actual zero-item render path first, then use sibling consistency to adjust confidence (not as a precondition)</td>
+    </tr>
+    <tr>
+      <td>Every <code>button_to</code> flagged for “no disabled guard”</td>
+      <td>Turbo Drive already prevents the double-submit by disabling the control</td>
+      <td>Disabled/pending bullet: do not flag double-submit on a Turbo form (Turbo auto-disables); Rails-UJS is <em>not</em> automatic and needs <code>data-disable-with</code>, so verify it there; a missing <code>turbo_submits_with</code> is a separate minor feedback advisory</td>
+    </tr>
+    <tr>
+      <td>Mobile-nav backdrop <code>div</code> flagged as non-semantic clickable</td>
+      <td>An Escape handler and an explicit toggle button already make the drawer keyboard-operable</td>
+      <td>Clickable bullet: downgrade backdrop-click-to-dismiss when a keyboard-equivalent close exists in the same controller</td>
+    </tr>
+    <tr>
+      <td>Nested-attributes <code>_destroy</code> checkboxes flagged as “destructive without confirm”</td>
+      <td>The mark-for-delete is visible and reversible before the bulk save</td>
+      <td>Destructive bullet: exempt only <em>after verifying</em> the marked row stays visible and reversible before save</td>
+    </tr>
+    <tr>
+      <td>Page-level flash forms flagged as “no error path”</td>
+      <td>A <code>role="alert"</code> flash is a real (if weaker) middle tier, not an absence</td>
+      <td>Error bullet: three named tiers (none / page-flash / field-level); flag page-flash only as advisory</td>
+    </tr>
+    <tr>
+      <td>Two P3 empty-state edges (household/memberships lists)</td>
+      <td>A signed-in user always has ≥1 member/household, so the state is unreachable</td>
+      <td>Covered by the zero-item-path check + framework-default guard</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Two cross-cutting guards were added from these: a <strong>sibling-consistency</strong> rule (a gap is stronger when the app’s own convention is locally inconsistent, applied <em>after</em> checking the real zero-item/behavior path) and a <strong>framework-default guard</strong> in the confidence anchors (a gap scores ≤25 only when the default is confirmed in effect here — Turbo submit-disable is automatic, but <code>form_with</code> errors and native <code>&lt;dialog&gt;</code> modality are not).</p>
+
+<h2 id="coverage">Coverage</h2>
+
+<p><strong>Reviewed:</strong> chat, widget, council_sessions, settings, invitations, onboarding, registrations, sessions, budgets, income, obligations, vault_items, waitlist, dashboard, overview, activity, goals, accounts, documents, receipts, investments, vault, relationships, mail_inbox, plus 13 Stimulus controllers and the relevant controllers/models. Read-only.</p>
+
+<p><strong>Well-calibrated already (no change):</strong> the icon-only-control and non-semantic-clickable cards produced zero false hits on a Rails/ERB stack that leans on <code>button</code>/<code>link_to</code>/<code>button_to</code> — correct behavior, the pattern simply is not present.</p>
+
+<h2 id="verdict">Verdict</h2>
+
+<p><strong>Fold-back complete.</strong> The experience lens ran on a real app, found 10 genuine gaps, and its five most over-firing signals are now guarded against Hotwire/Rails defaults and partial-driven structure. This is the experience half reaching the same dogfood loop the architecture packs used.</p>
+
+    <p class="note">Source: <a href="https://github.com/davidteren/intent-engineering/blob/main/docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md">docs/intent-engineering/2026-08-14-experience-dogfood-ongela.md</a></p>
+  </article>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="../">intent-engineering</a>
+      <span class="sp"></span>
+      <a href="../reports.html">Reports</a>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=6eff7847ac"></script>
+</body>
+</html>

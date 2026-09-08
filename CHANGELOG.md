@@ -29,6 +29,9 @@ for the design see **PLAN.md**.
   `docs/intent-engineering/2026-08-12-workflow-ie-review.md`.
 
 ### Changed
+- **GitHub Pages site refresh.** Light and dark themes, a finding (not a
+  gradient hero) as the central visual, hashed CSS/JS, an Open Graph image,
+  and HTML views of the published reports at `/reports.html`.
 - **Experience lens: per-stack notes + template-diff auto-selection** (issue #38,
   follow-up to #23). Hotwire recognition notes name the concrete signals the dogfoods
   surfaced; the authoritative selection rule in `lens-catalog.md` now treats a surface as

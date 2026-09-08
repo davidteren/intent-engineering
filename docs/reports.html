@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reports — intent-engineering</title>
+<meta name="description" content="Published intent-engineering dogfood and workflow reports." />
+<link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports.html" />
+<meta property="og:title" content="Reports — intent-engineering" />
+<meta property="og:description" content="Published dogfood and workflow reports from the intent-engineering plugin." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports.html" />
+<meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Reports — intent-engineering" />
+<meta name="twitter:description" content="Published dogfood and workflow reports from the intent-engineering plugin." />
+<meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23121820'/%3E%3Crect x='6' y='18' width='20' height='6' fill='%23e2a04a'/%3E%3C/svg%3E" />
+<script>
+(function(){
+  var t=null;
+  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  if(t!=="light"&&t!=="dark"){
+    t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.style.colorScheme=t;
+})();
+</script>
+<link rel="stylesheet" href="assets/site.css?v=6eff7847ac" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="./">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg>
+      intent-engineering
+    </a>
+    <nav class="nav-links" aria-label="Page">
+      <a href="./#lenses">Lenses</a>
+      <a href="./#skills">Skills</a>
+      <a href="./#how">How it works</a>
+      <a href="reports.html" aria-current="page">Reports</a>
+    </nav>
+    <div class="nav-end">
+      <details class="nav-more">
+        <summary>Menu</summary>
+        <div class="menu">
+          <a href="./#lenses">Lenses</a>
+          <a href="./#skills">Skills</a>
+          <a href="./#how">How it works</a>
+          <a href="reports.html">Reports</a>
+          <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+        </div>
+      </details>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.5Zm0 10.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 12Zm6.5-4a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.25 8Zm8.84-4.59a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.67 10.83a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm6.16 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.67 5.17a.75.75 0 0 1-1.06 0l-.7-.7A.75.75 0 0 1 4.97 3.4l.7.7a.75.75 0 0 1 0 1.06ZM8 5.25A2.75 2.75 0 1 1 8 10.75 2.75 2.75 0 0 1 8 5.25Z"/></svg>
+      </button>
+      <a class="gh" href="https://github.com/davidteren/intent-engineering">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding:2.5rem 1.25rem 4rem">
+    <p class="crumb"><a href="./">Home</a> / Reports</p>
+    <h1>Published reports</h1>
+    <p class="lede" style="margin-top:0.75rem">Dogfood runs and workflow reviews from this repo. Source markdown stays under <code>docs/intent-engineering/</code>.</p>
+    <ul class="report-list" style="margin-top:2rem">
+      <li>
+        <a href="reports/2026-08-16-experience-dogfood-fizzy.html">
+          <time datetime="2026-08-16">2026-08-16</time>
+          <span>
+            <strong>Experience lens on fizzy</strong>
+            <span>Second Hotwire/Rails dogfood. New smells: bodyless error dead-ends, live regions, name/action mismatch.</span>
+          </span>
+        </a>
+      </li>
+      <li>
+        <a href="reports/2026-08-14-experience-dogfood-ongela.html">
+          <time datetime="2026-08-14">2026-08-14</time>
+          <span>
+            <strong>Experience lens on ongela</strong>
+            <span>First experience-lens calibration on a real Rails app. False positives folded back into the smell cards.</span>
+          </span>
+        </a>
+      </li>
+      <li>
+        <a href="reports/2026-08-12-workflow-ie-review.html">
+          <time datetime="2026-08-12">2026-08-12</time>
+          <span>
+            <strong>Grok ie-review workflow</strong>
+            <span>Read-only review of the first-cut Grok runtime. Report only.</span>
+          </span>
+        </a>
+      </li>
+      <li>
+        <a href="reports/2026-07-30-v0.8.0-dogfood.html">
+          <time datetime="2026-07-30">2026-07-30</time>
+          <span>
+            <strong>v0.8.0 plugin dogfood</strong>
+            <span>Contract suite plus self-review of the init wizard, severity align, and PR learnings.</span>
+          </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="./">intent-engineering</a>
+      <span class="sp"></span>
+      <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
+      <a href="./">Home</a>
+      <a href="https://github.com/davidteren/intent-engineering/blob/main/LICENSE">MIT</a>
+    </div>
+  </div>
+</footer>
+<script src="assets/site.js?v=6eff7847ac"></script>
+</body>
+</html>

@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-08-13
+**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-09-08
 
 ### Last session handoff
 
-1. **What this is:** Intent Engineering plugin **v0.8.0**, plus an optional Grok review runtime.
-2. **What we finished:** README, contributor docs, and the site now describe that Grok path.
-3. **What you do next:** Check PR #33 on GitHub. (`feat/grok-ie-review-workflow`)
+1. **What this is:** Intent Engineering plugin **v0.8.0**, plus a refreshed GitHub Pages site.
+2. **What we finished:** Light and dark site themes, finding-as-hero, social preview, HTML reports.
+3. **What you do next:** Open the live site and check both themes.
 
 ---
 
