@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://cubic.dev/schema/cubic-repository-config.schema.json
+version: 1
+
+reviews:
+  enabled: true
+  sensitivity: high
+  incremental_commits: true
+  check_drafts: false
+  architecture_diagrams: false
+  resolve_threads_when_addressed: true
+  external_contributors_require_manual_review: false
+  senior_reviewers: [davidteren]
+  auto_approve_behavior: disabled
+  auto_approve: disabled
+  ultrareview: manual
+  custom_instructions: |
+    This repo publishes intent-engineering skills / agent guidance for AI coding agents.
+    Prioritize: skill clarity, safe defaults (no secret leakage, no destructive defaults),
+    accurate tool/CLI instructions, and avoiding drift between README, skill.md, and
+    machine-readable indexes (llms.txt, catalogs). Prefer concrete, testable guidance
+    over vague advice. Flag broken links and contradictory steps.
+
+  ignore:
+    files:
+      - '**/node_modules/**'
+      - '**/coverage/**'
+      - '**/tmp/**'
+      - '**/vendor/**'
+      - '**/package-lock.json'
+      - '**/yarn.lock'
+      - '**/pnpm-lock.yaml'
+      - '**/Gemfile.lock'
+      - '**/*.lock'
+      - '**/fixtures/**'
+      - '**/cassettes/**'
+    pr_labels:
+      - skip-review
+      - wip
+      - draft
+      - docs-only
+    max_changed_lines: 5000
+
+  custom_rules:
+    - name: Skill safety
+      description: >
+        Flag instructions that encourage pasting secrets, disabling safety checks,
+        destructive git/force-push defaults, or irreversible production actions without
+        an explicit human confirmation step.
+    - name: Docs and catalog drift
+      description: >
+        Flag README / skill.md / llms.txt / catalog changes that leave indexes,
+        frontmatter, or example commands out of sync with the skill body.
+      include:
+        - '**/*.md'
+        - '**/llms*.txt'
+        - '**/*catalog*'
+        - '**/*skill*'
+    - name: Security and secrets
+      description: >
+        Flag hardcoded secrets, tokens in examples that look real, and unsafe shell
+        patterns in skill recipes.
+
+pr_descriptions:
+  generate: true
+  skip_if_author_description: true
+  cubic_review_link: true
+  instructions: |
+    Keep What / Why / How. Mention risk and test plan briefly.
+
+issues:
+  fix_with_cubic_buttons: true
+  pr_comment_fixes: true
+  fix_commits_to_pr: true
+  auto_fix_sign_commits: false
+  coding_agent_provider: cubic
