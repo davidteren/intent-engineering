@@ -41,6 +41,9 @@ number/URL or branch.
   diff. Note uncertainty in Coverage; don't stop to ask.
 - **Explicit mutations only.** Never `git checkout`/`switch` or `gh pr checkout`. A PR
   or branch argument selects *scope*, not permission to switch trees.
+- **Caller constraints limit what the run fixes, never what it reports.** A finding that
+  a caller constraint covers ("do not change X") goes to Rejected with why
+  `accepted_by_caller`.
 - **Read the repo's standards.** Convention findings hinge on local `CLAUDE.md`/
   `AGENTS.md` and existing patterns — those override generic ideals.
 
@@ -153,7 +156,14 @@ agreement, config policy, confidence gate, tensions). Then:
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
    concrete `suggested_fix`. Apply only when the working tree is what was reviewed
-   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
+   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. **Verify
+   first:** one read-only sub-agent re-reads the cited lines of every finding that
+   passes this gate, with this prompt: "Adversarially verify this finding against the
+   target the lenses used. Set real=true only with concrete evidence you inspected
+   yourself. If you cannot open the file, the claim is wrong, or the evidence is thin,
+   set real=false." Apply only confirmed findings. A refuted finding goes to Rejected
+   with why `not_real`. In the Fallback, the orchestrator re-reads the lines itself and
+   Coverage says so. After applying,
    run affected tests/lint; if they fail, revert that fix and report it instead. If
    **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
    `fix(fit-review): <summary>` commit; if it was false, apply but leave uncommitted.

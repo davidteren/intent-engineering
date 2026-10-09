@@ -8,6 +8,15 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **The merge stage lists every dropped finding and verifies before apply (#47).** Coverage
+  has a Rejected list (title, file:line, lens, severity, confidence, `why`) in place of
+  counts by anchor, and a Re-grades log for every orchestrator change to severity or
+  confidence. Caller constraints limit what `fit-review` fixes, never what it reports
+  (`accepted_by_caller`). Agreement between lenses no longer raises confidence, in the
+  skill and the Grok workflow. Dedup merges findings on one defect within 3 lines even
+  when titles differ, and keeps `gated_auto` only when every copy has it. Interactive
+  `fit-review` re-reads each finding with a read-only sub-agent before it applies, and
+  `evals.json` gains the refusal case.
 - **Reports no longer look cleaner or more complete than the run was (#46).** The Lens
   status table in `references/report-template.md` gives each word one meaning and adds
   `ok` (ran, findings shown) next to `clean` (ran, no finding shown); `skipped` now means

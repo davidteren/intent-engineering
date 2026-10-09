@@ -91,7 +91,7 @@ Anchored. Synthesis gates at 75 (P0 survives at 50+).
   (caller not in the diff; platform unknown). Routes to observations / FYI. Still
   needs a concrete evidence quote.
 - **25 / 0 — suppress.** Speculative; no evidence in scope. Exist in the enum only so
-  synthesis can count drops.
+  synthesis can list the drops under Rejected (`below_confidence_gate`).
 
 ## Shared `fix_class` rubric (all lenses)
 

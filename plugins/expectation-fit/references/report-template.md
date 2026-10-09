@@ -63,7 +63,14 @@ monotonic across the whole report.
    conflict and the trade-off, so the user decides rather than the tool dictating.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), confidence suppressions by anchor, and:
+   remote-mode limits), and:
+   - **Rejected.** Every finding that the merge did not report: title, file:line,
+     lens, severity, confidence and `why`. The `why` values are
+     `below_confidence_gate`, `not_real` (a re-read refuted it), `verifier_failed` (the
+     re-read could not run), `malformed`, `accepted_by_caller` and
+     `over_max_findings`.
+   - **Re-grades.** Each orchestrator change to a lens's severity or confidence, with
+     its reason.
    - **Lens status** for every catalog lens, with the words in the table below.
    - **READ lines.** One per lens, copied from the lens's first observation
      (`READ: <what you read> of <what you were given>`). A READ line that shows a
@@ -110,11 +117,16 @@ this order. Each step runs in every context unless its mark says otherwise. Read
    - A `file` value such as `app/x.rb:35` splits into `file` and `line`.
 
    Drop a finding only when its title, severity or file is missing or cannot be
-   repaired. Coverage lists each repair and each drop by lens and title.
-2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
-   keep highest severity + confidence; record which lenses flagged it.
-3. **Cross-lens agreement**: 2+ lenses on the same fingerprint: promote one anchor
-   step (50->75, 75->100). Note the agreeing lenses.
+   repaired. A dropped finding goes to Rejected with why `malformed`. Log each repair,
+   and any other change the orchestrator makes to a lens's severity or confidence, under
+   Re-grades with its reason. Never change them silently.
+2. **Dedup.** Merge findings in the same file within 3 lines that describe the same
+   defect, even when their titles differ. Keep the highest severity and the highest
+   confidence. Show each lens with its own severity and title. Keep `gated_auto` only
+   when every copy has it; otherwise use the strictest class of the copies.
+3. **Cross-lens agreement.** Note the agreeing lenses. Agreement does not raise
+   confidence: one agent can play several lenses, so two lenses on one defect at 50
+   stay at 50.
 4. **Apply config policy before the confidence gate** *(review and audit; plan skips
    this step)*. Order matters (see `config-resolution.md`):
    1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
@@ -134,7 +146,7 @@ this order. Each step runs in every context unless its mark says otherwise. Read
    - P0 at confidence 50+, or
    - findings that received a **`severity_align` promotion** at confidence 50+
      (CI-backed floors must not be dropped solely for mid confidence).
-   Record suppressions by anchor.
+   Each suppressed finding goes to Rejected with why `below_confidence_gate`.
 6. **Collect tensions**: findings carrying a `tension` go to the Tensions section.
 
 Applying fixes is not a shared step. Only interactive `fit-review` applies (its Stage 5
@@ -249,12 +261,13 @@ Field rules:
   apply gate (`gated_auto`, confidence 75 or more, P2 or lower, a concrete
   `suggested_fix`). `mode:agent` applies nothing, so the caller decides. It is empty in
   audit and plan.
-- `rejected` lists every finding that the merge did not report (see Coverage).
+- `rejected` lists every finding that the merge did not report, with `title`, `file`,
+  `line`, `lens`, `severity`, `confidence` and `why` (see Rejected under Coverage).
 - `coverage.execution` is `subagents` or `single-agent`.
 - `coverage.lens_status` has one key per catalog lens, with the words from the Lens
   status table.
-- `coverage.repairs` lists each repair and each drop from Merge and gate step 1, by lens
-  and title.
+- `coverage.repairs` lists each re-grade (Merge and gate step 1) by lens and title, with
+  its reason. Drops go to `rejected`.
 
 Verdict words, by context. Use only these words:
 

@@ -454,6 +454,7 @@ if jobs.len() > 0 {
 
 let statuses = [];
 let observations = [];
+let rejected = [];
 let findings = [];
 observations.push("Config source: " + config_source + ". confidence_gate=" + gate.to_string() + ".");
 if args != () && args.stamp != () {
@@ -505,8 +506,8 @@ for lens in catalog {
                         findings.push(#{
                             lens: lens.id,
                             lenses: [lens.id],
+                            also: [],
                             title: title,
-                            title_key: norm(title),
                             file: file,
                             file_key: norm(file),
                             principle: if f.principle == () { "" } else { f.principle },
@@ -527,6 +528,7 @@ for lens in catalog {
                     }
                 } else {
                     dropped_bad += 1;
+                    rejected.push(#{ finding: f, lens: lens.id, why: "malformed" });
                 }
             }
             if dropped_bad > 0 {
@@ -547,7 +549,7 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        if u.file_key == f.file_key && u.title_key == f.title_key && delta <= 3 {
+        if u.file_key == f.file_key && delta <= 3 {
             seen_at = ui;
         }
         ui += 1;
@@ -555,12 +557,19 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
+        // One defect within 3 lines, titles may differ: keep the stronger copy and list
+        // the other lens's title and fix in `also`.
         let kept = unique[seen_at];
+        let other = f;
         if comes_first(f, kept) {
-            let prior = kept.lenses;
-            f.lenses = prior;
+            f.lenses = kept.lenses;
+            f.also = kept.also;
+            other = kept;
             unique[seen_at] = f;
         }
+        unique[seen_at].also.push(#{ lens: other.lens, severity: other.severity, title: other.title, suggested_fix: other.suggested_fix });
+        if other.confidence > unique[seen_at].confidence { unique[seen_at].confidence = other.confidence; }
+        if other.fix_class != "gated_auto" && unique[seen_at].fix_class == "gated_auto" { unique[seen_at].fix_class = other.fix_class; }
         let already = false;
         for lid in unique[seen_at].lenses {
             if lid == f.lens { already = true; }
@@ -571,10 +580,6 @@ for f in findings {
 
 let ui2 = 0;
 for u in unique {
-    if u.lenses.len() >= 2 {
-        if u.confidence == 50 { unique[ui2].confidence = 75; }
-        else if u.confidence == 75 { unique[ui2].confidence = 100; }
-    }
     for ov in overrides {
         if ov != () && ov.file_substr != () && ov.severity != () {
             if unique[ui2].file_key.index_of(norm(ov.file_substr)) >= 0 {
@@ -612,11 +617,12 @@ for f in ranked {
     if n < MAX_FINDINGS {
         capped.push(f);
         n += 1;
+    } else {
+        rejected.push(#{ finding: f, why: "over_max_findings" });
     }
 }
 
 let verified = [];
-let rejected = [];
 if capped.len() > 0 {
     phase("Verify");
     let vjobs = [];
@@ -741,7 +747,7 @@ merge_prompt += "Lens statuses JSON:\n";
 merge_prompt += json_encode(statuses);
 merge_prompt += "\nObservations JSON:\n";
 merge_prompt += json_encode(observations);
-merge_prompt += "\nRejected JSON (verifier_failed / not_real / below_confidence_gate):\n";
+merge_prompt += "\nRejected JSON (malformed / over_max_findings / verifier_failed / not_real / below_confidence_gate). List each one under Rejected in Coverage with title, file:line, lens, severity, confidence and why:\n";
 merge_prompt += json_encode(rejected);
 merge_prompt += "\nConfirmed findings JSON:\n";
 merge_prompt += json_encode(confirmed);

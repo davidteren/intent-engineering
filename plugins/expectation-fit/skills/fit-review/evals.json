@@ -25,6 +25,11 @@
       "id": 5,
       "prompt": "fit-review mode:agent where predictability returns two findings above the gate and simplicity returns none",
       "expected_output": "coverage.lens_status shows predictability as ok and simplicity as clean. It never shows clean next to a lens that has findings in the report, and it never uses skipped for a lens that auto-selection did not pick (that is not_selected)."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-review (clean tree, interactive) where a P2 gated_auto finding at confidence 100 passes the apply gate, but the verify re-read shows the cited code already handles the case",
+      "expected_output": "Does not apply the refuted finding. Lists it under Rejected with why not_real. The fix(fit-review) commit holds only confirmed fixes, and no commit is made when none remain."
     }
   ]
 }

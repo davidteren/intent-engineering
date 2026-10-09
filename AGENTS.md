@@ -104,10 +104,12 @@ expectation-fit/                       dev repo + marketplace
 3. **Dispatch** each lens in parallel using `references/subagent-template.md`, binding
    `run_artifact_dir = $RUN` (Layer A). Each lens reads its `resources/` heuristic docs,
    returns compact JSON per the schema, and writes full detail to `$RUN/{lens}.json`.
-4. **Merge / dedup / gate** (`references/report-template.md`): dedup by file+line+title,
-   promote findings agreed by 2+ lenses, suppress below the confidence gate (default
-   anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
-   and pattern policy (incl. `preferred`).
+4. **Merge / dedup / gate** (`references/report-template.md` "Merge and gate"): repair
+   off-schema findings, merge findings on one defect within 3 lines (titles may differ),
+   note agreeing lenses (agreement does not raise confidence), apply `severity_align`
+   then explicit severity overrides and pattern policy (incl. `preferred`), then suppress
+   below the confidence gate (default anchor 75; P0 survives 50+). Every dropped finding
+   is listed under Rejected with its reason.
 5. **Report** to the published path `$REPORT_PATH` under `docs/expectation-fit/`
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
