@@ -42,6 +42,16 @@ for the design see **PLAN.md**.
   authority. The lens template has an optional `<known-context>` block and a "Respect
   known context" rule; `fit-review plan:` quotes plan decision lines verbatim to every lens,
   and Coverage says `Plan: <path>` or `Plan: none`. New `fit-review` eval case 6.
+- **Grok `fit-review` workflow reads the right code and cannot claim a false Ready
+  (#44).** Prompts say agents have no shell and limit what they read. The script, not an
+  agent, builds the diff: `base` must be a commit SHA, and a ref name, a missing base, or
+  a non-path target with spaces pauses the run. `scope_mode` is set by the script. The
+  target is a JSON-encoded label, and the config agent sees the changed files for the
+  experience rule. The confidence gate runs before verify. Skeptics return `confirmed`,
+  `not_real` or `unverifiable`; any unverifiable or failed verify sets Not ready. Confirmed
+  findings keep the skeptic's reason and evidence, and `end_line` defaults to `line`. A
+  lens that reports `failed:` gets status failed. The convention lens docs now match the
+  lens catalog. Copy the file to `~/.grok/workflows/` after each pull.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

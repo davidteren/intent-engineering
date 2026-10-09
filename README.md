@@ -143,8 +143,10 @@ inside the installable plugin directory.
 From a Grok session in this repo:
 
 ```
-/workflow fit-review {"target":"origin/main...HEAD"}
+/workflow fit-review {"target":"HEAD","base":"<merge-base commit SHA>"}
 ```
+
+`base` must be a commit SHA. Get it with `git merge-base origin/main HEAD`.
 
 A config agent selects lenses. Those lenses run read-only. One skeptic checks each
 finding. Merge is read-only. The report is run scratch. Watch progress in
