@@ -1,0 +1,60 @@
+CHANGELOG.md
+  s_139c48e2134bb7::t_14e6257f4118fc 19-31
+plugins/expectation-fit/skills/fit-audit/evals.json
+  s_139c48e2134bb7::t_bf05b62c26e1c6 18-22
+plugins/expectation-fit/skills/fit-validate-plan/evals.json
+  s_139c48e2134bb7::t_bf05b62c26e1c6 17
+AGENTS.md
+  s_139c48e2134bb7::t_622764e457be85 50-52,56-62,77,79,115-117,130,132
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_ad26e632e767f5 18-19,92,103
+PLAN.md
+  s_139c48e2134bb7::t_622764e457be85 22,96-98,126-127,218
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_ad26e632e767f5 18-19,25-28,32-34,46,112,122,129
+plugins/expectation-fit/skills/fit-setup/SKILL.md
+  s_139c48e2134bb7::t_a19a49acfd6e85 413
+  s_139c48e2134bb7::t_6b1931633aeca3 220-225,361,387-389,407-408,437-439
+plugins/expectation-fit/config/defaults/ways-of-working.yaml
+  s_139c48e2134bb7::t_a19a49acfd6e85 110
+  s_139c48e2134bb7::t_82a502c43254c6 111-116,119
+README.md
+  s_139c48e2134bb7::t_f21361508623df 32,162-167,169,177-178
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_d8e17e83d7a3f1 54-57,332-333,345-350,352,355-361,379,381-383,386-387,389,394,397-403,408-410,422-429,431-432,434,437-440
+  s_139c48e2134bb7::t_bd7e89bf2b75e2 435
+  s_139c48e2134bb7::t_a19a49acfd6e85 331,344
+  s_139c48e2134bb7::t_50de067e7fb6cc 433,436
+STATUS.md
+  s_139c48e2134bb7::t_a19a49acfd6e85 35
+plugins/expectation-fit/README.md
+  s_139c48e2134bb7::t_f21361508623df 121,123-129,152-153,155-156
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_bb66eb7e2657df 27-28,38-40,50-54,65-68,84,187-189,199-200
+  s_139c48e2134bb7::t_ad26e632e767f5 220
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_a19a49acfd6e85 12
+  s_139c48e2134bb7::t_592ae1eb2b39bb 79-84,100
+plugins/expectation-fit/skills/fit-review/evals.json
+  s_139c48e2134bb7::t_bf05b62c26e1c6 12,23-27
+.gitignore
+  s_139c48e2134bb7::t_a19a49acfd6e85 1
+plugins/expectation-fit/skills/fit-from-pr-learnings/SKILL.md
+  s_139c48e2134bb7::t_6b1931633aeca3 93-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a79e23517f9a7fcf561f922e5b70b75ec4e5ad3b",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
