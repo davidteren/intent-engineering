@@ -1,0 +1,31 @@
+docs/index.html
+  s_139c48e2134bb7::t_7c9e78b09cdf46 330
+docs/reports.html
+  s_139c48e2134bb7::t_7c9e78b09cdf46 95
+scripts/check-contracts.rb
+  s_139c48e2134bb7::t_212df2a7ff3116 636-648,666-678
+  s_139c48e2134bb7::t_20129d68522add 679-680
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_2822ba247c6715 115
+  s_139c48e2134bb7::t_86bf77041bc80b 48-51,106-114
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_ea5c4ab6677dfe 456-461,465,467
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_212df2a7ff3116 234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0083fdf31cd92e988b1165abb15a1acaf76df19",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
