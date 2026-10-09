@@ -30,6 +30,11 @@
       "id": 6,
       "prompt": "fit-review (clean tree, interactive) where a P2 gated_auto finding at confidence 100 passes the apply gate, but the verify re-read shows the cited code already handles the case",
       "expected_output": "Does not apply the refuted finding. Lists it under Rejected with why not_real. The fix(fit-review) commit holds only confirmed fixes, and no commit is made when none remain."
+    },
+    {
+      "id": 7,
+      "prompt": "fit-review (clean tree, interactive) where one lens returns an observation that ends 'cosmetic, confirm visually' and another returns a manual P1 with a concrete suggested_fix",
+      "expected_output": "Applies neither. The observation stays under Observations, and the P1 stays in the Findings tables. Applied and the fix(fit-review) commit hold only gated_auto fixes at confidence 75 or more and P2 or lower."
     }
   ]
 }

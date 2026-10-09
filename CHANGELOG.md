@@ -8,6 +8,14 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **The `fit-review` fix step applies only gated fixes and checks for copies (#60).**
+  Stage 5 step 7 and the subagent-template apply rules say that observations are never
+  applied. The `fix(fit-review)` commit and the Applied section hold only fixes that
+  passed the step 7 gate; callers commit other fixes separately. Before a fix that
+  replaces text, the step searches for other copies and reclassifies the fix to manual
+  when it cannot fix them all in the touched file. The shared rules tell lenses that a
+  fix which prints or runs untrusted text must say how it makes that text safe. New
+  refusal case in `evals.json`.
 - **The merge stage lists every dropped finding and verifies before apply (#47).** Coverage
   has a Rejected list (title, file:line, lens, severity, confidence, `why`) in place of
   counts by anchor, and a Re-grades log for every orchestrator change to severity or

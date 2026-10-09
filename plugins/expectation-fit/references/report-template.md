@@ -44,7 +44,8 @@ monotonic across the whole report.
    one-line reason, for example `experience: not_selected, no user-facing paths in scope`.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
    Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
-   not in the severity tables.
+   not in the severity tables. Only fixes that passed the fit-review Stage 5 step 7
+   gate appear here.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
    Omit empty severities. **The all-clear line is allowed only when every selected lens
    is `clean` and read all of its scope** (see Lens status below). If severities are

@@ -156,19 +156,32 @@ agreement, config policy, confidence gate, tensions). Then:
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
    concrete `suggested_fix`. Apply only when the working tree is what was reviewed
-   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. **Verify
-   first:** one read-only sub-agent re-reads the cited lines of every finding that
-   passes this gate, with this prompt: "Adversarially verify this finding against the
-   target the lenses used. Set real=true only with concrete evidence you inspected
+   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`.
+
+   **Verify first:** one read-only sub-agent re-reads the cited lines of every finding
+   that passes this gate, with this prompt: "Adversarially verify this finding against
+   the target the lenses used. Set real=true only with concrete evidence you inspected
    yourself. If you cannot open the file, the claim is wrong, or the evidence is thin,
    set real=false." Apply only confirmed findings. A refuted finding goes to Rejected
    with why `not_real`. In the Fallback, the orchestrator re-reads the lines itself and
-   Coverage says so. After applying,
-   run affected tests/lint; if they fail, revert that fix and report it instead. If
-   **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
+   Coverage says so.
+
+   **Check for copies:** before a fix that replaces text, search the repo for a key
+   phrase of the old text. Also check every copy that a lens named in a finding or an
+   observation. If all copies sit in the touched file and take the same edit, fix them
+   all in one commit. Otherwise do not apply the fix: reclassify it to manual and list
+   each copy in it. Historical text, such as CHANGELOG entries and dated reports, does
+   not count as a copy.
+
+   After applying, run affected tests/lint; if they fail, revert that fix and report it
+   instead. If **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
    `fix(fit-review): <summary>` commit; if it was false, apply but leave uncommitted.
+   The `fix(fit-review)` commit holds only fixes that pass this gate. A caller that fixes
+   other findings commits those fixes separately, after this skill reports.
+
    Push back (don't apply) when a lens is wrong; skip taste calls and conflicting
-   suggestions but surface what was skipped. Never push.
+   suggestions but surface what was skipped. Never push. Observations are never
+   applied. They stay in the Observations section.
 
 ## Stage 6 — Report
 

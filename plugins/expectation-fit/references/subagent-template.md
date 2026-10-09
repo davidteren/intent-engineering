@@ -107,13 +107,17 @@ Every finding must set `fix_class`. Interactive `/fit-review` may apply only
 Orchestrator apply rules (review interactive only): apply only when
 `fix_class == gated_auto` **and** `confidence >= 75` **and** severity ≤ P2; reclassify
 over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
-remote scopes.
+remote scopes. Observations are never applied. They stay in the Observations section.
 
 ## Shared rules
 
 - **Name the surprise.** Every finding states the expectation that was set and the
   actual behavior. "Surprising" without naming the expectation is not a finding.
-- **Concrete fixes only.** No "consider" / "might want to". A specific change.
+- **Concrete fixes only.** No "consider" / "might want to". A specific change. A fix
+  must not add a risk. Text from the repo, a file, the environment or the user is
+  untrusted. A fix that prints or runs such text says how it makes the text safe. For
+  example, escape control characters, quote shell arguments, and stop tools like git
+  from reading names as patterns.
 - **Set `fix_class` honestly.** Default to `manual` when the fix is non-mechanical.
 - **Respect local conventions.** Repo `CLAUDE.md`/`AGENTS.md` and existing patterns
   win over generic ideals. A consistent repo-local choice is not a violation.
