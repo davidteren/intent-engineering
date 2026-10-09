@@ -42,6 +42,7 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/phoenix.yaml`) ar
 | `god-module` | 6. God module (dumping-ground module) |
 | `process-misuse` | 7. Process misuse (unsupervised / scattered / code-org-by-process) |
 | `law-of-demeter` | 8. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. Fat controller (logic that belongs in a context) — `fat-controller`
 - **Signal:** A controller over `phoenix.controller.max_loc`, any action over
@@ -211,6 +212,10 @@ flat, not nested** — a single multi-clause `with a <- x, b <- y, ... do` head 
 pipeline (the idiomatic *fix* for nesting), not N levels of depth; don't flag it as deep
 nesting.
 
+**`long-method`:** one function over `phoenix.general.max_function_loc`. Severity: P2 when
+the function mixes responsibilities; P3 when it is cohesive but over twice the limit;
+otherwise an observation, not a finding.
+
 ## Tool enrichment (optional)
 
 These sharpen the heuristics; the lens must degrade gracefully when they are absent. Detect
@@ -222,8 +227,8 @@ anything; never block on them.
   directly corroborates `context-bypass` and cross-context leaks.
 
 When a tool is present, treat its output as *corroborating evidence* that raises confidence
-— not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash heuristics and
-say so in the finding.
+— not as the source of truth. The lens notes once per run which tools ran. A finding names a
+tool only when that tool confirmed it.
 
 ## Relationship
 

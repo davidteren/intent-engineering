@@ -88,7 +88,7 @@
           },
           "smell": {
             "type": "string",
-            "description": "Architecture lens only. The structural smell id, e.g. fat-model, god-object, fat-controller, misused-service, callback-hell, query-in-view, law-of-demeter. See resources/frameworks/<stack>-architecture.md."
+            "description": "Architecture lens only. The structural smell id, e.g. fat-model, god-object, fat-controller, misused-service, callback-hell, query-in-view, law-of-demeter, long-method. See resources/frameworks/<stack>-architecture.md."
           },
           "pattern": {
             "type": "string",

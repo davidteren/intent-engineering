@@ -39,6 +39,7 @@ is obvious at a glance.
 | `fat-dependency` | 6. Fat / side-effecting dependency |
 | `layer-leak` | 7. Layer leak (transport ↔ domain bleed) |
 | `law-of-demeter` | 8. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. Fat router (logic in route handlers) — `fat-router`
 - **Signal:** A router module over `python.router.max_loc`, any single handler body over
@@ -239,6 +240,10 @@ assembly tolerates longer bodies** than imperative business logic — a flat, li
 single-purpose `build_*_workbook` reads better whole than split across helpers. Judge
 branching/nesting and mixed responsibilities, not raw line count, for renderer code.
 
+**`long-method`:** one function over `python.general.max_function_loc`. Severity: P2 when
+the function mixes responsibilities; P3 when it is cohesive but over twice the limit;
+otherwise an observation, not a finding.
+
 ## Tool enrichment (optional)
 
 These sharpen the heuristics; the lens must degrade gracefully when they are absent. Detect
@@ -256,8 +261,8 @@ presence first (e.g. `command -v ruff` / `command -v radon` / check the project'
   if the project declares layer contracts, a violation it reports is the smell.
 
 When a tool is present, treat its output as *corroborating evidence* that raises confidence
-— not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash heuristics and
-say so in the finding (so reviewers know it wasn't machine-confirmed).
+— not as the source of truth. The lens notes once per run which tools ran. A finding names a
+tool only when that tool confirmed it.
 
 ## Relationship
 

@@ -50,6 +50,7 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
 | `fat-middleware` | 6. Fat / side-effecting middleware |
 | `async-error-gap` | 7. Unhandled async / error-handling gap |
 | `law-of-demeter` | 8. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. Fat route handler / controller (logic at the edge) — `fat-route-handler`
 - **Signal:** A router file over `express.route.max_loc`, a controller over
@@ -228,6 +229,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/express.yaml`) ar
 nesting / callback hell -> async-await, early returns) apply to any function as cross-cutting
 signals.
 
+**`long-method`:** one function over `express.general.max_function_loc`. Severity: P2 when
+the function mixes responsibilities; P3 when it is cohesive but over twice the limit;
+otherwise an observation, not a finding.
+
 ## Tool enrichment (optional)
 
 These sharpen the heuristics; the lens must degrade gracefully when they are absent. Detect
@@ -241,8 +246,8 @@ Never install anything; never block on them.
   layer-leak the graph reveals).
 
 When a tool is present, treat its output as *corroborating evidence* that raises confidence
-— not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash heuristics and
-say so in the finding.
+— not as the source of truth. The lens notes once per run which tools ran. A finding names a
+tool only when that tool confirmed it.
 
 ## Relationship
 

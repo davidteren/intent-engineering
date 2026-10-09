@@ -153,10 +153,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
       Mark those findings `severity_aligned: true` for the gate exception below.
    2. **`severity_overrides`** (wins over align on conflict): string or
       `{ severity:, because: }` — copy `because` into Coverage.
-   3. Pattern policy: suppress architecture findings only when the path is `approved`
-      **and** the change is not a **net-new** introduction of a blocked / preferred-
-      `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
-      **changed** code at P1.
+   3. Pattern policy: `approved` silences blocked, instead_of and unidentified
+      findings on its path. Smell findings still show, and net-new blocked use still
+      gets P1. Keep preferred-`instead_of` introductions in **changed** code at P1.
 5. **Confidence gate** — suppress findings below the resolved `confidence_gate`
    (default anchor 75), EXCEPT:
    - P0 at confidence 50+, or

@@ -32,6 +32,13 @@ Each entry in `patterns`:
 
 ## How the lens uses a catalog
 
+**Pattern-bearing location** (the one definition; the agent and the policy file point
+here): any class or module in the reviewed scope. Exclude tests, migrations, exception
+classes, constant-only modules, and framework primitives that have no catalog id. For
+Rails, those primitives are models, controllers, helpers, mailers and channels, known by
+base class or folder. So a primitive is never unidentified. The stack's smells still
+judge it.
+
 1. **Recognize** — for each structural unit (class/module) in a
    pattern-bearing location, match against every entry's `recognition` block.
    Signals are **any-of**: a unit matches an entry if *any* signal hits, not all.
@@ -64,9 +71,10 @@ The project policy file references catalog entries **by `id`**:
 - `blocked: [service_object]` — patterns disallowed for **new** use. A blocked `id`
   appearing in changed code raises a high-priority finding; pre-existing uses
   are advisory (P3) unless also covered by `approved`.
-- `approved: [{ path: ..., reason: ... }]` — grandfathered instances/paths
-  whose findings are suppressed and noted in Coverage (e.g. legacy `app/services/**`
-  while new services stay blocked).
+- `approved: [{ path: ..., reason: ... }]` — grandfathered instances/paths (e.g.
+  legacy `app/services/**` while new services stay blocked). `approved` silences
+  blocked, instead_of and unidentified findings on its path. Smell findings still
+  show, and net-new blocked use still gets P1. Suppressions are noted in Coverage.
 
 **Typical migration shape** (interactors over services):
 

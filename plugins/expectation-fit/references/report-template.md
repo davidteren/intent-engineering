@@ -67,6 +67,9 @@ monotonic across the whole report.
      as clean empty findings.
    - **clean** — valid return, analyzed, zero findings remaining after the confidence
      gate (or findings present and listed).
+   - **architecture tools**: one line that names which external tools ran, from the
+     lens's once-per-run note, for example
+     `architecture: clean, heuristics only (ruff, radon not found)`.
 8. **Verdict** — review: Ready / Ready with fixes / Not ready. audit: top 3 posture
    gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps.
    **Never** Ready / all-clear / Ready to implement when any selected lens **failed**.

@@ -18,10 +18,11 @@ lenses:
   architecture: auto    # auto = on only when a supported framework (e.g. Rails) is detected
 
 # --- External tool preference -----------------------------------------------------
-# How a lens treats external static-analysis tools when they're installed. Only the
-# architecture lens uses external tools today (reek/flog/brakeman, ruff/radon, phpstan,
-# eslint/madge, credo). If your team already runs one of these, you don't want the plugin
-# duplicating it — set `prefer` or `report`. See references/config-resolution.md.
+# How the architecture lens treats external static-analysis tools. Only the tools in
+# the stack doc's "Tool enrichment" section count (Ruby: reek, flog; RuboCop is not one).
+# A tool counts only when it is installed where the lens runs, not when only CI runs it.
+# If no tool is found, every mode uses heuristics only, and the report says so.
+# See references/config-resolution.md.
 tools:
   architecture: enrich
   # enrich = run the plugin's heuristics PLUS the tool as corroboration (default).

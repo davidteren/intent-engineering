@@ -3,7 +3,7 @@
 
 ## How the lens uses this doc
 Heuristic-first (count + responsibility judgment via Read/Grep/Glob/Bash); optionally
-enrich with reek / flog / brakeman if installed (never required). Thresholds come from
+enrich with reek / flog if installed (never required). Thresholds come from
 resolved config (config/defaults/thresholds.yaml -> .expectation-fit/thresholds.yaml override).
 A threshold is a SIGNAL to look closer, not an automatic verdict — judge responsibilities.
 
@@ -32,6 +32,7 @@ is obvious at a glance.
 | `callback-hell` | 5. Callback hell |
 | `query-in-view` | 6. Query logic in views / fat helper |
 | `law-of-demeter` | 7. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. Fat model / God model — `fat-model`
 - **Signal:** A model whose size or breadth exceeds `rails.model.*`. Check
@@ -78,7 +79,8 @@ is obvious at a glance.
   `grep -oE '[A-Z][A-Za-z0-9_]+\.(new|call|find|create|perform)' <file> | sort -u | wc -l`,
   and distinct constant references overall; treat the count as a *signal* and confirm it's
   *logic* fan-out, not wiring. Fan-out measurement is low-precision via grep — when reek/flog
-  are available prefer them; when absent, say in the finding that it wasn't machine-confirmed.
+  are available prefer them. The lens notes once per run which tools ran. A finding names a
+  tool only when that tool confirmed it.
 - **Why it matters:** A high-fan-out class is a coordination hub — it knows about the
   whole system, so the whole system depends on it. It cannot be understood, tested, or
   reused in isolation, and it attracts more responsibility over time.
@@ -205,6 +207,16 @@ is obvious at a glance.
 - **Default severity:** P3 — usually a localised readability/coupling smell; escalate to
   P2 only when the same chain is duplicated widely (systemic coupling).
 
+## General metrics
+
+`rails.general.max_method_loc` (long method -> extract) applies to any method, and
+`rails.general.max_method_abc` confirms it when flog is available. High complexity on one
+method = refactor that method; complexity spread across a class = decompose the class.
+
+**`long-method`:** one method over `rails.general.max_method_loc`. Severity: P2 when the
+method mixes responsibilities; P3 when it is cohesive but over twice the limit; otherwise an
+observation, not a finding.
+
 ## Tool enrichment (optional)
 These sharpen the heuristics; the lens must degrade gracefully when they are absent.
 Detect presence before relying on output (e.g. `bundle show <gem>` / `which <bin>` /
@@ -220,12 +232,12 @@ grep the `Gemfile` / look for `.reek.yml`). Never install anything; never block 
   across a class = decompose the class.
 - **brakeman** — security scanner, **not** an architecture tool. It does not detect
   structural smells. Mention only to set expectations: if a project already runs
-  brakeman, route its findings to the security lens, not here. Do not treat its silence
+  brakeman, security scanning belongs to the team's security review, not to this plugin. Do not treat its silence
   as architectural health.
 
 When a tool is present, treat its output as *corroborating evidence* that raises
-confidence — not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash
-heuristics and say so in the finding (so reviewers know it wasn't machine-confirmed).
+confidence — not as the source of truth. The lens notes once per run which tools ran. A
+finding names a tool only when that tool confirmed it.
 
 ## Relationship
 [[../principles/occams-razor]], [[../principles/convention-over-configuration]],

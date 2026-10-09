@@ -45,6 +45,7 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/laravel.yaml`) ar
 | `logic-in-routes` | 6. Business logic in route files |
 | `fat-job` | 7. Business logic in Job / Listener / Command |
 | `law-of-demeter` | 8. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. Fat controller (logic / inline validation in actions) — `fat-controller`
 - **Signal:** Controller LOC over `laravel.controller.max_loc`; any single action over
@@ -211,6 +212,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/laravel.yaml`) ar
 FormRequest) apply to any method as cross-cutting signals. High complexity on one method =
 refactor that method; complexity spread across a class = decompose the class.
 
+**`long-method`:** one method over `laravel.general.max_method_loc`. Severity: P2 when the
+method mixes responsibilities; P3 when it is cohesive but over twice the limit; otherwise an
+observation, not a finding.
+
 ## Tool enrichment (optional)
 
 These sharpen the heuristics; the lens must degrade gracefully when they are absent. Detect
@@ -225,8 +230,8 @@ presence first (e.g. `command -v phpstan` / check `composer.json` `require-dev` 
   judgment.
 
 When a tool is present, treat its output as *corroborating evidence* that raises confidence
-— not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash heuristics and
-say so in the finding.
+— not as the source of truth. The lens notes once per run which tools ran. A finding names a
+tool only when that tool confirmed it.
 
 ## Relationship
 

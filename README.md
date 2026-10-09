@@ -60,7 +60,7 @@ concrete fixes.
 | **Convention** (`fit-convention-reviewer`) | convention-over-configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure/naming. *Reads your repo's `CLAUDE.md`/`AGENTS.md` first — local conventions win.* |
 | **Simplicity** (`fit-simplicity-reviewer`) | Occam, KISS, YAGNI | Needless abstraction, premature generality, knobs nobody sets, layers that don't earn their keep. Also guards against over-simplifying away real requirements. |
 | **Experience** (`fit-experience-reviewer`) | HIG, look-and-feel, UX | Missing interaction states, non-semantic controls, form/destructive feedback gaps, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design. Greppable smells in `ux-interaction-smells.md`. User-facing surfaces only. |
-| **Architecture** (`fit-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.expectation-fit/` allow/block/approved policy. Framework-specific (Rails, Python (FastAPI), Laravel, Express, Phoenix, React today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix). |
+| **Architecture** (`fit-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.expectation-fit/` allow/block/approved policy. Framework-specific (Rails, Python (FastAPI), Laravel, Express, Phoenix, React today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix). |
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries a
 confidence anchor, and proposes a concrete fix. When two principles conflict (e.g. DWIM's
@@ -180,9 +180,7 @@ The Grok workflow writes only run scratch. It does not publish under
 
 **With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
 correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
-UX, and architecture packs. If you already run reek/eslint/phpstan/…, set
-`tools.architecture: prefer` in `.expectation-fit/ways-of-working.yaml` so the architecture
-lens does not duplicate those tools.
+UX, and architecture packs.
 
 ## Install (local dogfooding)
 

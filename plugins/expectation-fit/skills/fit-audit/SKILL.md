@@ -90,8 +90,9 @@ just needs the merged per-lens return.
 1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
    policy **before** the confidence gate as in `fit-review` Stage 5: **`severity_align`
    then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
-   survive), suppress `approved` paths, keep `blocked` / preferred-instead_of findings
-   (no apply — audit is read-only).
+   survive). `approved` silences blocked, instead_of and unidentified findings on its
+   path. Smell findings still show, and net-new blocked use still gets P1. Keep other
+   `blocked` / preferred-instead_of findings (no apply — audit is read-only).
 2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the

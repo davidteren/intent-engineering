@@ -41,6 +41,19 @@ for the design see **PLAN.md**.
   new "CLI and developer output" section (clig.dev added to Sources), a traced
   framework-default guard, and a tighter live-region shape. `accessibility.md` limits
   `role="tab"` to in-page panels.
+- **Architecture lens policy and tool fixes (#50).** The `python` arch pack now needs a
+  web or worker framework; a plain Python CLI or library returns `SKIPPED:` unless
+  `lenses.architecture: on`. brakeman is no longer listed as an architecture tool, and
+  `fit-setup` and the README no longer suggest `tools.architecture: prefer`. All six
+  stack docs and `findings-schema.json` gain a `long-method` smell id (Rails gains a
+  "General metrics" section). Under `enrich`, the lens runs a present tool, notes once
+  per run which tools ran, and Coverage shows that note. "Pattern-bearing location" is
+  defined once in `resources/patterns/README.md`, and the lens never reports a
+  preferred or blocked rule as met (new `fit-audit` eval case 4). **Behavior change:**
+  `approved` now silences blocked, instead_of and unidentified findings on its path,
+  but smell findings still show and net-new blocked use still gets P1 (before, review
+  and audit suppressed every architecture finding on an approved path). Each
+  unidentified-pattern `suggested_fix` now holds a ready-to-paste `approved` entry.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
