@@ -1,0 +1,29 @@
+CHANGELOG.md
+  s_139c48e2134bb7::t_c31e33c96e7534 55-61
+AGENTS.md
+  s_139c48e2134bb7::t_c5a960565dcc27 44-47,251-253,311-312,315,318-321,324-328
+README.md
+  s_139c48e2134bb7::t_0397b619b80a50 190,193,197-198
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_299f5b4743c18a 12-13,15
+scripts/README.md
+  s_139c48e2134bb7::t_d95b19121de91a 17-18,27
+scripts/check-contracts.rb
+  s_139c48e2134bb7::t_6672637c7daec6 23-24,227-246
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8a55975d93bd3527107f565f773530ea2cc1be22",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
