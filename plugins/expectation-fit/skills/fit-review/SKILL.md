@@ -61,10 +61,31 @@ Compute the diff. Reuse the scope logic familiar from standard code-review skill
 - **Branch name** — resolve `origin/<branch>` without checkout; `branch-remote` scope.
 - **No argument** — current branch vs its detected base.
 
-Produce: `BASE`, `FILES` (`git diff --name-only $BASE`), `DIFF` (`git diff -U10 $BASE`),
-`UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
-scope; list them in Coverage. If no base resolves, stop — don't fall back to
-`git diff HEAD` (it would miss committed work).
+Produce: `BASE`, `HEAD_REF` (the head the lenses read: the working tree in
+`local-aligned`/standalone scope, the PR head ref in `pr-remote`, `origin/<branch>` in
+`branch-remote`), `FILES` (`git diff --name-only $BASE`, or `git diff --name-only $BASE
+$HEAD_REF` in remote scopes), `DIFF` (the same range with `-U10`), and `UNTRACKED`
+(`git ls-files --others --exclude-standard`). Untracked files are out of scope; list
+them in Coverage. If no base resolves, stop — don't fall back to `git diff HEAD` (it
+would miss committed work).
+
+**Empty diff.** If `FILES` is empty, dispatch no lens. Still load config and resolve the
+report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:agent`)
+with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
+Findings line:
+`Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
+Set the verdict to Ready, and stop. This stop comes before lens selection, so a lens set
+to `on` does not run.
+
+**Plan-only diff.** Hand off when no changed file is code and at least one is a plan,
+spec or requirements doc. Such a doc has implementation units (U1, U2), R/A/F ids, or
+actors and flows (see fit-validate-plan Stage 1). Files that steer agents count as code
+here: SKILL.md, agent, command and rule files, AGENTS.md and CLAUDE.md. When unsure,
+take the normal path. To hand off, say: "No code in this diff; running fit-validate-plan
+instead." Run `fit-validate-plan` once on all changed docs, with the same `mode:agent`
+and `out:` tokens. Its report and verdict are the result of this run. Write no review
+report. In `mode:agent`, the reply keeps the plan verdict words (Ready to implement /
+Revise first).
 
 Also capture **`TREE_CLEAN`**: `git status --porcelain` empty at this moment (before any
 write). Stage 5 uses this flag for the optional commit (do not re-check after apply).
@@ -74,6 +95,11 @@ write). Stage 5 uses this flag for the optional commit (do not re-check after ap
 Summarize what the change is trying to do (2-3 lines) from the PR body / commit log
 (`git log --oneline $BASE..HEAD`) / `plan:` / conversation. Pass it to every lens;
 intent shapes how hard each lens looks, not which lenses run.
+
+If the diff changes only docs, a CHANGELOG or a version number, add this line to the
+intent: "Check each changed claim against the code and the other docs: versions, status
+lines and links. Also read the docs outside the diff that state the same fact." Lens
+selection does not change.
 
 ## Stage 3 — Select lenses
 

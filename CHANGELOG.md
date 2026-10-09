@@ -8,6 +8,13 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **`fit-review` defines empty, plan-only and docs-only diffs (#59).** An empty diff
+  dispatches no lens (even one set to `on`) and still writes the normal report with a
+  "Nothing to review" line and the verdict Ready. `FILES` now comes from the head the
+  lenses read, so remote scopes see the right change. A plan-only diff hands off to one
+  `fit-validate-plan` run over all changed docs, which now accepts several paths as one
+  set with one report. A docs-only diff keeps the same lens team and adds a claim-check
+  line to the intent.
 - **The `fit-review` fix step applies only gated fixes and checks for copies (#60).**
   Stage 5 step 7 and the subagent-template apply rules say that observations are never
   applied. The `fix(fit-review)` commit and the Applied section hold only fixes that

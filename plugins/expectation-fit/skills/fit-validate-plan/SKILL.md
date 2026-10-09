@@ -1,7 +1,7 @@
 ---
 name: fit-validate-plan
 description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists."
-argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [path/to/plan-or-spec.md]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [path/to/plan-or-spec.md ...]"
 ---
 
 # Expectation Fit — Plan Validation
@@ -19,11 +19,12 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
-| remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
+| remainder | Path to the document, or several paths. Several paths form one set: one run, one report. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
 ## Stage 1 — Read & classify
 
-Read the document. Classify by **content shape**, not path (path is a tie-breaker):
+Read each document. Classify each one by **content shape**, not path (path is a
+tie-breaker):
 
 - **`requirements`** (what-to-build): actors, flows, acceptance examples, R/A/F IDs,
   user/business framing, no implementation units. A requirements doc may legitimately
@@ -32,8 +33,9 @@ Read the document. Classify by **content shape**, not path (path is a tie-breake
   tests, technical decisions, sequencing. A plan that commits to building UI must
   enumerate the states.
 
-Pass `Document type:` to every lens — it changes how strict each lens is (a
-requirements doc is allowed to defer detail a plan must pin down).
+Pass `Document type:` to every lens, per document. It changes how strict each lens is
+(a requirements doc is allowed to defer detail a plan must pin down). A set goes to each
+lens in one dispatch, so the lens can see conflicts across documents.
 
 ## Stage 2 — Select lenses
 
@@ -63,7 +65,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE_SLUG` | sanitized plan basename, or empty |
+| `SCOPE_SLUG` | sanitized plan basename (the first one, plus `-set` for several), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
@@ -74,8 +76,9 @@ Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
 policy:** pass `model: sonnet` to convention and experience; let predictability and
 simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
-that cite the doc location (`line` = the relevant section's start line, or 0 when none
-applies) and describe the gap a planner/implementer would hit. Missing required
+that cite the doc location (`file` = the document path; `line` = the relevant section's
+start line, or 0 when none applies) and describe the gap a planner/implementer would
+hit. For a set, each lens returns one flat `scores` object for the whole set. Missing required
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 ## Stage 4 — Merge & rate
@@ -92,8 +95,8 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 ## Stage 5 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
-type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (each doc
+with its type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
 with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens status per the report-template Lens status table),
 Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
 before coding. The verdict blocks on `requirements`-level or design-blocking gaps;

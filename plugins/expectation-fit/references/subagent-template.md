@@ -38,7 +38,8 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
  `git diff --stat` output. For audit: the file/path set}
 Read the diff file with offset and limit, page by page, to its last line, tests
 included. Name any part you did not read.
-{For plan: the document content + Document type: requirements | plan}
+{For plan: the document content + Document type: requirements | plan, for each
+ document in the set}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
  workspace paths for in-scope files}
 </scope>

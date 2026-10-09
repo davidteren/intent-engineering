@@ -255,7 +255,8 @@ Field rules:
   sentence. Otherwise `reason` is `null`.
 - `completed_at` is an ISO 8601 UTC time.
 - `scope` by context. Review: `mode`, `base`, `branch`, `head_sha`, and `pr` (number or
-  `null`). Plan: `document` (the path). Audit: `target` (the path, glob or subsystem).
+  `null`). Plan: `document` (the path, or a list of paths for a
+  set). Audit: `target` (the path, glob or subsystem).
 - `finding_counts` counts findings per severity after the confidence gate. All four keys
   are always present.
 - `actionable_findings` is the caller's apply list: findings that pass the `fit-review`
