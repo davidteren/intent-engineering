@@ -15,6 +15,10 @@ predictability and simplicity use their `model: inherit` frontmatter (the sessio
 they are the always-on lenses and benefit from session-model depth on high-stakes diffs.
 Do **not** spawn all five as `sonnet`; that downgrades the two always-on lenses.
 
+**Concurrency cap (queue/backfill rule):** respect the harness limit on active subagents.
+Queue the lenses that do not fit and start the next one each time a lens finishes. A
+capacity error is backpressure, not a lens failure: requeue that lens.
+
 ```
 You are the {lens} lens. Read your agent definition for identity and calibration.
 
@@ -62,8 +66,9 @@ included. Name any part you did not read.
 </scope>
 
 <prior>
-{only with prior:<report-path>: the fixed and declined rows of the prior report
- (#N, file:line, title, status). Empty otherwise.
+{only with prior:<report-path>: the prior report rows that the prior: shared token
+ (config-resolution Shared tokens) selects for this skill (#N, file:line, title,
+ status). Empty otherwise.
  plan context also gets: "Mark each prior gap closed or still open, with its plan line."
  and "Drop a score only when you name the new gap."}
 </prior>
@@ -120,8 +125,8 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 - `{plugin_root}`: the absolute plugin root. Before dispatch, replace each plugin-root
   variable with the absolute plugin root. The harness does not substitute reference
   files, so a lens prompt must never carry a literal plugin-root variable.
-- `<prior>`: the orchestrator reads the `prior:` report and passes its `fixed` and
-  `declined` rows. `prior:` never changes the diff range; `base:` keeps that job.
+- `<prior>`: the orchestrator reads the `prior:` report and passes the rows that the
+  `prior:` shared token selects (config-resolution Shared tokens). `prior:` never changes the diff range; `base:` keeps that job.
 - `{reviewed_sha}`: `fit-review` binds its pinned `REVIEWED_SHA` (remote scopes).
 
 ## Shared confidence rubric (all lenses)

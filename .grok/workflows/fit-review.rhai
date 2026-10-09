@@ -308,8 +308,10 @@ let target = if args == () { () } else { args.target };
 if target == () { pause("verification", "Pass args.target: the diff, branch, or path to review."); }
 
 let plugin_root = "plugins/expectation-fit";
-if args != () && args.plugin_root != () {
+let caller_plugin_root = false;
+if args != () && args.plugin_root != () && args.plugin_root != "" {
     plugin_root = args.plugin_root;
+    caller_plugin_root = true;
 }
 
 let base_ref = ();
@@ -418,7 +420,7 @@ let standards_paths = "";
 let intent_text = "Review the target for surprise against expectation-fit lenses.";
 let policy_notes = "";
 let provenance = "Provenance: unresolved";
-let plugin_root_ok = false;
+let plugin_root_ok = caller_plugin_root;
 let overrides = [];
 if cfg != () && cfg.agent_id != () {
     let slug = fingerprint("" + cfg.agent_id);
@@ -441,7 +443,8 @@ if cfg != () && cfg.success == true && cfg.output != () && cfg.output.source != 
     if cfg.output.notes != () { log(cfg.output.notes); }
     if cfg.output.policy_notes != () { policy_notes = cfg.output.policy_notes; }
     if cfg.output.provenance != () { provenance = cfg.output.provenance; }
-    if cfg.output.plugin_root != () && cfg.output.plugin_root != "" { plugin_root = cfg.output.plugin_root; plugin_root_ok = true; }
+    // The caller's args.plugin_root wins; the config agent's value is only a fallback.
+    if !caller_plugin_root && cfg.output.plugin_root != () && cfg.output.plugin_root != "" { plugin_root = cfg.output.plugin_root; plugin_root_ok = true; }
     if cfg.output.overrides != () && type_of(cfg.output.overrides) == "array" {
         overrides = cfg.output.overrides;
     }
@@ -617,8 +620,10 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        // Same defect: same normalized title, or the same smell id when both have one.
-        // A finding with no line (line 0) merges only on an identical normalized title.
+        // Grok merges duplicates only on an identical normalized title or the same smell id.
+        // This is deliberate: it is safer than guessing. Differently titled copies of one
+        // defect stay separate and are verified separately. A finding with no line (line 0)
+        // merges only on an identical normalized title.
         let same_title = match_key(u.title) == match_key(f.title);
         let same_defect = same_title;
         if u.line != 0 && f.line != 0 && u.smell != "" && u.smell == f.smell { same_defect = true; }
@@ -630,7 +635,7 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
-        // One defect within 3 lines (titles may differ). Each copy keeps its own severity and
+        // One defect within 3 lines (titles differ only on a smell match). Each copy keeps its own severity and
         // confidence. Keep the highest-severity copy that passes the gate; if none passes,
         // keep the highest-severity copy. Agreement never raises confidence.
         let kept = unique[seen_at];

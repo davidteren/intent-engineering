@@ -19,7 +19,7 @@
     {
       "id": 4,
       "prompt": "fit-validate-plan docs/plans/my-plan.md (after the confidence gate, two P2 findings remain, the lowest dimension score is 6/10, and every selected lens is ok)",
-      "expected_output": "Verdict is Ready to implement, because no P0 or P1 survives the gate. Both P2 findings are listed as gaps that do not block. The reply ends with: Verdict: Ready to implement. Lowest score: 6/10. Blocking: 0. Failed lenses: none. Report: <path>. Does not modify the plan."
+      "expected_output": "Verdict is Ready to implement, because no P0 or P1 survives the gate. Both P2 findings are listed as gaps that do not block. The verdict shows the lens coverage, and the reply ends with: Verdict: Ready to implement (<n> of <n> lenses). Lowest score: 6/10. Blocking: 0. Failed lenses: none. Report: <path>. Does not modify the plan."
     },
     {
       "id": 5,

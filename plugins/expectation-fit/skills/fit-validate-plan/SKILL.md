@@ -98,7 +98,8 @@ Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. 
 `run_artifact_dir = $RUN` (Layer A only), `repo_root` to `git rev-parse --show-toplevel`,
 and `plugin_root = $PLUGIN_ROOT`.
 
-Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
+Spawn lenses in parallel with `Context: plan` and the `Document type:` (concurrency cap: the
+queue/backfill rule in the subagent template). **Model
 policy:** pass `model: sonnet` to convention and experience; let predictability and
 simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
@@ -108,7 +109,8 @@ would hit. For a set, each lens returns one flat `scores` object per document di
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool); in a
 set, each dispatch writes `$RUN/{lens}-<doc-slug>.json` (bind `{doc_slug}`).
 
-With `prior:`, fill the `<prior>` slot with the prior gaps and its two plan rules: mark
+With `prior:`, fill the `<prior>` slot with ALL prior gap rows (see the `prior:` shared
+token) and its two plan rules: mark
 each prior gap closed or still open, with its plan line; drop a score only when the lens
 names the new gap. Lenses still read the whole plan and can raise new gaps.
 
@@ -159,7 +161,7 @@ counts the P0 and P1 findings that survive the gate, and the report path is the 
 path from the `Report:` line in that doc:
 
 ```text
-Verdict: <verdict>. Lowest score: <n>/10. Blocking: <n>. Failed lenses: <names or none>. Report: $REPORT_PATH
+Verdict: <verdict> (<lens coverage>). Lowest score: <n>/10. Blocking: <n>. Failed lenses: <names or none>. Report: $REPORT_PATH
 ```
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
@@ -168,7 +170,7 @@ the planning workflow.)
 ## Fallback
 
 No sub-agents: follow "When you cannot spawn agents" in
-`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use its queue/
 backfill rule. Everything else unchanged.
 
 ---

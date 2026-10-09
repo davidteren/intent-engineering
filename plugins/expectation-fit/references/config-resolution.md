@@ -365,7 +365,7 @@ skill's argument table points here and lists only its own difference.
 | Token | Effect |
 |-------|--------|
 | `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: Artifact paths below. |
-| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`). It never changes what the run reads. |
+| `prior:<report-path>` | Earlier report of the same target. For `fit-review` and `fit-audit`, its `fixed` and `declined` rows go to every lens through the `<prior>` slot. For `fit-validate-plan`, ALL its gap rows (open, fixed and declined) go there, so each lens marks every prior gap closed or still open. The slot is defined in `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. It never changes what the run reads. |
 | `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 
 ## Artifact paths (orchestrators — shared)

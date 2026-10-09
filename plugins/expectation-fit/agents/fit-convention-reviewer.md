@@ -91,7 +91,7 @@ here).
 **Audit / plan:** include `scores` with these exact keys (0–10): `framework_idiom`,
 `repo_consistency`, `configuration_restraint`. Omit `scores` in review mode.
 
-Write full detail to `{run_artifact_dir}/convention.json` using the Write tool. Write and fix that file only with the Write tool, never with a shell command. No prose
+Write full detail to the artifact path the prompt binds (see the subagent-template output contract; a plan set uses `{lens}-{doc_slug}.json`) using the Write tool. Write and fix that file only with the Write tool, never with a shell command. No prose
 outside the JSON.
 
 Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.

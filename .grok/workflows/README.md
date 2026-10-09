@@ -67,6 +67,8 @@ This is a Grok runtime, not a second copy of the Claude skill.
   policy notes in Coverage. It does **not** apply smell-first
   `severity_align`, principle overrides, pattern policy, or architecture
   thresholds the way `/fit-review` does. Treat this as a subset.
+- Grok merges duplicates only on identical title or smell; differently titled
+  copies are verified separately.
 - The lens list in the script is a snapshot of `lens-catalog.md`.
 - The JSON schema in the script is a snapshot of `findings-schema.json`.
 - The report lives in run scratch. There is no `docs/` write and no

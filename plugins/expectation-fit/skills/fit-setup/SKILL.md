@@ -130,19 +130,28 @@ child without an absolute `project_base`.
 For **upgrade**, resolve existing `PROJECT_CONFIG` via walk-up; do not move it unless
 the user explicitly asks to migrate placement.
 
-**Legacy folder (`.intense/`, before 0.9.0).** When `PROJECT_CONFIG` ends in `/.intense`,
-offer the move first. Run it from the folder that holds `.intense/`, not from cwd: set
-`LEGACY_PARENT` to the absolute parent of `PROJECT_CONFIG` (found by the walk-up), then
-`git -C "$LEGACY_PARENT" mv .intense .expectation-fit` when the folder is tracked, else
-`mv "$LEGACY_PARENT/.intense" "$LEGACY_PARENT/.expectation-fit"`. Ask once, show the command, and never move without a yes. If both folders hold
-one of the three yaml files (`ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml`),
-stop and list them; `.expectation-fit/` already wins the walk-up. When
-`.expectation-fit/` exists but holds only `runs/` or `reports/`, move each
-`.intense/*.yaml` file into it one by one
-(`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>` for a tracked file,
-else `mv` with both paths under `$LEGACY_PARENT`). Never `git mv` the whole folder into an existing folder,
-because that nests it as `.expectation-fit/.intense/`. After a move, print the git state
-of the new folder so the user can commit it.
+**Legacy folder (`.intense/`, before 0.9.0).** In upgrade, always check for a legacy
+`.intense/`: either `PROJECT_CONFIG` ends in `/.intense`, or a sibling `.intense/` sits
+next to the resolved `.expectation-fit/`. Set `LEGACY_PARENT` to the absolute folder that
+holds `.intense/` (not cwd). "Yaml" below means one of the three files
+(`ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml`). Ask once, show each command,
+and never move or remove without a yes.
+
+- **Both folders hold yaml:** stop and list both. Config resolution uses
+  `.expectation-fit/` and ignores the legacy one. Offer to merge the keys that are
+  missing from `.expectation-fit/` out of the legacy files, then to remove `.intense/`.
+  Remove it only on a yes.
+- **`.expectation-fit/` does not exist:** rename the whole folder:
+  `git -C "$LEGACY_PARENT" mv .intense .expectation-fit` when it is tracked, else
+  `mv "$LEGACY_PARENT/.intense" "$LEGACY_PARENT/.expectation-fit"`.
+- **`.expectation-fit/` exists (any contents) without yaml:** move each `.intense/*.yaml`
+  file one by one (`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>`
+  for a tracked file, else `mv` with both paths under `$LEGACY_PARENT`). Do not migrate
+  `.intense/runs/` or `.intense/reports/`; name them in the summary.
+
+Never move the whole `.intense/` into an existing `.expectation-fit/`, because that nests
+it as `.expectation-fit/.intense/`. After a move, print the git state of the new folder
+so the user can commit it.
 
 ---
 
@@ -431,8 +440,8 @@ Resolve the **active** run-scratch path first (same rules as
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`):
 
 - If project `.expectation-fit/ways-of-working.yaml` has `artifacts.run_dir` → use that.
-- Else, if a legacy `.intense/ways-of-working.yaml` (not yet moved) has
-  `artifacts.run_dir` → use that.
+- Else, only when the resolved config folder IS the legacy `.intense/` (not yet moved),
+  and its `ways-of-working.yaml` has `artifacts.run_dir` → use that.
 - Else → default `.expectation-fit/runs/`.
 
 New run folders ignore themselves (config-resolution writes a `*` `.gitignore` into

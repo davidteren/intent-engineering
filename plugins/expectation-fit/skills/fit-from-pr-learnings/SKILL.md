@@ -102,6 +102,9 @@ migrations, i18n, CSS tokens, tests serial, naming.
    only; still merge sources/severities unless also confirmed.
 5. Optionally write `<stamp>-from-pr-learnings.md` under the resolved
    `artifacts.report_dir` (or `out:`) summarizing G-ids and source PRs for humans.
+   Before the write, create the folder and its `*` `.gitignore` exactly as the canonical
+   report-path block in `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` does
+   (the `mkdir -p` and `case` lines under `if [ -n "$REPORT_PATH" ]`).
 6. Never commit or push.
 
 ### 5. Optional calibrate handoff

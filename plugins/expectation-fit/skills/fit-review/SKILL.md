@@ -97,8 +97,9 @@ working tree never leaks into scope), `DIFF` (the same range with `-U10`), and
 scope; list them in Coverage. If no base resolves, stop — don't fall back to
 `git diff HEAD` (it would miss committed work).
 
-**Empty diff.** If `FILES` is empty, dispatch no lens. Still load config and resolve the
-report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:agent`)
+**Empty diff.** If `FILES` is empty, dispatch no lens. Config is already loaded (Stage 1).
+Skip Stage 3 and the Stage 4 dispatch, but resolve the report path (Stage 4 artifact
+paths). Write the normal Stage 6 report (JSON in `mode:agent`)
 with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
 Findings line:
 `Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
@@ -201,14 +202,15 @@ Bind **`run_artifact_dir = $RUN`** (Layer A only), `plugin_root = $PLUGIN_ROOT`,
 `base` to `BASE` from Stage 1, and `plan_path` to the `plan:` path when one is given.
 
 Write the Stage 1 `DIFF` to `$RUN/diff.patch`. Pass each lens that path, its line count
-and `git diff --stat $BASE`, not the diff inline. A large diff then never gets cut off
+and the `git diff --stat` for the same range and `EXCLUDES` as `FILES` (`$BASE $REVIEWED_SHA` in
+remote scopes), not the diff inline. A large diff then never gets cut off
 in the lens prompt.
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
 convention, experience, and **architecture**; let predictability and simplicity inherit
-the session model. Respect the harness active-subagent cap (queue and backfill;
-capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.json`
+the session model. Concurrency cap: use the queue/backfill rule in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Each lens writes `$RUN/{lens}.json`
 (via the Write tool) and returns compact JSON.
 
 ## Stage 5 — Merge, gate, act
@@ -301,7 +303,7 @@ catches.
 ## Fallback
 
 No sub-agents: follow "When you cannot spawn agents" in
-`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use its queue/
 backfill rule. Everything else unchanged.
 
 ---

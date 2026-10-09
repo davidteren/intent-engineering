@@ -280,7 +280,8 @@ Complete example (a review run without `out:`):
       "title": "Bare rescue hides cache write errors",
       "file": "app/models/order.rb",
       "line": 51,
-      "suggested_fix": "Rescue only Redis::BaseError and re-raise everything else."
+      "suggested_fix": "Rescue only Redis::BaseError and re-raise everything else.",
+      "requires_verification": true
     }
   ],
   "rejected": [
@@ -330,6 +331,11 @@ Complete example (a review run without `out:`):
 `artifact_path`, `plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`,
 `tree_clean`, `base_sha`, and `status` on each finding. The example above shows each one.
 
+Per-finding keys: each item in `findings` has `title`, `principle`, `severity`,
+`confidence`, `file`, `line`, `fix_class`, `suggested_fix`, `lenses` and `status`. Each
+item in `actionable_findings` has `title`, `file`, `line`, `suggested_fix` and
+`requires_verification`.
+
 Field rules:
 
 - `status` is `complete`, `failed` or `skipped`. `skipped` means the run reviewed
@@ -353,10 +359,13 @@ Field rules:
   set). Audit: `target` (the path, glob or subsystem).
 - `finding_counts` counts findings per severity after the confidence gate. All four keys
   are always present.
-- `actionable_findings` is the caller's apply list: findings that pass the full
-  `fit-review` apply gate in `${CLAUDE_PLUGIN_ROOT}/skills/fit-review/SKILL.md` (Stage 5
-  step 7). `mode:agent` applies nothing, so the caller decides. It is empty in audit and
-  plan.
+- Each item in `findings` carries `lenses`: every lens that reported it (after dedup).
+- `actionable_findings` is the caller's apply list: findings that pass the static
+  conditions of the `fit-review` apply gate (Stage 5 step 7 in
+  `${CLAUDE_PLUGIN_ROOT}/skills/fit-review/SKILL.md`): `gated_auto`, confidence >= 75, P2
+  or P3, a concrete `suggested_fix`, no `tension`, and not a prior declined row.
+  `mode:agent` skips the verify-first step, so each item has `requires_verification: true`
+  and the caller must verify it before applying. It is empty in audit and plan.
 - `rejected` lists every finding that the merge did not report, with `title`, `file`,
   `line`, `lens`, `severity`, `confidence` and `why` (see Rejected under Coverage).
 - `coverage.config` is the Config line: the config source that the run used.

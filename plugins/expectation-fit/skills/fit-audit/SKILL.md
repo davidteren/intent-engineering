@@ -91,8 +91,8 @@ pass `model: sonnet` to convention, experience, and architecture; let predictabi
 and simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Pass the file set (or sample) and the stack docs to read. **Audit mode requires
 `scores`** — each lens returns 0-10 per dimension it owns (scoring rubric) plus findings
-citing `file:line`. Missing required `scores` → lens **failed**. Respect the concurrency
-cap. Lenses write `$RUN/{lens}.json` (via the Write tool).
+citing `file:line`. Missing required `scores` → lens **failed**. Concurrency cap: use the
+queue/backfill rule in the subagent template. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 For very large audits, a lens may itself fan out across file groups; the orchestrator
 just needs the merged per-lens return.
@@ -133,7 +133,7 @@ In `mode:agent`, the path is the `artifact_path` field only.
 ## Fallback
 
 No sub-agents: follow "When you cannot spawn agents" in
-`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use its queue/
 backfill rule. Everything else unchanged.
 
 ---
