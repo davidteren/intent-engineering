@@ -17,7 +17,9 @@ YAML without confirmation.
 ## When to use
 
 - User has a triage doc (e.g. `PR-COMMENTS-TRIAGE-*.md` with G1…Gn guardrails).
-- User points at one or more GitHub PRs after review.
+- User points at one or more GitHub PRs after the PR merges. A commit of this skill's
+  edits on an open PR branch moves the PR head, which restarts CI, review bots and
+  readiness checks. One run can take several `pr:` tokens.
 - User wants workspace-level config for a multi-repo stack (BE + FE) via walk-up.
 
 ## Argument parsing
@@ -58,6 +60,14 @@ Per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`:
 gh api graphql …  # reviewThreads on the PR
 # Or: gh api repos/{owner}/{repo}/pulls/{n}/comments
 ```
+
+`fit-review` never posts to the PR, so its declines are not review threads. For each
+`pr:`, get the PR head branch (`headRefName` from `gh pr view`). Read the newest
+`fit-review` markdown report (by file stamp) in the resolved `artifacts.report_dir` whose
+Header branch matches. Use only findings that the report marks declined, with the stated
+reason. Read each finding's own marker, not its section: Tensions also lists fixed
+findings. A reason that holds beyond this PR becomes one `conventions.notes` line that
+cites the report path and finding number. A reason tied to this PR adds nothing.
 
 Cluster into themes: API versioning, security (tokens/query), FE client contract,
 migrations, i18n, CSS tokens, tests serial, naming.
@@ -111,7 +121,7 @@ Write a short markdown report:
 
 | Section | Content |
 |---------|---------|
-| Header | project base, Config path, sources used (triage path / PR list) |
+| Header | project base, Config path, sources used (triage path / PR list), and the `fit-review` report read per PR (or "Fit report: none found") |
 | Guardrails ingested | table G-id / note / severity |
 | Config changes | paths written |
 | Suggested next | `/fit-review` on open PR, `/fit-audit` on feature path |

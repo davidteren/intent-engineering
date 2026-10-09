@@ -65,6 +65,13 @@ for the design see **PLAN.md**.
   follow-ups to `wip/`. `docs/index.html` links to `/releases/latest` and `/releases`
   and names no current version or check count. The "New architecture stack" bullet names
   every place that lists the stacks.
+- **`/fit-from-pr-learnings` reads `fit-review` declines and says when to run (#62).**
+  Run it after the PR merges (a commit on an open PR branch restarts CI and review bots);
+  one run can take several `pr:` tokens. In `pr:` mode it reads the newest `fit-review`
+  report for the PR head branch in `artifacts.report_dir`. Only a decline whose reason
+  holds beyond the PR becomes a `conventions.notes` line, citing the report path and
+  finding number, and the Step 4 confirm still gates every note. The report Header names
+  the report read. New eval case 4.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
