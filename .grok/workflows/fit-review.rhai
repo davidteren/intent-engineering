@@ -15,6 +15,8 @@ let config_schema = #{
     "required": ["source"],
     "properties": #{
         "source": #{ "type": "string" },
+        "plugin_root": #{ "type": "string" },
+        "provenance": #{ "type": "string" },
         "confidence_gate": #{ "type": "integer" },
         "run_predictability": #{ "type": "boolean" },
         "run_convention": #{ "type": "boolean" },
@@ -335,6 +337,8 @@ if base_ref != () && base_ref != "" {
     cfg_prompt += base_ref;
     cfg_prompt += "\n";
 }
+cfg_prompt += "Return plugin_root: the ABSOLUTE path of the plugin folder above (the folder that holds references/config-resolution.md). Return an empty string when no plugin is there.\n";
+cfg_prompt += "Return provenance: the Provenance line from references/report-template.md (Provenance line section), with $HOME shown as ~ and the target commit, WITHOUT the trailing run part.\n";
 cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs — prose, not silent omit).\n";
 cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience on only for a user-facing surface or lenses.experience=on. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += "Use read_file and grep. Do not guess a stack that the catalog does not list.\n";
@@ -357,6 +361,8 @@ let standards_paths = "";
 let intent_text = "Review the target for surprise against expectation-fit lenses.";
 let scope_mode = "path";
 let policy_notes = "";
+let provenance = "Provenance: unresolved";
+let plugin_root_ok = false;
 let overrides = [];
 if cfg != () && cfg.agent_id != () {
     let slug = fingerprint("" + cfg.agent_id);
@@ -379,10 +385,16 @@ if cfg != () && cfg.success == true && cfg.output != () && cfg.output.source != 
     if cfg.output.scope_mode != () { scope_mode = cfg.output.scope_mode; }
     if cfg.output.notes != () { log(cfg.output.notes); }
     if cfg.output.policy_notes != () { policy_notes = cfg.output.policy_notes; }
+    if cfg.output.provenance != () { provenance = cfg.output.provenance; }
+    if cfg.output.plugin_root != () && cfg.output.plugin_root != "" { plugin_root = cfg.output.plugin_root; plugin_root_ok = true; }
     if cfg.output.overrides != () && type_of(cfg.output.overrides) == "array" {
         overrides = cfg.output.overrides;
     }
 }
+if config_ok && !plugin_root_ok {
+    pause("verification", "Pass args.plugin_root: the absolute path of the expectation-fit plugin folder.");
+}
+provenance += "; run " + run_slug;
 if base_ref != () && base_ref != "" && !target_looks_like_path {
     diff_text = git_diff_since(base_ref);
 }
@@ -710,6 +722,9 @@ merge_prompt += scope_mode;
 merge_prompt += "\nRun scratch id: ";
 merge_prompt += run_slug;
 merge_prompt += "\nHeader must include context=review, the target, intent, config source, run scratch id, and one-line reason per lens status.\n";
+merge_prompt += "Header must include this line verbatim: ";
+merge_prompt += provenance;
+merge_prompt += "\nCoverage must include this line verbatim: Runtime: Grok workflow (subset: no severity_align, principle overrides, pattern policy or architecture thresholds)\n";
 merge_prompt += "Verdict line must be exactly: ";
 merge_prompt += verdict;
 merge_prompt += "\nReturn the markdown in the report field only. The orchestrator will store it.\n";

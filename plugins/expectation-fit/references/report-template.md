@@ -15,6 +15,34 @@ Override Layer B with `out:<path>`. After a successful publish, Layer A is delet
 `artifacts.cleanup_runs` is true (default). Include `run_id` in the Header so the run
 is still identifiable after cleanup.
 
+**A published report is a point-in-time record.** Add later status as a dated addendum.
+Do not edit the original lines.
+
+## Provenance line
+
+Every `fit-review`, `fit-audit` and `fit-validate-plan` report carries this one line in
+its Header. It names the plugin copy that ran and the commit that the lenses read:
+
+```
+Provenance: Expectation Fit <version> from <plugin root>; <repo root>@<branch> <sha>[ +uncommitted]; run <run_id>
+```
+
+- `<version>` comes from `<plugin root>/.claude-plugin/plugin.json`. `<plugin root>` is
+  the absolute plugin root (see `subagent-template.md`, Slot bindings).
+- `<sha>` is the commit that the lenses read (short form). `+uncommitted` marks a dirty
+  tree. Show `$HOME` as `~` in both paths.
+- `fit-review` appends `; base <base_sha>`. `fit-audit` appends
+  `; <N> commits ahead of <default>`.
+
+```bash
+PLUGIN_VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)
+REPO_ROOT=$(git rev-parse --show-toplevel)
+BRANCH=$(git rev-parse --abbrev-ref HEAD)        # fit-review remote scopes: the reviewed branch
+REVIEWED_SHA=${REVIEWED_SHA:-$(git rev-parse --short HEAD)}
+[ -z "$(git status --porcelain)" ] && TREE_CLEAN=true || TREE_CLEAN=false
+COMPLETED_AT=$(date +%Y-%m-%dT%H:%M:%S%z)       # local time with UTC offset; STAMP stays local
+```
+
 ## Findings table (review & audit)
 
 Group by severity. The `Issue` cell is one terse clause (the scannable index). Depth
@@ -39,11 +67,15 @@ monotonic across the whole report.
 
 ## Report sections (in order)
 
-1. **Header** — scope, intent, context (review/audit/plan), lens team with the
-   one-line reason for each conditional lens.
+1. **Header** — scope or target, intent, context (review/audit/plan), the
+   **Provenance line** (above), `completed_at`, and the lens team with the one-line
+   reason for each conditional lens. Audit adds the stack and the sampling note. Plan
+   adds the document path and type. Skills point here; they do not list Header fields
+   of their own.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
-   Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
-   not in the severity tables.
+   Fix | Lens`, then validation outcome + commit status. Name the fix commit by its real
+   SHA from `git rev-parse --short HEAD` after the commit, never a placeholder. Applied
+   findings appear here, not in the severity tables.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
    Omit empty severities. **All-clear is allowed only when every *selected* lens is
    `clean` (not failed, not skipped-as-selected).** If severities are empty and all
@@ -59,7 +91,8 @@ monotonic across the whole report.
    conflict and the trade-off, so the user decides rather than the tool dictating.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), confidence suppressions by anchor, and **per-lens status**:
+   remote-mode limits), confidence suppressions by anchor, finding lines that could
+   not be verified (see `subagent-template.md`, output contract), and **per-lens status**:
    - **failed** — non-JSON return, missing `$RUN/{lens}.json`, missing required
      `scores` in audit/plan, or harness error after optional one re-dispatch.
    - **skipped** — not selected, or architecture pack absent (catalog ⬜ / no pack);
@@ -98,6 +131,14 @@ only when the caller passes `out:` (then `$REPORT_PATH` is that path, and
   "observations": [],
   "coverage": {},
   "artifact_path": null,
-  "run_id": "<run-id>"
+  "run_id": "<run-id>",
+  "plugin_version": "<version>",
+  "plugin_root": "~/<plugin root>",
+  "repo_root": "~/<repo root>",
+  "branch": "<branch>",
+  "reviewed_sha": "<sha>",
+  "tree_clean": true,
+  "base_sha": "<fit-review only>",
+  "completed_at": "2026-10-09T14:05:00+0200"
 }
 ```

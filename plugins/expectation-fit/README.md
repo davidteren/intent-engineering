@@ -137,6 +137,20 @@ callers; it writes a file only when you pass `out:`.
 
 Then the `/fit-*` skills and `fit-*-reviewer` agents are available.
 
+## Upgrade
+
+Claude Code updates a plugin only when its `version` changes. To pull a new release:
+
+```
+claude plugin marketplace update expectation-fit-marketplace
+claude plugin update expectation-fit@expectation-fit-marketplace
+```
+
+Then run `/reload-plugins` (or restart the session). To get updates without these
+steps, turn on auto-update for the marketplace in `/plugin` (Marketplaces tab). Each
+report's `Provenance:` line names the version and plugin folder that ran, so you can
+see when a stale copy produced it.
+
 ## Grok (optional, source repo only)
 
 This installable plugin is Claude Code. The development repo also has a Grok

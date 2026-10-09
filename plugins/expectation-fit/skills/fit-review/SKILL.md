@@ -60,12 +60,21 @@ Compute the diff. Reuse the scope logic familiar from standard code-review skill
   `pr-remote`. In `pr-remote`, lenses inspect via `git show <ref>:<path>` / diff hunks
   only.
 - **Branch name** — resolve `origin/<branch>` without checkout; `branch-remote` scope.
+  When `<branch>` is the current branch and `origin/<branch>` is an ancestor of HEAD
+  (`git merge-base --is-ancestor origin/<branch> HEAD`), classify as `local-aligned`.
 - **No argument** — current branch vs its detected base.
+
+**Pin the reviewed commit** before any lens runs: `REVIEWED_SHA` is HEAD in
+`local-aligned` and standalone scopes, the PR head SHA in `pr-remote`, and
+`origin/<branch>` in `branch-remote`. `BASE_SHA=$(git rev-parse --short $BASE)`. Print
+the report-template Provenance line (with `; base <base_sha>`) as the first output; the
+run id joins it once Stage 4 makes one.
 
 Build `EXCLUDES` per config-resolution (Scope exclusions), so earlier reports and run
 scratch stay out of scope. Produce: `BASE`, `FILES`
 (`git diff --name-only $BASE -- "${EXCLUDES[@]}"`), `DIFF`
-(`git diff -U10 $BASE -- "${EXCLUDES[@]}"`),
+(`git diff -U10 $BASE -- "${EXCLUDES[@]}"`). In `pr-remote` and `branch-remote`, diff
+`$BASE $REVIEWED_SHA` instead, so the working tree never leaks into scope. Also produce
 `UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
 scope; list them in Coverage. If no base resolves, stop — don't fall back to
 `git diff HEAD` (it would miss committed work).
@@ -128,7 +137,8 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
-Bind **`run_artifact_dir = $RUN`** (Layer A only).
+Bind **`run_artifact_dir = $RUN`** (Layer A only), `plugin_root = $PLUGIN_ROOT`, and
+`reviewed_sha = $REVIEWED_SHA`.
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
@@ -146,7 +156,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 1. **Validate** each return; assign per-lens status (failed / skipped / clean). Drop
    malformed *findings* (record the count) but mark the **lens failed** on non-JSON,
    missing `$RUN/{lens}.json`, or a selected lens that never returned. One re-dispatch
-   is allowed on non-JSON; still failed after that.
+   is allowed on non-JSON; still failed after that. Then **verify lines** before dedup:
+   grep for the first line of each evidence quote (`grep -n -F`, or on
+   `git show $REVIEWED_SHA:<path>` in remote scopes) and set `line` from the hit. With
+   no hit, keep the finding and list its line as unverified in Coverage.
 2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
    keep highest severity + confidence; record which lenses flagged it.
 3. **Cross-lens agreement** — 2+ lenses on the same fingerprint: promote one anchor
@@ -175,10 +188,14 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
    concrete `suggested_fix`. Apply only when the working tree is what was reviewed
-   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
+   (`local-aligned`/standalone), never in `pr-remote`/`branch-remote`, and only while
+   HEAD still equals `REVIEWED_SHA`. If HEAD moved, skip apply and print
+   `Reviewed <sha>; HEAD moved to <sha>`. After applying,
    run affected tests/lint; if they fail, revert that fix and report it instead. If
    **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
-   `fix(fit-review): <summary>` commit; if it was false, apply but leave uncommitted.
+   `fix(fit-review): <summary>` commit and record its real SHA
+   (`git rev-parse --short HEAD`) for Applied; if it was false, apply but leave
+   uncommitted.
    Push back (don't apply) when a lens is wrong; skip taste calls and conflicting
    suggestions but surface what was skipped. Never push.
 
@@ -186,9 +203,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 
 Write the report to `$REPORT_PATH` (markdown) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. In `mode:agent`, reply with the
-JSON and write it to `$REPORT_PATH` only when `out:` was passed (never into `$RUN`). Include run_id, branch, head_sha,
-verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
-Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
+JSON and write it to `$REPORT_PATH` only when `out:` was passed (never into `$RUN`).
+Sections: Header (per report-template, with the Provenance line), Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
 selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
 ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
@@ -229,3 +245,7 @@ truth, shared by every `fit-*` skill:
 
 Lens detection heuristics live in `${CLAUDE_PLUGIN_ROOT}/resources/`; the lens agents
 read those themselves.
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

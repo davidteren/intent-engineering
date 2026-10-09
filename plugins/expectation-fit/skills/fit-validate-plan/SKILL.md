@@ -67,20 +67,22 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only).
+`run_artifact_dir = $RUN` (Layer A only) and `plugin_root = $PLUGIN_ROOT`.
 
 Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
 policy:** pass `model: sonnet` to convention and experience; let predictability and
 simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
-that cite the doc location (`line` = the relevant section's start line, or 0 when none
-applies) and describe the gap a planner/implementer would hit. Missing required
+that cite the doc location (`line` = the exact plan line of the evidence quote, or 0
+when none applies) and describe the gap a planner/implementer would hit. Missing required
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 ## Stage 4 — Merge & rate
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
-   (as `fit-review` Stage 5; no apply — it's a doc).
+1. Validate, assign per-lens status (failed / skipped / clean). Before dedup, grep the
+   plan for the first line of each evidence quote (`grep -n -F`) and set `line` from the
+   hit; with no hit, list the line as unverified in Coverage. Then dedup and
+   confidence-gate (as `fit-review` Stage 5; no apply — it's a doc).
 2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
    Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
    actionable gaps.
@@ -90,9 +92,11 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 ## Stage 5 — Report
 
 Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
-type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
-with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Sections: Header (per
+report-template, with the Provenance line), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
+with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean;
+when `git rev-list --count HEAD..@{u}` is above zero, add `Checkout is N commits behind
+<upstream> as of last fetch. Code facts may be stale.` Never run `git fetch`),
 Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
 before coding. The verdict blocks on `requirements`-level or design-blocking gaps;
 advisory gaps are noted but don't block. Do **not** claim Ready to implement if any
@@ -118,3 +122,7 @@ Stage 2 — shared contract for every `fit-*` skill:
 - `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — dimensional rating
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`
 - `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

@@ -13,7 +13,7 @@ You are the {lens} lens. Read your agent definition for identity and calibration
 Context: {review | audit | plan | plan-assist}
 
 <knowledge>
-Read these docs under ${CLAUDE_PLUGIN_ROOT}/resources/ before reviewing — they hold
+Read these docs under {plugin_root}/resources/ before reviewing — they hold
 your detection heuristics (the "Violation smells" sections especially):
 {list from lens-catalog for this lens}
 {convention lens only: ALSO read repo standards at these paths FIRST — they override:
@@ -29,7 +29,7 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
 {For code: FILES + DIFF, or the file/path set for audit}
 {For plan: the document content + Document type: requirements | plan}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
- workspace paths for in-scope files}
+ workspace paths for in-scope files. <ref> = {reviewed_sha}}
 </scope>
 
 <output-contract>
@@ -37,10 +37,13 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
 e.g. .expectation-fit/runs/<run-id>/). The skill MUST bind run_artifact_dir = $RUN when it fills
 this template. This is NOT the published report path (Layer B).
 
-Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
+Return compact JSON per {plugin_root}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
 using the Write tool. Return ONLY the JSON — no prose.
+
+`line` is the 1-based line in the new file. Take it from `grep -n` or a Read
+(`git show <ref>:<path>` in remote scopes), never from a diff hunk header.
 
 EXCEPTION — Context: plan-assist is an advisory inline pass: do NOT write an artifact,
 and prose IS allowed (the deliverable is a checklist, not JSON). The artifact-write
@@ -53,6 +56,10 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 - `{run_artifact_dir}` — bind to the skill's resolved `$RUN` (Layer A scratch only).
   Never leave it unbound — a literal executor cannot invent the path. Do **not** bind
   this to the published report path.
+- `{plugin_root}`: the absolute plugin root. Before dispatch, replace each plugin-root
+  variable with the absolute plugin root. The harness does not substitute reference
+  files, so a lens prompt must never carry a literal plugin-root variable.
+- `{reviewed_sha}`: `fit-review` binds its pinned `REVIEWED_SHA` (remote scopes).
 - `{lens}`, `{standards_paths}`, intent, scope — as shown in the template.
 
 ## Shared confidence rubric (all lenses)

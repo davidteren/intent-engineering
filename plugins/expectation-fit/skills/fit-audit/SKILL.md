@@ -76,7 +76,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only).
+`run_artifact_dir = $RUN` (Layer A only) and `plugin_root = $PLUGIN_ROOT`.
 
 Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
 pass `model: sonnet` to convention, experience, and architecture; let predictability
@@ -110,8 +110,10 @@ just needs the merged per-lens return.
 ## Stage 5 — Report
 
 Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
-stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Sections: Header (per
+report-template, with the Provenance line; append `; <N> commits ahead of <default>`
+from `git rev-list --count <default>..HEAD`, where `<default>` is the remote default
+branch, the same base `fit-review` detects), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
 each lens failed/skipped/clean, Config line), Verdict = the **top 3 posture gaps to fix first** with
 why. Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
@@ -135,3 +137,7 @@ Stage 1 — shared contract for every `fit-*` skill:
 - `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — audit scoring
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`
 - `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

@@ -29,6 +29,22 @@ for the design see **PLAN.md**.
   legacy single-bucket mode is gone: a top-level `report_dir` is now an alias for
   `artifacts.report_dir`, and `/fit-setup upgrade` carries it over. `/fit-setup`
   question 6 warns that reports under a published `docs/` site are public.
+- **Reports name the plugin copy and the reviewed commit (#45).** Version is now 0.9.0 in
+  `plugin.json` and `marketplace.json`, so installs leave the stale 0.8.0 cache; the
+  plugin README has an Upgrade section. `report-template.md` defines one `Provenance:`
+  line (plugin version and root, repo, branch, commit, dirty flag, run id) that every
+  review, audit and plan report carries, plus matching `mode:agent` JSON keys. A
+  published report is a point-in-time record: later status goes in a dated addendum,
+  and Applied names the real fix SHA. `completed_at` carries a UTC offset. Lens prompts
+  get the absolute plugin root through a `{plugin_root}` slot instead of a literal
+  variable. Lenses take `line` from `grep -n` or a Read, and orchestrators check each
+  line against its evidence quote before dedup (unverified lines go to Coverage).
+  `fit-review` pins `REVIEWED_SHA` and `BASE_SHA` in Stage 1, diffs remote scopes
+  against the pinned commit, treats the current branch as `local-aligned` when
+  `origin/<branch>` is an ancestor of HEAD, and skips apply when HEAD moved.
+  `fit-audit` shows commits ahead of the default branch; `fit-validate-plan` warns when
+  the checkout is behind its upstream. The Grok workflow resolves one absolute plugin
+  root (or pauses), and its report carries the Provenance and `Runtime:` lines.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
