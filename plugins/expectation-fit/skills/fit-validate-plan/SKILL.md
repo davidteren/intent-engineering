@@ -82,7 +82,8 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 
 1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
    with Context: plan. No apply, because the input is a doc.
-2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
+2. Build the dimensional rating table (scoring rubric) from lenses with status
+   `clean` or `ok`: `Lens |
    Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
    actionable gaps.
 3. Collect tensions (e.g. simplicity vs convention in the proposed approach) and
@@ -93,11 +94,11 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
 type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
-with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
+with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens status per the report-template Lens status table),
 Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
 before coding. The verdict blocks on `requirements`-level or design-blocking gaps;
-advisory gaps are noted but don't block. Do **not** claim Ready to implement if any
-selected lens **failed**. No time estimates.
+advisory gaps are noted but don't block. Do **not** claim Ready to implement when a lens status or a
+partial read blocks it. No time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when

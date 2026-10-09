@@ -34,7 +34,10 @@ your detection heuristics (the "Violation smells" sections especially):
 
 <scope>
 Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
-{For code: FILES + DIFF, or the file/path set for audit}
+{For code review: FILES, the diff file path ($RUN/diff.patch), its line count and the
+ `git diff --stat` output. For audit: the file/path set}
+Read the diff file with offset and limit, page by page, to its last line, tests
+included. Name any part you did not read.
 {For plan: the document content + Document type: requirements | plan}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
  workspace paths for in-scope files}
@@ -49,6 +52,9 @@ Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
 Compact means merge-tier fields only. Leave why_it_matters and evidence out of the reply.
 They go only in the file.
+Your first observation is "READ: <what you read> of <what you were given>", for
+example "READ: lines 1-1734 of diff.patch (1734 lines), 12 of 12 files". The
+convention lens also names the standards files it read.
 Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
 using the Write tool. Write and fix that file only with the Write tool, never with a
@@ -116,7 +122,7 @@ remote scopes.
   `tension` field and present the trade-off — do not pick a side as if it were
   settled.
 - **Show the config.** The convention and architecture lenses start their observations
-  with `Config: <source>`. If a project `.expectation-fit/` (or legacy `.intense/`)
+  with `Config: <source>`, right after the READ line. If a project `.expectation-fit/` (or legacy `.intense/`)
   exists but the prompt did not pass its resolved values, that line names it as not
   applied.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.

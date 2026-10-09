@@ -275,6 +275,7 @@ fn lens_prompt(target, plugin_root, lens_id, agent_file, docs, hunts, base_ref, 
     p += "Do not write any file. The orchestrator stores your return as Layer A scratch.\n";
     p += "If the target is a git ref or diff range, run git diff / git show yourself. Do not only read the current workspace.\n";
     p += "An empty findings list is valid only after you have inspected the target.\n";
+    p += "Your first observation is READ: <what you read> of <what you were given>. Page a long diff to its last line, tests included. Name any part you did not read.\n";
     p += "At most 8 findings. Name the broken expectation. Concrete suggested_fix.\n";
     p += "Skip formatter/linter nits. Flag principle tensions instead of picking a side.\n";
     p += "</output-contract>\n";
@@ -335,7 +336,7 @@ if base_ref != () && base_ref != "" {
     cfg_prompt += base_ref;
     cfg_prompt += "\n";
 }
-cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs — prose, not silent omit).\n";
+cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs, and one selection reason per catalog lens — prose, not silent omit).\n";
 cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience on only for a user-facing surface or lenses.experience=on. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += "Use read_file and grep. Do not guess a stack that the catalog does not list.\n";
 
@@ -672,6 +673,20 @@ for f in verified {
     else { rejected.push(#{ finding: f, why: "below_confidence_gate" }); }
 }
 log(confirmed.len().to_string() + "/" + capped.len().to_string() + " findings survived verification and the confidence gate");
+
+// Status words follow the report-template Lens status table: after the gate, a lens
+// with reported findings is "ok", not "clean".
+let si = 0;
+for s in statuses {
+    if s.status == "clean" {
+        let n = 0;
+        for f in confirmed {
+            for lid in f.lenses { if lid == s.lens { n += 1; } }
+        }
+        if n > 0 { statuses[si].status = "ok"; }
+    }
+    si += 1;
+}
 
 let any_failed = false;
 let selected_skipped = false;

@@ -91,7 +91,8 @@ just needs the merged per-lens return.
 
 1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
    with Context: audit. No apply, because audit is read-only.
-2. Assemble the **posture table** from each **clean** lens's `scores` (read
+2. Assemble the **posture table** from the `scores` of each lens with status `clean`
+   or `ok` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the
    product. Omit or mark failed lenses rather than inventing scores.
@@ -108,8 +109,8 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
 stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
-each lens failed/skipped/clean, Config line), Verdict = the **top 3 posture gaps to fix first** with
-why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
+each lens status per the report-template Lens status table, Config line), Verdict = the **top 3 posture gaps to fix first** with
+why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear when a lens status or a partial read blocks it. No apply,
 no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from

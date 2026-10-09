@@ -619,6 +619,20 @@ Dir[File.join(PLUGIN, "skills", "fit-*", "SKILL.md")].sort.each do |abs|
   end
 end
 
+# Lens status words (issue #46): every word the Grok runtime sets has a row in the
+# report-template Lens status table, so both runtimes speak the same five words.
+status_rows = report_tpl.scan(/^\s*\|\s*`([a-z_]+)`\s*\|/).flatten
+grok_path = File.expand_path("../.grok/workflows/fit-review.rhai", __dir__)
+if File.file?(grok_path)
+  grok_words = File.read(grok_path).scan(/(?:status:\s*|status\s*=\s*|lens_status\s*=\s*)"([a-z_]+)"/).flatten.uniq
+  missing = grok_words - status_rows
+  if missing.empty?
+    ok "Grok status words #{grok_words.sort.inspect} all have a Lens status row"
+  else
+    bad "report-template.md Lens status table missing Grok status word(s): #{missing.join(', ')}"
+  end
+end
+
 # ---------------------------------------------------------------------------
 section "12. Skill evals (behavioral contracts, incl. refusal cases)"
 

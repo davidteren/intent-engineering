@@ -128,6 +128,11 @@ Override the published path with `out:<path>`. Configure permanently via
 `artifacts.*` in `.expectation-fit/ways-of-working.yaml`. Pass `mode:agent` for a single JSON
 object (also written under the publish dir as `.json`) for programmatic callers.
 
+One run is a sample. A second run can find defects the first run missed, so "No findings
+surfaced in this pass" is not proof of none. A lens takes seconds to two minutes on a
+small diff, and up to 50 minutes at maximum effort. When the harness reports times,
+Coverage shows them in a Cost line.
+
 ## Install
 
 ```

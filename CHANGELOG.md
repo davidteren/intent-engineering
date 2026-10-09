@@ -8,6 +8,15 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **Reports no longer look cleaner or more complete than the run was (#46).** The Lens
+  status table in `references/report-template.md` gives each word one meaning and adds
+  `ok` (ran, findings shown) next to `clean` (ran, no finding shown); `skipped` now means
+  only "selected but could not analyze", and `not_selected` covers the rest. Both
+  runtimes set `clean` or `ok` after the confidence gate. The all-clear line reads "No
+  findings surfaced in this pass", the Header names every catalog lens with a reason,
+  Coverage prints a READ line per lens and an optional Cost line, and a partial read
+  blocks the all-clear line and Ready. `fit-review` hands the diff to lenses as
+  `$RUN/diff.patch`. `check-contracts.rb` checks that every Grok status word has a row.
 - **Lens runs without subagents or file writes have rules, and reports show how lenses ran (#43).**
   `references/subagent-template.md` now names the agent to dispatch per lens
   (`expectation-fit:fit-<lens>-reviewer`, or a general agent that reads the agent file),

@@ -39,41 +39,58 @@ monotonic across the whole report.
 
 ## Report sections (in order)
 
-1. **Header** — scope, intent, context (review/audit/plan), lens team with the
-   one-line reason for each conditional lens, and `Execution: subagents | single-agent`.
+1. **Header** — scope, intent, context (review/audit/plan), `Execution: subagents |
+   single-agent`, and the lens team: every catalog lens with its selection and a
+   one-line reason, for example `experience: not_selected, no user-facing paths in scope`.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
    Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
    not in the severity tables.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
-   Omit empty severities. **All-clear is allowed only when every *selected* lens is
-   `clean` (not failed, not skipped-as-selected).** If severities are empty and all
-   selected lenses are clean, do NOT drop the section — render:
-   `No findings — all selected lenses returned clean (N lenses, M files reviewed).`
-   In a single-agent run, the line ends with `(N lenses in one agent, M files reviewed).`
-   and set Verdict to Ready / Healthy. If any selected lens **failed**, do **not** use
-   that all-clear line; state which lenses failed and set Verdict accordingly (review:
-   Not ready or Ready with fixes; plan: Revise first). (In `mode:agent`, empty
-   `findings` with a clean verdict is valid only when lens statuses are all clean.)
+   Omit empty severities. **The all-clear line is allowed only when every selected lens
+   is `clean` and read all of its scope** (see Lens status below). If severities are
+   empty and that holds, do NOT drop the section. Render:
+   `No findings surfaced in this pass (N lenses, M files reviewed).`
+   In a single-agent run, render:
+   `No findings surfaced in this pass (N lenses in one agent, M files reviewed).`
+   Then set Verdict to Ready / Healthy. One run is a sample: a second run can surface
+   what this one missed. If a status or a partial read blocks the all-clear line, do
+   **not** use it. State which lenses and why, and set Verdict accordingly (review: Not
+   ready or Ready with fixes; plan: Revise first). (In `mode:agent`, empty `findings`
+   with a clean verdict is valid only under the same rule.)
 4. **Posture** *(audit & plan only)* — the scoring table from `scoring-rubric.md`,
-   lowest scores first (from clean lenses only).
+   lowest scores first, from lenses with status `clean` or `ok`.
 5. **Tensions** — any findings carrying a `tension`: name the two principles in
    conflict and the trade-off, so the user decides rather than the tool dictating.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), confidence suppressions by anchor, and **per-lens status**:
-   - **failed** — non-JSON return, missing `$RUN/{lens}.json`, missing required
-     `scores` in audit/plan, a returned `lens` that differs from the dispatched lens, or
-     harness error after optional one re-dispatch.
-   - **skipped** — not selected, or architecture pack absent (catalog ⬜ / no pack);
-     promote `SKIPPED:` observations from the architecture agent here. Not the same
-     as clean empty findings.
-   - **clean** — valid return, analyzed, zero findings remaining after the confidence
-     gate (or findings present and listed).
+   remote-mode limits), confidence suppressions by anchor, and:
+   - **Lens status** for every catalog lens, with the words in the table below.
+   - **READ lines.** One per lens, copied from the lens's first observation
+     (`READ: <what you read> of <what you were given>`). A READ line that shows a
+     partial read blocks the all-clear line and Ready.
+   - **Cost**, one line, when the harness reports numbers: each lens's wall time, its
+     tokens when known, and the session model. Leave the line out when the harness
+     gives no numbers.
+
+   **Lens status.** Each word has one meaning. Set `clean` or `ok` after the
+   confidence gate.
+
+   | Status | Meaning | Blocks the all-clear line and Ready |
+   |---|---|---|
+   | `clean` | Ran. The report shows no finding from this lens. | No |
+   | `ok` | Ran. The report shows N findings from this lens, applied fixes included. Coverage writes "ok, N findings". | No. The findings set the verdict. |
+   | `failed` | Non-JSON return, missing `$RUN/{lens}.json`, missing required `scores`, a returned `lens` that differs from the dispatched lens, or a harness error (after the optional one re-dispatch). | Yes |
+   | `skipped` | Selected, but it could not analyze. Example: no architecture pack (a `SKIPPED:` observation). | Yes |
+   | `not_selected` | Auto-selection, config or a `lenses:<list>` token did not pick it. The Header gives the reason. | No |
+
+   Ready here means Ready (review), Healthy (audit) and Ready to implement (plan).
 8. **Verdict** — review: Ready / Ready with fixes / Not ready. audit: top 3 posture
    gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps.
-   **Never** Ready / all-clear / Ready to implement when any selected lens **failed**.
+   **Never** Ready / all-clear / Ready to implement when a lens status or a partial
+   read blocks it (see Lens status).
 
-No time estimates. No praise. Every finding actionable.
+No time estimates. Measured times in the Cost line are measurements, not estimates. No
+praise. Every finding actionable.
 
 ## Merge and gate
 
@@ -81,7 +98,7 @@ No time estimates. No praise. Every finding actionable.
 this order. Each step runs in every context unless its mark says otherwise. Read
 `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for the field rules.
 
-1. **Validate and repair.** Assign each lens a status (see Coverage). Mark the lens
+1. **Validate and repair.** Assign each lens a status (see Lens status under Coverage). Mark the lens
    **failed** on a non-JSON return, a missing `$RUN/{lens}.json`, a returned `lens`
    that differs from the dispatched lens, or a selected lens that never returned. One re-dispatch is allowed on a non-JSON return; a lens that is
    still non-JSON after that is failed. Repair off-schema findings; do not drop them:
@@ -234,8 +251,8 @@ Field rules:
   audit and plan.
 - `rejected` lists every finding that the merge did not report (see Coverage).
 - `coverage.execution` is `subagents` or `single-agent`.
-- `coverage.lens_status` has one key per catalog lens, with the status words from
-  Coverage.
+- `coverage.lens_status` has one key per catalog lens, with the words from the Lens
+  status table.
 - `coverage.repairs` lists each repair and each drop from Merge and gate step 1, by lens
   and title.
 

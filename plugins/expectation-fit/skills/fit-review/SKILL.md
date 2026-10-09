@@ -109,8 +109,9 @@ For the convention and architecture lenses, find standards paths first: Glob
 `**/CLAUDE.md` and `**/AGENTS.md` whose directory is an ancestor of a changed file; pass
 them in `<standards-paths>`. Also pass the resolved `.expectation-fit` conventions/notes.
 
-Announce the lens team with a one-line reason for each conditional lens before
-dispatching. This is progress reporting, not a confirmation prompt.
+Before dispatching, announce every catalog lens with its selection and a one-line
+reason, for example `experience: not_selected, no user-facing paths in scope`. This is
+progress reporting, not a confirmation prompt.
 
 ## Stage 4 — Dispatch
 
@@ -127,6 +128,10 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
 Bind **`run_artifact_dir = $RUN`** (Layer A only).
 
+Write the Stage 1 `DIFF` to `$RUN/diff.patch`. Pass each lens that path, its line count
+and `git diff --stat $BASE`, not the diff inline. A large diff then never gets cut off
+in the lens prompt.
+
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
 convention, experience, and **architecture**; let predictability and simplicity inherit
@@ -138,7 +143,7 @@ capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.js
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape (including
-**Lens status**: failed / skipped / clean).
+**Lens status**).
 
 Run steps 1 to 6 of **Merge and gate** in
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` (validate and repair, dedup,
@@ -162,9 +167,10 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
 verdict, completed_at in the Header. Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
-lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
-selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
-ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
+lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (the status of
+every catalog lens per the report-template Lens status table, READ lines, Cost), Verdict
+(Ready / Ready with fixes / Not ready). **Do not** use Ready / all-clear when a lens
+status or a partial read blocks it. No time
 estimates. Every finding actionable.
 
 **mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,

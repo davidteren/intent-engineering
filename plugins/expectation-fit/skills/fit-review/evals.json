@@ -20,6 +20,11 @@
       "id": 4,
       "prompt": "fit-review (dirty tree with uncommitted user work)",
       "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-review mode:agent where predictability returns two findings above the gate and simplicity returns none",
+      "expected_output": "coverage.lens_status shows predictability as ok and simplicity as clean. It never shows clean next to a lens that has findings in the report, and it never uses skipped for a lens that auto-selection did not pick (that is not_selected)."
     }
   ]
 }
