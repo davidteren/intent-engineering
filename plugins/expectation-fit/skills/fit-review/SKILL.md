@@ -22,15 +22,19 @@ report in scratch and no apply.
 Parse `$ARGUMENTS`; strip recognized tokens before treating the remainder as a PR
 number/URL or branch.
 
+`out:`, `prior:` and `lenses:` are shared tokens, defined once in
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Shared tokens). Their rows below
+list only this skill's difference.
+
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). Outside-repo only when explicitly given. |
+| `out:<path>` | Shared token. Outside-repo only when explicitly given. |
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. To re-review after fix commits, pass the head_sha of the last report (local checkout only). |
-| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
+| `prior:<report-path>` | Shared token. Never changes the diff range. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). Its decision lines go verbatim, with their ids, to every lens in `<known-context>` (Stage 2). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
-| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
+| `lenses:<list>` | Shared token. |
 
 ## Operating principles
 
@@ -96,7 +100,10 @@ report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:age
 with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
 Findings line:
 `Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
-Set the verdict to Ready, and stop. This stop comes before lens selection, so a lens set
+Set the verdict to Ready only when `UNTRACKED` is also empty. When `UNTRACKED` is not
+empty, give no Ready verdict: use Not ready. In `mode:agent`, reply with `status`
+`failed` and `reason` "No tracked changes; <N> untracked files not reviewed". Then
+stop. This stop comes before lens selection, so a lens set
 to `on` does not run.
 
 **Plan-only diff.** Hand off when no changed file is code and at least one is a plan,
@@ -108,11 +115,12 @@ working tree is the reviewed tree. To hand off, say: "No code in this diff; runn
 fit-validate-plan instead." Run `fit-validate-plan` once on all changed docs, with the
 same `mode:agent`, `out:`, `config:` and `lenses:` tokens. Its report and verdict are the
 result of this run. Write no review report. In `mode:agent`, the reply keeps the plan
-verdict words (Ready to implement / Revise first). In `pr-remote` and `branch-remote`
+verdict words (Ready to implement / Revise first) and sets `handoff` to
+`"fit-validate-plan"`. In `pr-remote` and `branch-remote`
 scopes, do not hand off, because fit-validate-plan reads the working tree, not
 `$REVIEWED_SHA`. Instead stop and say: "No code in this diff. Check out <branch> and run
-fit-validate-plan on: <docs>." Write no review report; in `mode:agent`, reply with
-`status` `failed` and that message as `reason`.
+fit-validate-plan on: <docs>." Write no review report. In `mode:agent`, reply with
+`status` `skipped`, that message as `reason`, and `handoff` set to `"fit-validate-plan"`.
 
 Also capture **`TREE_CLEAN`**: `git status --porcelain` empty at this moment (before any
 write). Stage 5 uses this flag for the optional commit (do not re-check after apply).
@@ -242,7 +250,10 @@ hit, keep the finding and list its line as unverified in Coverage. Then:
    `fix(fit-review): <summary>` commit and record its real SHA
    (`git rev-parse --short HEAD`) for Applied; if it was false, apply but leave
    uncommitted. Set each finding's Status at run time: `fixed <sha>` for applied ones,
-   `declined: <reason>` for push-backs and skipped taste calls, else `open`.
+   `declined: <reason>` only for an explicit owner or caller decision, else `open`. A
+   skipped taste call or conflicting suggestion stays `open`, and its Issue ends with
+   "(not applied: taste call)". A finding the run believes is wrong goes to Rejected
+   with why `not_real`.
    The `fix(fit-review)` commit holds only fixes that pass this gate. A caller that fixes
    other findings commits those fixes separately, after this skill reports.
 

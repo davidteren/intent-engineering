@@ -39,7 +39,9 @@ PLUGIN_VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$PLUGIN_ROOT/.clau
 REPO_ROOT=$(git rev-parse --show-toplevel)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)        # fit-review remote scopes: the reviewed branch
 REVIEWED_SHA=${REVIEWED_SHA:-$(git rev-parse --short HEAD)}
-[ -z "$(git status --porcelain)" ] && TREE_CLEAN=true || TREE_CLEAN=false
+# TREE_CLEAN: fit-review reuses its Stage 1 value. Do not recompute it there.
+# fit-audit and fit-validate-plan capture it once here, before any write:
+# [ -z "$(git status --porcelain)" ] && TREE_CLEAN=true || TREE_CLEAN=false
 COMPLETED_AT=$(date +%Y-%m-%dT%H:%M:%S%z)       # local time with UTC offset; STAMP stays local
 ```
 
@@ -173,8 +175,10 @@ this order. Each step runs in every context unless its mark says otherwise. Read
    and any other change the orchestrator makes to a lens's severity or confidence, under
    Re-grades with its reason. Never change them silently.
 2. **Dedup.** Merge findings in the same file within 3 lines that describe the same
-   defect, even when their titles differ. Keep the highest severity and the highest
-   confidence. Show each lens with its own severity and title. Keep `gated_auto` only
+   defect, even when their titles differ. Keep each copy's severity and confidence
+   together. Keep the highest-severity copy whose confidence passes the gate. If no copy
+   passes, keep the highest-severity copy with its own confidence. Log the choice under
+   Re-grades. Show each lens with its own severity and title. Keep `gated_auto` only
    when every copy has it; otherwise use the strictest class of the copies.
 3. **Cross-lens agreement.** Note the agreeing lenses. Agreement does not raise
    confidence: one agent can play several lenses, so two lenses on one defect at 50
@@ -230,6 +234,7 @@ Complete example (a review run without `out:`):
 {
   "status": "complete",
   "reason": null,
+  "handoff": null,
   "context": "review",
   "verdict": "Not ready",
   "completed_at": "2026-10-09T14:32:05+0200",
@@ -317,7 +322,7 @@ Complete example (a review run without `out:`):
 }
 ```
 
-**mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
+**mode:agent fields:** `status`, `reason`, `handoff`, `context`, `verdict`, `completed_at`, `run_id`,
 `scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
 `lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
 `observations`, `coverage.execution`, `coverage.lens_status`, `coverage.regrades`,
@@ -326,8 +331,11 @@ Complete example (a review run without `out:`):
 
 Field rules:
 
-- `status` is `complete` or `failed`. When it is `failed`, `reason` says why in one
+- `status` is `complete`, `failed` or `skipped`. `skipped` means the run reviewed
+  nothing by design. When it is `failed` or `skipped`, `reason` says why in one
   sentence. Otherwise `reason` is `null`.
+- `handoff` is `"fit-validate-plan"` when a review run hands the work to that skill.
+  Otherwise it is `null`.
 - `completed_at` is an ISO 8601 local time with its UTC offset
   (`date +%Y-%m-%dT%H:%M:%S%z`). Report file names keep the local `STAMP`.
 - Provenance keys (see Provenance line): `plugin_version`, `plugin_root`, `repo_root`,

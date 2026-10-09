@@ -145,7 +145,7 @@ Coverage shows them in a Cost line.
 
 Then the `/fit-*` skills and `fit-*-reviewer` agents are available.
 
-## Upgrade
+## Update the plugin
 
 Claude Code updates a plugin only when its `version` changes. To pull a new release:
 
@@ -173,18 +173,21 @@ Version 0.9.0 renames the plugin. Old names map to new names as follows:
 | `/ie-init` | `/fit-setup` |
 | `ie-<lens>-reviewer` agents | `fit-<lens>-reviewer` agents |
 | `intent-engineering@intent-engineering-marketplace` | `expectation-fit@expectation-fit-marketplace` |
-| `.intense/` config folder | `.expectation-fit/` (the legacy `.intense/` is still read) |
-| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (the legacy variable is still read) |
+| `.intense/` config folder | `.expectation-fit/` (legacy `.intense/` still read through 0.9.x; removal planned for 1.0) |
+| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (legacy variable still read through 0.9.x; removal planned for 1.0) |
 | Reports in a tracked folder by default | Reports default to `.expectation-fit/reports/` (git-ignored) |
 
 To switch an existing install:
 
 ```
-/plugin marketplace remove intent-engineering-marketplace
 /plugin marketplace add https://github.com/davidteren/intent-engineering
-/plugin install expectation-fit
+/plugin install expectation-fit@expectation-fit-marketplace
 /plugin uninstall intent-engineering@intent-engineering-marketplace
+/plugin marketplace remove intent-engineering-marketplace
+/reload-plugins
 ```
+
+On success, `/fit-review` is listed and `/ie-review` is gone.
 
 Then run `/fit-setup upgrade` to move `.intense/` to `.expectation-fit/`.
 

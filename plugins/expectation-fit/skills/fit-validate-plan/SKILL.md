@@ -13,14 +13,18 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 
 ## Argument parsing
 
+`out:`, `prior:` and `lenses:` are shared tokens, defined once in
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Shared tokens). Their rows below
+list only this skill's difference.
+
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON; no interactive routing. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
-| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Turns the run into a re-check: each prior gap is marked closed or still open. |
+| `out:<path>` | Shared token. |
+| `prior:<report-path>` | Shared token. Turns the run into a re-check: each prior gap is marked closed or still open. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
-| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
-| remainder | Path to the document, or several paths. Several paths form one set: one run, one report, with one flow per document inside it. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
+| `lenses:<list>` | Shared token. |
+| remainder | Path to the document, or several paths. Several paths form one set: one run, one report, with one flow per document inside it. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. In `mode:agent`, reply with status `failed` and reason "No plan document given or found under docs/plans/ or docs/brainstorms/." |
 
 If you get several documents, one run accepts the whole set: one run id and one report.
 Inside that run, run one flow per document: one lens dispatch per document and one

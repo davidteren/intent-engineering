@@ -1,5 +1,8 @@
 # expectation-fit
 
+> Formerly intent-engineering (0.8.x). The `/ie-*` skills are now `/fit-*`. See
+> [Upgrading from intent-engineering](plugins/expectation-fit/README.md#upgrading-from-intent-engineering).
+
 [![contracts](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg)](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Listed on ClaudePluginHub](https://www.claudepluginhub.com/badge/davidteren-intent-engineering-plugins-intent-engineering)](https://www.claudepluginhub.com/plugins/davidteren-intent-engineering-plugins-intent-engineering?ref=badge)
@@ -126,7 +129,7 @@ the plugin defaults (`config/defaults/`):
 
 **Multi-repo:** put one shared `.expectation-fit/` at the workspace root and set
 `conventions.auto.roots` to sibling apps; child cwds inherit via walk-up.
-**Upgrade:** `/fit-setup upgrade` merges missing capabilities only (does not wipe notes).
+**Upgrade project config:** `/fit-setup upgrade` merges missing capabilities only (does not wipe notes).
 
 Merge rule: project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
 The `conventions` block has `extends`; pattern lists are replace-only. See

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **intent-engineering**. Format follows
+All notable changes to **expectation-fit** (formerly intent-engineering). Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
@@ -23,8 +23,8 @@ new names as follows:
 | `/ie-init` | `/fit-setup` |
 | `ie-<lens>-reviewer` agents | `fit-<lens>-reviewer` agents |
 | `intent-engineering@intent-engineering-marketplace` | `expectation-fit@expectation-fit-marketplace` |
-| `.intense/` config folder | `.expectation-fit/` (the legacy `.intense/` is still read) |
-| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (the legacy variable is still read) |
+| `.intense/` config folder | `.expectation-fit/` (legacy `.intense/` still read through 0.9.x; removal planned for 1.0) |
+| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (legacy variable still read through 0.9.x; removal planned for 1.0) |
 | Reports in a tracked folder by default | Reports default to `.expectation-fit/reports/` (git-ignored) |
 
 ### Fixed

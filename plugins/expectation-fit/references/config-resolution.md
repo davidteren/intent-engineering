@@ -207,7 +207,9 @@ procedure prevents.
 **Legacy folder.** Before the rename (0.9.0) the folder was `.intense/` and the env var was
 `INTENSE_CONFIG_DIR`. Both still work for at least one release. At each level the walk-up
 checks `.expectation-fit/` first, then `.intense/`. When the legacy folder wins, Coverage
-says so and suggests `/fit-setup upgrade` to move it.
+says so and suggests `/fit-setup upgrade` to move it. When `.expectation-fit/` wins and a
+sibling `.intense/` at the same level also holds one of the three yaml files, Coverage
+says the legacy folder is ignored and names its files.
 
 ```bash
 # Resolve PROJECT_CONFIG (directory containing at least one of the three yaml files)
@@ -274,6 +276,13 @@ else
 fi
 case "$PROJECT_CONFIG" in
   */.intense) CONFIG_SOURCE="$CONFIG_SOURCE (legacy folder; run /fit-setup upgrade to move it to .expectation-fit/)" ;;
+  */.expectation-fit)
+    LEGACY="$(dirname "$PROJECT_CONFIG")/.intense"
+    IGNORED=""
+    for f in ways-of-working.yaml patterns.yaml thresholds.yaml; do
+      [ -f "$LEGACY/$f" ] && IGNORED="${IGNORED:+$IGNORED, }$f"
+    done
+    [ -n "$IGNORED" ] && CONFIG_SOURCE="$CONFIG_SOURCE (legacy .intense/ also present and ignored: $IGNORED; run /fit-setup upgrade)" ;;
 esac
 DEFAULTS="${CLAUDE_PLUGIN_ROOT}/config/defaults"
 # Always record for Coverage (required: never silent about source):
@@ -347,6 +356,17 @@ Nested maps merge recursively at every depth. Only lists replace, unless the blo
 | `report_dir` *(legacy)* | skills | alias for `artifacts.report_dir` (see Artifact paths). Run scratch still uses `artifacts.run_dir`. |
 | `patterns.preferred/allowed/blocked/approved/unknown_pattern` | `fit-architecture-reviewer` | preferred-over (instead_of), classify, flag blocked-in-changed-code, suppress approved, raise unknown |
 | `thresholds.*` | `fit-architecture-reviewer` | metric limits for structural smells |
+
+## Shared tokens
+
+`fit-review`, `fit-audit` and `fit-validate-plan` give these tokens one meaning. Each
+skill's argument table points here and lists only its own difference.
+
+| Token | Effect |
+|-------|--------|
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: Artifact paths below. |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`). It never changes what the run reads. |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 
 ## Artifact paths (orchestrators — shared)
 

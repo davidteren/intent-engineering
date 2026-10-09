@@ -13,13 +13,17 @@ surfaced first. This is a read-only assessment — it never edits code.
 
 ## Argument parsing
 
+`out:`, `prior:` and `lenses:` are shared tokens, defined once in
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Shared tokens). Their rows below
+list only this skill's difference.
+
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON instead of markdown. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
-| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
+| `out:<path>` | Shared token. |
+| `prior:<report-path>` | Shared token. Never changes the audit target. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
-| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
+| `lenses:<list>` | Shared token. |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target

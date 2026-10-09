@@ -181,9 +181,10 @@ restate it here. Observations are never applied. They stay in the Observations s
   win over generic ideals. A consistent repo-local choice is not a violation.
   Treat each project note (`conventions.notes`) as a limit. Do not suggest a change
   that breaks a note. Only the convention lens reports a broken note.
-- **Respect known context.** Do not ask to undo a known-context decision. If the
-  decision itself causes a defect, report it. Quote the decision in evidence, and name
-  it in `tension`.
+- **Respect settled decisions.** A settled decision is a `<known-context>` plan
+  decision, a `<prior>` fixed or declined row, or a decision the document marks
+  settled. Do not reopen one without new evidence. If you reopen one, quote it in
+  evidence, cite the new evidence or the prior #N, and name it in `tension`.
 - **Flag tensions, don't dogmatize.** When two principles conflict (DWIM vs
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were
@@ -192,10 +193,6 @@ restate it here. Observations are never applied. They stay in the Observations s
   with `Config: <source>`, right after the READ line. If a project `.expectation-fit/` (or legacy `.intense/`)
   exists but the prompt did not pass its resolved values, that line names it as not
   applied.
-- **Respect prior decisions.** Do not raise a prior fixed or declined item again
-  without new evidence. If you do, cite the evidence and name the prior #N.
-- **Respect settled decisions.** When the document marks a decision as settled, treat it
-  as settled. Reopen it only with new evidence.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
 - **No-change items go to observations.** When the honest fix is no change, a later
   decision, or something that does not exist yet, put the item in observations, not

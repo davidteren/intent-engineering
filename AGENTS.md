@@ -78,15 +78,15 @@ expectation-fit/                       dev repo + marketplace
   CHANGELOG.md                            dated change history + decisions
   .claude-plugin/marketplace.json         marketplace entry (install from repo root)
   scripts/check-contracts.rb              contract-integrity check (the one automated check)
-  docs/intent-engineering/             this repo's committed dogfood reports (runs pass out:)
+  docs/intent-engineering/             published reports from before the rename (history)
   docs/index.html                         GitHub Pages site
   .expectation-fit/runs/ + reports/    self-ignoring run scratch and local reports
   .grok/workflows/                        optional Grok runtime (not shipped in the plugin)
   plugins/expectation-fit/             THE INSTALLABLE PLUGIN (self-contained)
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
-    agents/      ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
-    skills/      ie-{init,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
+    agents/      fit-{predictability,convention,simplicity,experience,architecture}-reviewer.md
+    skills/      fit-{setup,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
     references/  findings-schema.json, subagent-template.md, lens-catalog.md,
                  stack-catalog.md, report-template.md, scoring-rubric.md,
                  principle-index.md, config-resolution.md   (the shared contract layer)
@@ -269,7 +269,7 @@ suppress a whole class of findings.
 
 Adding anything means updating its references in lockstep, or it's orphaned:
 
-- **New lens** → `agents/ie-<x>-reviewer.md` (with the full agent contract above) **and**
+- **New lens** → `agents/fit-<x>-reviewer.md` (with the full agent contract above) **and**
   add it to the `findings-schema.json` `lens` enum, a `lens-catalog.md` row,
   `scoring-rubric.md` dimensions, and `README.md`. Wire its selection into the skills.
 - **New framework doc** → `resources/frameworks/<stack>.md` (with a smells section +
