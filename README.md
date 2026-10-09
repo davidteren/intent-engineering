@@ -1,4 +1,4 @@
-# intent-engineering
+# expectation-fit
 
 [![contracts](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg)](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -6,7 +6,7 @@
 
 **Site:** [davidteren.github.io/intent-engineering](https://davidteren.github.io/intent-engineering/)
 
-A Claude Code plugin that enforces **intent engineering**: software — and the experience
+A Claude Code plugin that enforces **expectation fit**: software — and the experience
 around it — that behaves the way a reasonable developer or user already expects. It guards
 against *surprise* on both sides: hidden side effects and reinvented conventions in the
 **code**, and broken flows, weak interaction states, or dark patterns in the **UX**. It
@@ -29,12 +29,12 @@ concrete fixes.
 >
 > **How:** A small set of lenses (each grounded in a researched principle) run as parallel
 > agents. They return scored, deduplicated findings with concrete fixes, written to a
-> report under `docs/intent-engineering/`. The same lenses work in four contexts: planning, plan validation, code
+> report under `docs/expectation-fit/`. The same lenses work in four contexts: planning, plan validation, code
 > review, and codebase audit. Claude Code is the installable plugin. An optional Grok
 > review runtime lives in this repo under `.grok/workflows/`.
 
 > This is the **development repo** for the plugin (and its marketplace). The installable
-> plugin is self-contained under [`plugins/intent-engineering/`](plugins/intent-engineering/README.md).
+> plugin is self-contained under [`plugins/expectation-fit/`](plugins/expectation-fit/README.md).
 > Contributing? Read **[AGENTS.md](AGENTS.md)** first.
 
 ---
@@ -43,12 +43,12 @@ concrete fixes.
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
-| `/ie-init` | a repo or multi-repo workspace | Setup/upgrade wizard for `.intense/` (placement, auto sources, severity align, pattern preference, thresholds). Modes: fresh, upgrade, calibrate. |
-| `/ie-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
-| `/ie-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
-| `/ie-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
-| `/ie-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
-| `/ie-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
+| `/fit-setup` | a repo or multi-repo workspace | Setup/upgrade wizard for `.expectation-fit/` (placement, auto sources, severity align, pattern preference, thresholds). Modes: fresh, upgrade, calibrate. |
+| `/fit-plan-assist` | a planning draft / an approach you're weighing | An advisory checklist of the principle decisions to get right *now*, tailored to the work. Non-blocking. |
+| `/fit-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
+| `/fit-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode applies safe, verified fixes (never pushes). |
+| `/fit-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
+| `/fit-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
 
 ---
 
@@ -56,11 +56,11 @@ concrete fixes.
 
 | Lens (agent) | Principles | Hunts for |
 |--------------|-----------|-----------|
-| **Predictability** (`ie-predictability-reviewer`) | least-astonishment, DWIM, WYSIWYG | Name/behavior mismatch, hidden side effects, surprising returns, inconsistent branch returns, silent failures, controls that don't do what their label implies, preview/state divergence |
-| **Convention** (`ie-convention-reviewer`) | convention-over-configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure/naming. *Reads your repo's `CLAUDE.md`/`AGENTS.md` first — local conventions win.* |
-| **Simplicity** (`ie-simplicity-reviewer`) | Occam, KISS, YAGNI | Needless abstraction, premature generality, knobs nobody sets, layers that don't earn their keep. Also guards against over-simplifying away real requirements. |
-| **Experience** (`ie-experience-reviewer`) | HIG, look-and-feel, UX | Missing interaction states, non-semantic controls, form/destructive feedback gaps, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design. Greppable smells in `ux-interaction-smells.md`. User-facing surfaces only. |
-| **Architecture** (`ie-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.intense/` allow/block/approved policy. Framework-specific (Rails, Python (FastAPI), Laravel, Express, Phoenix, React today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix). |
+| **Predictability** (`fit-predictability-reviewer`) | least-astonishment, DWIM, WYSIWYG | Name/behavior mismatch, hidden side effects, surprising returns, inconsistent branch returns, silent failures, controls that don't do what their label implies, preview/state divergence |
+| **Convention** (`fit-convention-reviewer`) | convention-over-configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure/naming. *Reads your repo's `CLAUDE.md`/`AGENTS.md` first — local conventions win.* |
+| **Simplicity** (`fit-simplicity-reviewer`) | Occam, KISS, YAGNI | Needless abstraction, premature generality, knobs nobody sets, layers that don't earn their keep. Also guards against over-simplifying away real requirements. |
+| **Experience** (`fit-experience-reviewer`) | HIG, look-and-feel, UX | Missing interaction states, non-semantic controls, form/destructive feedback gaps, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture, AI-slop design. Greppable smells in `ux-interaction-smells.md`. User-facing surfaces only. |
+| **Architecture** (`fit-architecture-reviewer`) | structural quality, design patterns | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter. Classifies design-pattern instances against a per-stack catalog, raises unidentified patterns, enforces your `.expectation-fit/` allow/block/approved policy. Framework-specific (Rails, Python (FastAPI), Laravel, Express, Phoenix, React today), code/audit only; heuristic-first, optionally enriched by `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel), `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix). |
 
 Every finding names the **broken expectation** (not just "this is surprising"), carries a
 confidence anchor, and proposes a concrete fix. When two principles conflict (e.g. DWIM's
@@ -71,7 +71,7 @@ presents the trade-off rather than dictating.
 
 ## Source principles (the knowledge base)
 
-The lenses are grounded in researched docs under `plugins/intent-engineering/resources/`,
+The lenses are grounded in researched docs under `plugins/expectation-fit/resources/`,
 each with a definition, origin, core tenets, **violation smells** (the lens's detection
 checklist), good vs bad examples, how-to-apply, and cited sources.
 
@@ -109,9 +109,9 @@ pattern instances.
 
 ---
 
-## Configuration (`.intense/`)
+## Configuration (`.expectation-fit/`)
 
-Run `/ie-init` to set up or upgrade project config under `.intense/` (monolith or shared
+Run `/fit-setup` to set up or upgrade project config under `.expectation-fit/` (monolith or shared
 workspace config for multi-repo stacks), then commit it. Project config **supersedes**
 the plugin defaults (`config/defaults/`):
 
@@ -124,9 +124,9 @@ the plugin defaults (`config/defaults/`):
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
   service object, …).
 
-**Multi-repo:** put one shared `.intense/` at the workspace root and set
+**Multi-repo:** put one shared `.expectation-fit/` at the workspace root and set
 `conventions.auto.roots` to sibling apps; child cwds inherit via walk-up.
-**Upgrade:** `/ie-init upgrade` merges missing capabilities only (does not wipe notes).
+**Upgrade:** `/fit-setup upgrade` merges missing capabilities only (does not wipe notes).
 
 Merge rule: project overrides global key-by-key; lists replace (the `conventions` block can
 opt into append via `extends: true`; pattern lists are replace-only). See
@@ -137,61 +137,61 @@ opt into append via `extends: true`; pattern lists are replace-only). See
 ## Grok (optional)
 
 The Claude plugin is the product. This repo also ships a Grok review runtime at
-[`.grok/workflows/ie-review.rhai`](.grok/workflows/ie-review.rhai). It is **not**
+[`.grok/workflows/fit-review.rhai`](.grok/workflows/fit-review.rhai). It is **not**
 inside the installable plugin directory.
 
 From a Grok session in this repo:
 
 ```
-/workflow ie-review {"target":"origin/main...HEAD"}
+/workflow fit-review {"target":"origin/main...HEAD"}
 ```
 
 A config agent selects lenses. Those lenses run read-only. One skeptic checks each
 finding. Merge is read-only. The report is run scratch. Watch progress in
 `/workflows`. This path does **not** apply product-code fixes. Interactive apply
-stays in `/ie-review`.
+stays in `/fit-review`.
 
-It is a subset of the skill. A config agent walks up for `.intense`, then the
+It is a subset of the skill. A config agent walks up for `.expectation-fit`, then the
 script applies booleans, a confidence gate, and optional file-substring overrides.
 It does not apply smell-first `severity_align` or pattern policy, and it does not
 write `docs/`. Full notes: [`.grok/workflows/README.md`](.grok/workflows/README.md).
 
 ## Reports
 
-Claude skills use two layers: ephemeral run scratch under `.intense/runs/<run-id>/`
+Claude skills use two layers: ephemeral run scratch under `.expectation-fit/runs/<run-id>/`
 (per-lens JSON; deleted after publish by default), and a published report under
-`docs/intent-engineering/<stamp>-<skill>[-scope].md`. Override the published path with
-`out:<path>`; set `artifacts.*` in `.intense/ways-of-working.yaml` for permanent
+`docs/expectation-fit/<stamp>-<skill>[-scope].md`. Override the published path with
+`out:<path>`; set `artifacts.*` in `.expectation-fit/ways-of-working.yaml` for permanent
 defaults. Pass `mode:agent` for a single JSON object instead of markdown.
 
 The Grok workflow writes only run scratch. It does not publish under
-`docs/intent-engineering/`.
+`docs/expectation-fit/`.
 
 ---
 
 ## First run
 
 1. Install the plugin (marketplace add + install — see below).
-2. Optional: `/ie-init` to set up or upgrade `.intense/` (defaults work without it).
-3. Run `/ie-audit` on a path or `/ie-review` on your branch; open the report under
-   `docs/intent-engineering/`.
+2. Optional: `/fit-setup` to set up or upgrade `.expectation-fit/` (defaults work without it).
+3. Run `/fit-audit` on a path or `/fit-review` on your branch; open the report under
+   `docs/expectation-fit/`.
 4. **Grok (optional):** from a Grok session in this repo, run
-   `/workflow ie-review {"target":"origin/main...HEAD"}` and watch `/workflows`.
+   `/workflow fit-review {"target":"origin/main...HEAD"}` and watch `/workflows`.
 
 **With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
 correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
 UX, and architecture packs. If you already run reek/eslint/phpstan/…, set
-`tools.architecture: prefer` in `.intense/ways-of-working.yaml` so the architecture
+`tools.architecture: prefer` in `.expectation-fit/ways-of-working.yaml` so the architecture
 lens does not duplicate those tools.
 
 ## Install (local dogfooding)
 
 ```
-/plugin marketplace add /Users/david.teren/Projects/Personal/intent-engineering   # repo root (has .claude-plugin/marketplace.json)
-/plugin install intent-engineering
+/plugin marketplace add /Users/david.teren/Projects/Personal/expectation-fit   # repo root (has .claude-plugin/marketplace.json)
+/plugin install expectation-fit
 ```
 
-Then the `/ie-*` skills and `ie-*-reviewer` agents are available in any repo.
+Then the `/fit-*` skills and `fit-*-reviewer` agents are available in any repo.
 
 ---
 
@@ -199,10 +199,10 @@ Then the `/ie-*` skills and `ie-*-reviewer` agents are available in any repo.
 
 ```
 .claude-plugin/marketplace.json     marketplace entry (install from repo root)
-plugins/intent-engineering/         the installable plugin (self-contained)
+plugins/expectation-fit/         the installable plugin (self-contained)
   .claude-plugin/plugin.json
-  agents/      ie-*-reviewer.md      the five lenses (incl. architecture)
-  skills/      ie-*/SKILL.md         init, plan-assist, validate-plan, review, audit, from-pr-learnings
+  agents/      fit-*-reviewer.md      the five lenses (incl. architecture)
+  skills/      fit-*/SKILL.md         init, plan-assist, validate-plan, review, audit, from-pr-learnings
   references/  *.md, *.json          shared contract (schema, templates, catalogs, config-resolution)
   config/defaults/  *.yaml           shipped config defaults
   resources/   principles/ frameworks/ agnostic/ patterns/   researched knowledge base + catalog
@@ -211,7 +211,7 @@ AGENTS.md  CLAUDE.md  PLAN.md  STATUS.md  CHANGELOG.md  LICENSE
 ```
 
 > **Note on `agents/`:** a common global gitignore excludes `agents/`. The repo
-> `.gitignore` re-includes `plugins/intent-engineering/agents/` so the lens agents are
+> `.gitignore` re-includes `plugins/expectation-fit/agents/` so the lens agents are
 > actually committed — without that negation an installed plugin would have no agents. Keep
 > the negation on any clone/fork.
 >
@@ -223,8 +223,8 @@ AGENTS.md  CLAUDE.md  PLAN.md  STATUS.md  CHANGELOG.md  LICENSE
 ## Docs
 
 - **[AGENTS.md](AGENTS.md)** — contributor/agent guide (load-bearing rules, architecture, how to extend).
-- **[plugins/intent-engineering/README.md](plugins/intent-engineering/README.md)** — end-user usage detail.
-- **[.grok/workflows/README.md](.grok/workflows/README.md)** — optional Grok `ie-review` runtime.
+- **[plugins/expectation-fit/README.md](plugins/expectation-fit/README.md)** — end-user usage detail.
+- **[.grok/workflows/README.md](.grok/workflows/README.md)** — optional Grok `fit-review` runtime.
 - **PLAN.md** — design and build plan. **STATUS.md** — current-state snapshot. **CHANGELOG.md** — change history.
 
 ## License

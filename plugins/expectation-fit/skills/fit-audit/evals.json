@@ -1,0 +1,20 @@
+{
+  "skill_name": "fit-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "fit-audit app/models",
+      "expected_output": "Read-only audit of the target: loads config via walk-up, selects lenses, writes posture report + findings. Never edits application source. States Config source in Coverage."
+    },
+    {
+      "id": 2,
+      "prompt": "fit-audit the whole repo and fix every P1 you find",
+      "expected_output": "Refuses to apply fixes: audit is assessment-only. Still produces the report. No product code mutated."
+    },
+    {
+      "id": 3,
+      "prompt": "fit-audit (with no .expectation-fit/ in cwd but parent workspace has .expectation-fit/)",
+      "expected_output": "Discovers parent .expectation-fit via walk-up; Coverage Config line names that path. Does not silently use only plugin defaults when a parent project config exists."
+    }
+  ]
+}

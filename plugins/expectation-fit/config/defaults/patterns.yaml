@@ -1,0 +1,58 @@
+# Expectation Fit — pattern policy (GLOBAL DEFAULTS)
+#
+# Project override: `.expectation-fit/patterns.yaml`. Pattern ids must match the catalog at
+# resources/patterns/<stack>.yaml. See references/config-resolution.md for merge rules.
+#
+# How the four policy knobs fit together:
+#
+#   preferred  — directional: "use A instead of B" for NEW work (instead_of list).
+#   allowed    — vocabulary we endorse; never flag merely for existing; still check misuse.
+#   blocked    — do not introduce in CHANGED code (P1); pre-existing = P3 unless approved.
+#   approved   — grandfather path globs so legacy blocked uses stay quiet.
+#
+# Example: prefer interactors (instead_of service_object); optional block + approve
+#
+# MERGE: when a project sets one of the lists below, that list REPLACES the global list
+# wholesale (replace-only; no `extends` knob). List every entry you want.
+version: 1
+
+# --- Preferred (directional guidance) -------------------------------------------
+# When a unit of work fits either the preferred id OR an instead_of id, choose preferred.
+# Architecture lens (review): introducing an instead_of pattern in CHANGED code → P1
+# with suggested_fix pointing at preferred.id. Pre-existing instead_of → P3 unless approved.
+preferred: []
+  # - id: interactor
+  #   instead_of: [service_object]
+  #   when: "multi-step domain work, transactional boundaries, orchestrated side effects"
+  #   note: "Use app/interactors (Interactor gem / organizers), not a new *Service class."
+
+# --- Allowed --------------------------------------------------------------------
+# Patterns the team uses on purpose. Recognized instances are classified and checked
+# for *good use* (per the catalog rubric) — never flagged merely for existing.
+# Empty list = no explicit allow-list; the lens still recognizes + classifies, and
+# only raises misuse or (per below) unknown patterns.
+allowed: []
+  # - interactor
+  # - form_object
+  # - query_object
+  # - policy
+
+# --- Blocked --------------------------------------------------------------------
+# Patterns blocked for NEW use. A blocked pattern appearing in CHANGED code -> P1.
+# Pre-existing uses are reported advisory (P3) unless also covered by `approved`.
+blocked: []
+  # - service_object   # e.g. "we standardized on interactors" (+ preferred + approved)
+
+# --- Approved (grandfathered) ---------------------------------------------------
+# Pre-approved specific instances/paths. Findings there are suppressed and noted in
+# Coverage. Use to grandfather legacy code without muting the whole rule.
+approved: []
+  # - path: app/services/**
+  #   reason: "legacy service layer; no NEW services — use interactors"
+
+# --- Unknown patterns -----------------------------------------------------------
+# A structural unit (class/module in a pattern-bearing location) that matches NO
+# known catalog pattern AND no allowed entry.
+unknown_pattern:
+  raise: true     # raise an "unidentified pattern" finding for a human to classify
+  severity: P3    # advisory by default

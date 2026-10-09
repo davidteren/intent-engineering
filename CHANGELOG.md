@@ -7,6 +7,16 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Changed
+- **Renamed to Expectation Fit (#41).** The plugin is now `expectation-fit` (marketplace
+  `expectation-fit-marketplace`). Skills and agents use the `fit-` prefix: `fit-review`,
+  `fit-audit`, `fit-validate-plan`, `fit-plan-assist`, `fit-from-pr-learnings`, and
+  `fit-setup` (was `ie-init`). Project config moves to `.expectation-fit/`, and the env var to
+  `EXPECTATION_FIT_CONFIG_DIR`. The old `.intense/` folder and `INTENSE_CONFIG_DIR` still
+  work for at least one release; Coverage names the legacy folder and `/fit-setup upgrade`
+  offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
+  reports from before the rename stay in `docs/intent-engineering/` as history.
+
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
   read-only on a real Hotwire/Rails app (ongela) and folded the false positives

@@ -1,19 +1,19 @@
-# AGENTS.md — working in the intent-engineering repo
+# AGENTS.md — working in the expectation-fit repo
 
 Guidance for any AI agent (or human) contributing to this repository. Read this
 before editing. `CLAUDE.md` points here; this is the single source of truth for how
 the repo is laid out and the rules that keep the plugin installable and internally
 consistent.
 
-> This repo *develops* the **intent-engineering** Claude Code plugin. The plugin's
-> own end-user docs live in [`plugins/intent-engineering/README.md`](plugins/intent-engineering/README.md);
+> This repo *develops* the **expectation-fit** Claude Code plugin. The plugin's
+> own end-user docs live in [`plugins/expectation-fit/README.md`](plugins/expectation-fit/README.md);
 > the design lives in `PLAN.md`, current state in `STATUS.md`, and change history in `CHANGELOG.md`.
 
 ---
 
 ## What this repo is
 
-A Claude Code **plugin** that enforces *intent engineering*: software that behaves the
+A Claude Code **plugin** that enforces *expectation fit*: software that behaves the
 way a reasonable developer or user already expects. It applies established design
 principles as review **lenses** (parallel sub-agents) across four contexts — planning,
 plan validation, code review, codebase audit — producing scored, deduplicated,
@@ -30,14 +30,14 @@ schemas, and cross-references stay mutually consistent.
 
 1. **`agents/` gitignore trap.** Some environments globally ignore `agents/` *everywhere*
    (several AI coding tools add it to a global gitignore). The repo `.gitignore` MUST
-   keep the `!plugins/intent-engineering/agents/` + `!plugins/intent-engineering/agents/**`
+   keep the `!plugins/expectation-fit/agents/` + `!plugins/expectation-fit/agents/**`
    negation, or on such a machine all five lens agents silently leave git and a cloned
    plugin has **zero agents**. It's defensive — keep it so the plugin is portable
    regardless of a contributor's global config. After touching anything under `agents/`,
-   verify with `git ls-files plugins/intent-engineering/agents/` (expect 5 files). The
+   verify with `git ls-files plugins/expectation-fit/agents/` (expect 5 files). The
    same lesson is why `.idea/` is listed in the repo `.gitignore` too.
 2. **Self-contained plugin.** Everything the installed plugin needs lives **under**
-   `plugins/intent-engineering/` — `agents/`, `skills/`, `references/`, `config/`,
+   `plugins/expectation-fit/` — `agents/`, `skills/`, `references/`, `config/`,
    `resources/`. A Claude Code plugin only ships what's inside its plugin dir. Never
    move `resources/` or `references/` to the repo root. Edit them in place; they are the
    single source of truth. Optional Grok runtimes live in repo-root `.grok/workflows/`
@@ -48,33 +48,33 @@ schemas, and cross-references stay mutually consistent.
    resolve `${CLAUDE_PLUGIN_ROOT}` paths.
 4. **Read-only by default; never push.** Lenses are read-only except for the Layer A
    run-scratch JSON write. Orchestrators write the published report under
-   `docs/intent-engineering/` (and clean up run scratch). Only `/ie-review` (interactive)
-   mutates product code — applies safe fixes, commits on a clean tree — and `/ie-init`
-   writes under `.intense/` (optional `.gitignore` append for runs). Nothing ever pushes,
+   `docs/expectation-fit/` (and clean up run scratch). Only `/fit-review` (interactive)
+   mutates product code — applies safe fixes, commits on a clean tree — and `/fit-setup`
+   writes under `.expectation-fit/` (optional `.gitignore` append for runs). Nothing ever pushes,
    opens PRs, or files tickets.
-5. **Two-layer artifacts — not `wip/`.** Run scratch → `.intense/runs/<run-id>/`
+5. **Two-layer artifacts — not `wip/`.** Run scratch → `.expectation-fit/runs/<run-id>/`
    (lens JSON; deleted after publish when `cleanup_runs: true`). Published report →
-   `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Configure via `artifacts.*` in
+   `docs/expectation-fit/<stamp>-<skill>[-scope].md`. Configure via `artifacts.*` in
    `ways-of-working.yaml`. Do not reintroduce plugin defaults under `wip/` or `.wip/`.
-6. **`ie-` prefix** for every skill and agent. Project config dir is **`.intense/`**.
+6. **`ie-` prefix** for every skill and agent. Project config dir is **`.expectation-fit/`**.
 
 ---
 
 ## Repo map
 
 ```
-intent-engineering/                       dev repo + marketplace
+expectation-fit/                       dev repo + marketplace
   AGENTS.md  CLAUDE.md  README.md  LICENSE
   PLAN.md                                 design + phase detail
   STATUS.md                               current-state snapshot
   CHANGELOG.md                            dated change history + decisions
   .claude-plugin/marketplace.json         marketplace entry (install from repo root)
   scripts/check-contracts.rb              contract-integrity check (the one automated check)
-  docs/intent-engineering/                published ie-* reports (date-stamped markdown)
+  docs/expectation-fit/                published fit-* reports (date-stamped markdown)
   docs/index.html                         GitHub Pages site
-  .intense/runs/                          gitignored ephemeral lens scratch (cleaned up)
+  .expectation-fit/runs/                          gitignored ephemeral lens scratch (cleaned up)
   .grok/workflows/                        optional Grok runtime (not shipped in the plugin)
-  plugins/intent-engineering/             THE INSTALLABLE PLUGIN (self-contained)
+  plugins/expectation-fit/             THE INSTALLABLE PLUGIN (self-contained)
     .claude-plugin/plugin.json            name, version, keywords, license
     README.md                             end-user usage + lens details
     agents/      ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
@@ -90,10 +90,10 @@ intent-engineering/                       dev repo + marketplace
 
 ## How a run works (skills → lenses → report)
 
-`ie-validate-plan`, `ie-review`, and `ie-audit` are orchestrators with the same shape:
+`fit-validate-plan`, `fit-review`, and `fit-audit` are orchestrators with the same shape:
 
 1. **Load resolved config** (`references/config-resolution.md`): discover nearest
-   `.intense/` via walk-up (or `config:` / `INTENSE_CONFIG_DIR`), then deep-merge over
+   `.expectation-fit/` via walk-up (or `config:` / `EXPECTATION_FIT_CONFIG_DIR`), then deep-merge over
    `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Always before lens selection; always record
    the Config source in Coverage.
 2. **Select lenses** (`references/lens-catalog.md`): predictability + simplicity are
@@ -108,23 +108,23 @@ intent-engineering/                       dev repo + marketplace
    promote findings agreed by 2+ lenses, suppress below the confidence gate (default
    anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
    and pattern policy (incl. `preferred`).
-5. **Report** to the published path `$REPORT_PATH` under `docs/intent-engineering/`
+5. **Report** to the published path `$REPORT_PATH` under `docs/expectation-fit/`
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
-`ie-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
-no artifacts, prose (not findings JSON). `ie-init` is the setup/upgrade wizard for
-`.intense/` (fresh, upgrade, calibrate; multi-repo placement) and may offer a
-`.gitignore` line for `.intense/runs/`.
+`fit-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
+no artifacts, prose (not findings JSON). `fit-setup` is the setup/upgrade wizard for
+`.expectation-fit/` (fresh, upgrade, calibrate; multi-repo placement) and may offer a
+`.gitignore` line for `.expectation-fit/runs/`.
 
-**Grok optional runtime.** `.grok/workflows/ie-review.rhai` is a Grok script, not a
+**Grok optional runtime.** `.grok/workflows/fit-review.rhai` is a Grok script, not a
 Claude skill. It is a subset: agent-resolved config, selected lenses, skeptics,
 script-owned verdict, report in run scratch. It must not move into
-`plugins/intent-engineering/`. See `.grok/workflows/README.md`.
+`plugins/expectation-fit/`. See `.grok/workflows/README.md`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
 the apply stage), `out:<path>` (override published report path). Path resolution:
 `references/config-resolution.md` → Artifact paths. Defaults: run
-`.intense/runs/<run-id>/`, publish `docs/intent-engineering/<stamp>-<skill>[-scope].md`.
+`.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-<skill>[-scope].md`.
 Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —
 keep them in sync if you change one.
 
@@ -134,11 +134,11 @@ keep them in sync if you change one.
 
 | Agent | Principles | Model | When it runs |
 |-------|-----------|-------|--------------|
-| `ie-predictability-reviewer` | least-astonishment, DWIM, WYSIWYG | inherit | always-on |
-| `ie-simplicity-reviewer` | Occam, KISS, YAGNI | inherit | always-on |
-| `ie-convention-reviewer` | convention-over-config, framework idiom | sonnet | code (almost always) |
-| `ie-experience-reviewer` | HIG, look-and-feel, UX | sonnet | user-facing surfaces |
-| `ie-architecture-reviewer` | structural quality, design patterns | sonnet | supported framework, code/audit only |
+| `fit-predictability-reviewer` | least-astonishment, DWIM, WYSIWYG | inherit | always-on |
+| `fit-simplicity-reviewer` | Occam, KISS, YAGNI | inherit | always-on |
+| `fit-convention-reviewer` | convention-over-config, framework idiom | sonnet | code (almost always) |
+| `fit-experience-reviewer` | HIG, look-and-feel, UX | sonnet | user-facing surfaces |
+| `fit-architecture-reviewer` | structural quality, design patterns | sonnet | supported framework, code/audit only |
 
 **Agent contract (every lens):**
 - Frontmatter: `name` (= filename stem **and** the `lens` enum in `findings-schema.json`
@@ -162,8 +162,8 @@ keep them in sync if you change one.
 - `smell` and `pattern` fields are **architecture-lens-only**. `scores` are returned only
   in audit/plan contexts, keyed by the canonical snake_case ids in `scoring-rubric.md`.
 - Local conventions win: convention + architecture lenses read repo `CLAUDE.md`/`AGENTS.md`
-  and `.intense/` first. Authority order is fixed in `config-resolution.md`:
-  `.intense/*.yaml` > repo `CLAUDE.md`/`AGENTS.md` > sibling code > plugin defaults/framework docs.
+  and `.expectation-fit/` first. Authority order is fixed in `config-resolution.md`:
+  `.expectation-fit/*.yaml` > repo `CLAUDE.md`/`AGENTS.md` > sibling code > plugin defaults/framework docs.
 
 ---
 
@@ -173,18 +173,18 @@ Single source of truth, read at runtime by skills and lenses. Do not duplicate t
 rules into skills/agents — reference them.
 
 - `findings-schema.json` — the machine-checkable finding contract. The `lens` enum must
-  equal exactly the five `agents/ie-*-reviewer.md` basenames.
+  equal exactly the five `agents/fit-*-reviewer.md` basenames.
 - `subagent-template.md` — the dispatch prompt skeleton + the shared confidence rubric.
 - `lens-catalog.md` — the five lenses, their resource docs, and selection rules.
 - `stack-catalog.md` — the **stack registry**: every known stack, its detection signals,
   the packs it loads (convention doc, architecture doc, pattern catalog, threshold
   namespace), and whether the architecture lens supports it. Skills + the architecture lens
-  + `ie-init` read this instead of hardcoding detection, so adding a stack is data + a
+  + `fit-setup` read this instead of hardcoding detection, so adding a stack is data + a
   catalog row, not skill edits.
 - `scoring-rubric.md` — audit/plan posture dimensions per lens (canonical snake_case keys).
 - `report-template.md` — synthesized output shape (markdown tables + `mode:agent` JSON).
 - `principle-index.md` — maps each principle/topic to its resource doc and owning lens.
-- `config-resolution.md` — how `.intense/` config merges over defaults; authority order.
+- `config-resolution.md` — how `.expectation-fit/` config merges over defaults; authority order.
 
 Note: findings cite **principles** (the schema enum) while posture rates **dimensions**
 (the scoring-rubric keys). These are two intentionally distinct taxonomies — don't assume
@@ -192,10 +192,10 @@ one should mirror the other.
 
 ---
 
-## Config system (`config/defaults/` + `.intense/`)
+## Config system (`config/defaults/` + `.expectation-fit/`)
 
 The plugin works out of the box with defaults; a repo tunes it via committable
-`.intense/*.yaml` at its root.
+`.expectation-fit/*.yaml` at its root.
 
 - `ways-of-working.yaml` — lens toggles (turn an agent `off`), external-tool preference
   (`tools.architecture`: `enrich`/`prefer`/`report`/`off`), severity overrides,
@@ -216,7 +216,7 @@ lens judges responsibilities, not just the number.
 **Two id namespaces, deliberately distinct casing:** structural-smell ids are
 **kebab-case** (`fat-model`, `god-object`, `callback-hell`, …); design-pattern ids are
 **snake_case** (`interactor`, `service_object`, …). Pattern ids are an API — keep them
-stable; anything in `.intense/patterns.yaml` must exist in the matching catalog.
+stable; anything in `.expectation-fit/patterns.yaml` must exist in the matching catalog.
 
 ---
 
@@ -260,12 +260,12 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   `resources/frameworks/<stack>-architecture.md`, `resources/patterns/<stack>.yaml`, and a
   `<stack>.*` namespace in `config/defaults/thresholds.yaml` exist; then flip the stack's
   `stack-catalog.md` row to **Arch pack ✅** and add a `principle-index.md` row. The
-  architecture lens + `ie-init` read the registry, so **no skill edits are needed** — the
+  architecture lens + `fit-setup` read the registry, so **no skill edits are needed** — the
   registry is the only detection wiring. The contract check (section 10) enforces that a ✅
   row, its files, and its threshold namespace all agree.
 - **New design pattern** → add to `resources/patterns/<stack>.yaml` with all required
   fields (`id`, `name`, `intent`, `recognition`, `good_use`, `misuse`). Ids are snake_case,
-  stable, and may be referenced by `.intense/patterns.yaml`.
+  stable, and may be referenced by `.expectation-fit/patterns.yaml`.
 - **New principle doc** → write the doc (full structure + Sources) **and** wire it into
   `principle-index.md` and the owning lens's "Read first" list. Cross-link related
   principle docs with `[[wikilink]]` to the bare filename.
@@ -300,16 +300,16 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   (false positive / intentional / already fixed), then resolve the thread. Never resolve
   silently — reviewers (and their self-learning) need the reply. Prefer a PR + required
   checks over direct pushes to `main` when branch protection expects CI.
-- **Dogfood as you go.** Run the lenses' logic against your change (or `/ie-audit` once
+- **Dogfood as you go.** Run the lenses' logic against your change (or `/fit-audit` once
   installed), fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
 - Clean git history is preferred; the owner may ask to squash to a single commit.
 
 ## Install (local dogfooding)
 
 ```
-/plugin marketplace add /Users/david.teren/Projects/Personal/intent-engineering
-/plugin install intent-engineering
+/plugin marketplace add /Users/david.teren/Projects/Personal/expectation-fit
+/plugin install expectation-fit
 ```
 
-Then `/ie-init`, `/ie-review`, `/ie-audit`, `/ie-validate-plan`, `/ie-plan-assist`,
-`/ie-from-pr-learnings`.
+Then `/fit-setup`, `/fit-review`, `/fit-audit`, `/fit-validate-plan`, `/fit-plan-assist`,
+`/fit-from-pr-learnings`.

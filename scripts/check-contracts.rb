@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 #
-# Contract-integrity check for the intent-engineering plugin.
+# Contract-integrity check for the expectation-fit plugin.
 #
 # Asserts the cross-file invariants that keep the plugin installable and internally
 # consistent — the things a single edit can silently break. Deterministic and
@@ -38,7 +38,7 @@ require "json"
 require "yaml"
 require "shellwords"
 
-PLUGIN = File.expand_path("../plugins/intent-engineering", __dir__)
+PLUGIN = File.expand_path("../plugins/expectation-fit", __dir__)
 LENSES = %w[predictability convention simplicity experience architecture].freeze
 
 $failures = 0
@@ -126,8 +126,8 @@ else
   bad "findings-schema lens enum #{schema_lenses.inspect} != #{LENSES.inspect}"
 end
 
-agent_files = Dir[File.join(PLUGIN, "agents/ie-*-reviewer.md")]
-agent_basenames = agent_files.map { |f| File.basename(f, ".md").sub(/^ie-/, "").sub(/-reviewer$/, "") }
+agent_files = Dir[File.join(PLUGIN, "agents/fit-*-reviewer.md")]
+agent_basenames = agent_files.map { |f| File.basename(f, ".md").sub(/^fit-/, "").sub(/-reviewer$/, "") }
 if agent_basenames.sort == schema_lenses.sort
   ok "agents/ basenames == lens enum"
 else
@@ -135,7 +135,7 @@ else
 end
 
 catalog = read("references/lens-catalog.md")
-catalog_lenses = catalog.scan(/`ie-([a-z-]+)-reviewer`/).flatten.uniq
+catalog_lenses = catalog.scan(/`fit-([a-z-]+)-reviewer`/).flatten.uniq
 if (schema_lenses - catalog_lenses).empty? && (catalog_lenses - schema_lenses).empty?
   ok "lens-catalog rows == lens enum"
 else
@@ -164,7 +164,7 @@ agent_files.each do |abs|
     bad "#{rel}: name #{fm['name'].inspect} != filename stem #{stem.inspect}"
   end
 
-  lens_id = stem.sub(/^ie-/, "").sub(/-reviewer$/, "")
+  lens_id = stem.sub(/^fit-/, "").sub(/-reviewer$/, "")
   bad "#{rel}: lens id #{lens_id.inspect} not in enum" unless schema_lenses.include?(lens_id)
 
   %w[tools model].each do |field|
@@ -317,7 +317,7 @@ end
 # cites must be defined, and every defined metric should be referenced somewhere. This
 # generalizes over rails, python, and any future stack — add the threshold namespace +
 # `<stack>-architecture.md` and the check covers it automatically.
-agent_text = read("agents/ie-architecture-reviewer.md")
+agent_text = read("agents/fit-architecture-reviewer.md")
 config_res = read("references/config-resolution.md")
 
 metrics_by_stack.each do |stack, defined_metrics|
@@ -477,8 +477,8 @@ section "11. Skill / agent prose vs catalog (behavioral drift)"
 # Skills that select or scaffold architecture must read the stack catalog and must not
 # hardcode a closed Arch-pack subset (the P1 that left 4 of 6 packs unwired).
 orchestrator_skills = %w[
-  skills/ie-review/SKILL.md
-  skills/ie-audit/SKILL.md
+  skills/fit-review/SKILL.md
+  skills/fit-audit/SKILL.md
 ]
 orchestrator_skills.each do |rel|
   text = read(rel)
@@ -493,17 +493,17 @@ orchestrator_skills.each do |rel|
   end
 end
 
-init_skill = read("skills/ie-init/SKILL.md")
-bad "skills/ie-init/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
+init_skill = read("skills/fit-setup/SKILL.md")
+bad "skills/fit-setup/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
 if init_skill =~ /Arch pack ✅\s*\(today:/ ||
    init_skill =~ /convention-only:.*`react`/
-  bad "skills/ie-init/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
+  bad "skills/fit-setup/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
 else
-  ok "skills/ie-init/SKILL.md: no stale Arch pack today-list"
+  ok "skills/fit-setup/SKILL.md: no stale Arch pack today-list"
 end
 
 # Orchestrators must not re-author the canonical path bash; they bind slots only.
-%w[skills/ie-review/SKILL.md skills/ie-audit/SKILL.md skills/ie-validate-plan/SKILL.md].each do |rel|
+%w[skills/fit-review/SKILL.md skills/fit-audit/SKILL.md skills/fit-validate-plan/SKILL.md].each do |rel|
   text = read(rel)
   if text.include?("RUN_ID=\"${STAMP}-$(head -c4 /dev/urandom")
     bad "#{rel}: re-authors RUN_ID bash; bind slots and use config-resolution canonical block"
@@ -536,14 +536,14 @@ score_keys = {
   "architecture" => %w[responsibility_placement pattern_health pattern_legibility coupling_restraint]
 }
 score_keys.each do |lens, keys|
-  agent = read("agents/ie-#{lens}-reviewer.md")
+  agent = read("agents/fit-#{lens}-reviewer.md")
   missing = keys.reject { |k| agent.include?(k) }
   if missing.empty?
-    ok "agents/ie-#{lens}-reviewer.md cites all score keys"
+    ok "agents/fit-#{lens}-reviewer.md cites all score keys"
   else
-    bad "agents/ie-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
+    bad "agents/fit-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
   end
-  bad "agents/ie-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+  bad "agents/fit-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
 end
 
 # ---------------------------------------------------------------------------
@@ -551,7 +551,7 @@ section "12. Skill evals (behavioral contracts, incl. refusal cases)"
 
 # Optional per-skill evals.json pin happy-path + refusal behaviour. Missing files are
 # warnings (adoption can grow gradually); present files must parse and match the skill.
-skill_dirs = Dir[File.join(PLUGIN, "skills", "ie-*")].select { |p| File.directory?(p) }.sort
+skill_dirs = Dir[File.join(PLUGIN, "skills", "fit-*")].select { |p| File.directory?(p) }.sort
 skill_dirs.each do |dir|
   slug = File.basename(dir)
   eval_path = File.join(dir, "evals.json")
@@ -606,15 +606,15 @@ end
 
 # Config walk-up procedure must remain documented (issue #25)
 config_res = read("references/config-resolution.md")
-if config_res.include?("walk-up") || config_res.include?("Walk-up") || config_res.include?("resolve_intense_dir")
-  ok "config-resolution.md documents walk-up / resolve_intense_dir"
+if config_res.include?("walk-up") || config_res.include?("Walk-up") || config_res.include?("resolve_walk_up")
+  ok "config-resolution.md documents walk-up / resolve_walk_up"
 else
   bad "config-resolution.md: missing walk-up discovery procedure"
 end
-if config_res.include?("INTENSE_CONFIG_DIR") && config_res.include?("config:")
-  ok "config-resolution.md documents INTENSE_CONFIG_DIR and config: override"
+if config_res.include?("EXPECTATION_FIT_CONFIG_DIR") && config_res.include?("config:")
+  ok "config-resolution.md documents EXPECTATION_FIT_CONFIG_DIR and config: override"
 else
-  bad "config-resolution.md: missing INTENSE_CONFIG_DIR or config: escape hatch"
+  bad "config-resolution.md: missing EXPECTATION_FIT_CONFIG_DIR or config: escape hatch"
 end
 if config_res.include?("conventions.sources")
   ok "config-resolution.md documents conventions.sources"
