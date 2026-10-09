@@ -221,7 +221,7 @@ has_config_yaml() {
 # Explicit path: succeed only when the resolved dir exists AND has at least one yaml.
 # Prefer a config folder under arg only when it has yaml; else yaml directly under arg.
 resolve_explicit_config() {
-  arg="$1"
+  arg="${1%/}"   # drop one trailing slash (tab completion adds it)
   case "$arg" in
     */.expectation-fit|.expectation-fit|*/.intense|.intense)
       if [ -d "$arg" ] && has_config_yaml "$arg"; then echo "$arg"; return 0; fi
