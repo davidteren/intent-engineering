@@ -1,0 +1,60 @@
+CHANGELOG.md
+  s_139c48e2134bb7::t_9f15c4540ead91 20-28,35
+  s_139c48e2134bb7::t_99a183ef70b9d9 29-34
+plugins/expectation-fit/references/findings-schema.json
+  s_139c48e2134bb7::t_fbcffb6710b5b6 58
+plugins/expectation-fit/references/subagent-template.md
+  s_139c48e2134bb7::t_2a73b7687c670b 60,62,64
+  s_139c48e2134bb7::t_c2d52942328fa8 29-31
+  s_139c48e2134bb7::t_91fdc1fe211214 82-95
+  s_139c48e2134bb7::t_4a71daf5abc23a 105
+  s_139c48e2134bb7::t_40f359caac26ab 108
+  s_139c48e2134bb7::t_b20be62e40befe 103
+  s_139c48e2134bb7::t_1d89eed69d575d 125-131,133-134
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_2d3db94e766c38 641
+  s_139c48e2134bb7::t_96eea4d517b317 642
+  s_139c48e2134bb7::t_1b01c1e7057355 394
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_e2b13a9b31cc1d 124-126
+  s_139c48e2134bb7::t_ecebd952a63222 171
+plugins/expectation-fit/agents/fit-simplicity-reviewer.md
+  s_139c48e2134bb7::t_f1b0c6434fb272 66-67
+  s_139c48e2134bb7::t_179823787feedf 30-31
+  s_139c48e2134bb7::t_0532ecc95ee2c0 51-54
+  s_139c48e2134bb7::t_fe0530769c3e7b 75-76
+plugins/expectation-fit/skills/fit-review/evals.json
+  s_139c48e2134bb7::t_9b70bd69901c5a 23-27
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_28c6115309341b 70
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_4bb52ce4906d1b 76
+plugins/expectation-fit/agents/fit-predictability-reviewer.md
+  s_139c48e2134bb7::t_1474a32fef4e9a 26
+plugins/expectation-fit/resources/principles/least-astonishment.md
+  s_139c48e2134bb7::t_0d3a832ec7dc1c 66-71
+plugins/expectation-fit/resources/agnostic/defaults-and-configuration.md
+  s_139c48e2134bb7::t_3a7bd26ede01a1 29
+plugins/expectation-fit/resources/agnostic/error-handling.md
+  s_139c48e2134bb7::t_582f1ff3ae97cb 67-73
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_44f977bd86556e 12
+plugins/expectation-fit/references/principle-index.md
+  s_139c48e2134bb7::t_6f8bcc9d3b675a 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b2a016712580bb3dd169a25c5b687cc35aa3a79",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
