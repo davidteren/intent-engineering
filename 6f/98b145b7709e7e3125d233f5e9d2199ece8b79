@@ -1,0 +1,47 @@
+plugins/expectation-fit/config/defaults/ways-of-working.yaml
+  s_139c48e2134bb7::t_aab220f7af9c33 16-17
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_fdc61beea40ae9 91-92
+plugins/expectation-fit/resources/agnostic/ux-interaction-smells.md
+  s_139c48e2134bb7::t_0af37bbb8e7e59 171-173
+  s_139c48e2134bb7::t_dd86335b21a412 145-156
+  s_139c48e2134bb7::t_e24ec0f41d2cf2 114-118
+  s_139c48e2134bb7::t_34955d83d69214 202
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_944760d966bc7c 52
+scripts/check-contracts.rb
+  s_139c48e2134bb7::t_04775d927b9d58 496-510
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_53d80c44a8b9f4 339
+  s_139c48e2134bb7::t_327729fbb68010 416
+CHANGELOG.md
+  s_139c48e2134bb7::t_5ceff396f99768 35-43
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_67cd50352fa59a 51-52
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_a7b75d38240fc3 15
+  s_139c48e2134bb7::t_765a5442d46d23 35-37,40-43
+docs/index.html
+  s_139c48e2134bb7::t_84973c91f06d4e 150
+plugins/expectation-fit/resources/agnostic/accessibility.md
+  s_139c48e2134bb7::t_ccf5760fae3631 42
+plugins/expectation-fit/agents/fit-experience-reviewer.md
+  s_139c48e2134bb7::t_00fde9ae7c9997 52-54
+  s_139c48e2134bb7::t_c293bc26da5b6d 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6f98b145b7709e7e3125d233f5e9d2199ece8b79",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
