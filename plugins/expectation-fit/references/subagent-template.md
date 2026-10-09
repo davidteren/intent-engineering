@@ -103,8 +103,9 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 
 ## Slot bindings (orchestrator)
 
-- `{doc_slug}`: plan sets only. Bind it to the document path under the `slug_of` rule
-  in config-resolution.md. Leave it unbound for every other run.
+- `{doc_slug}`: plan sets only. Bind it to the per-document slug from fit-validate-plan
+  (built from the repo-relative path, with `-2`, `-3` on a collision), so two documents
+  never share one file. Leave it unbound for every other run.
 - `{run_artifact_dir}` — bind to the skill's resolved `$RUN` (Layer A scratch only).
   Never leave it unbound — a literal executor cannot invent the path. Do **not** bind
   this to the published report path.

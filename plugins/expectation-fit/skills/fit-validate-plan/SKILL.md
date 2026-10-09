@@ -30,9 +30,17 @@ If you get several documents, one run accepts the whole set: one run id and one 
 Inside that run, run one flow per document: one lens dispatch per document and one
 report section per document. Never put two documents in one lens dispatch. Each
 dispatch in a set writes its own file, `$RUN/{lens}-<doc-slug>.json`, so dispatches do
-not overwrite each other. `<doc-slug>` is the document path under the slug rule in
-`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (`slug_of`). A single-document
-run keeps `$RUN/{lens}.json`.
+not overwrite each other. `<doc-slug>` comes from the repo-relative path, not the
+basename, so `docs/plans/search.md` and `docs/brainstorms/search.md` do not collide:
+drop the extension, lowercase it, and turn each run of other characters into one `-`:
+
+```bash
+DOC_SLUG=$(printf '%s' "${DOC_REL%.*}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')
+# docs/plans/search.md -> docs-plans-search    docs/brainstorms/search.md -> docs-brainstorms-search
+```
+
+If two documents in the set still get the same slug, append `-2`, `-3` and so on in
+set order. A single-document run keeps `$RUN/{lens}.json`.
 
 ## Stage 1 — Read & classify
 

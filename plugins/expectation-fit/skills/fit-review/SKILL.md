@@ -81,9 +81,11 @@ Compute the diff. Reuse the scope logic familiar from standard code-review skill
 
 **Pin the reviewed commit** before any lens runs: `REVIEWED_SHA` is HEAD in
 `local-aligned` and standalone scopes, the PR head SHA in `pr-remote`, and
-`origin/<branch>` in `branch-remote`. `BASE_SHA=$(git rev-parse --short $BASE)`. Print
-the report-template Provenance line (with `; base <base_sha>`) as the first output; the
-run id joins it once Stage 4 makes one.
+`origin/<branch>` in `branch-remote`. `BASE_SHA=$(git rev-parse --short $BASE)`. Outside
+`mode:agent`, print the report-template Provenance line (with `; base <base_sha>`) as the
+first output; the run id joins it once Stage 4 makes one. In `mode:agent`, print nothing
+here: the provenance goes in the JSON keys (`plugin_version`, `plugin_root`, `repo_root`,
+`branch`, `reviewed_sha`, `base_sha`, `run_id`).
 
 Build `EXCLUDES` per config-resolution (Scope exclusions), so earlier reports and run
 scratch stay out of scope. Produce: `BASE`, `HEAD_REF` (the head the lenses read: the
@@ -281,8 +283,8 @@ single source.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc
-(absolute path).
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Outside `mode:agent`, print the `Report:` line from
+that doc (absolute path). In `mode:agent`, the path is the `artifact_path` field only.
 
 ## Quality gates
 

@@ -127,7 +127,8 @@ no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc (absolute path).
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Outside `mode:agent`, print the `Report:` line from that doc (absolute path).
+In `mode:agent`, the path is the `artifact_path` field only.
 
 ## Fallback
 

@@ -469,9 +469,10 @@ case "$RUN" in
 esac
 ```
 
-Never `rm -rf` an unbound or mis-bound path. Always print the absolute report path to
-the user: `Report: <absolute path>` (`Report: none (JSON reply only)` in `mode:agent`
-without `out:`). Do not leave orphan lens JSON when cleanup succeeds.
+Never `rm -rf` an unbound or mis-bound path. Outside `mode:agent`, always print the
+absolute report path to the user: `Report: <absolute path>`. In `mode:agent`, print no
+text outside the one JSON object: the path is its `artifact_path` field (`null` without
+`out:`). Do not leave orphan lens JSON when cleanup succeeds.
 
 **Scope exclusions:** never audit or review files under the resolved run dir or report
 dir, or the `out:` target. When `out:` names a file (`*.md`, `*.json`), exclude only that

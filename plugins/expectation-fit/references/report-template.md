@@ -133,7 +133,7 @@ monotonic across the whole report.
    |---|---|---|
    | `clean` | Ran. The report shows no finding from this lens. | No |
    | `ok` | Ran. The report shows N findings from this lens, applied fixes included. Coverage writes "ok, N findings". | No. The findings set the verdict. |
-   | `failed` | Non-JSON return, missing `$RUN/{lens}.json` (plan set: `$RUN/{lens}-<doc-slug>.json`), missing required `scores`, a returned `lens` that differs from the dispatched lens, or a harness error (after the optional one re-dispatch). | Yes |
+   | `failed` | Non-JSON return, missing `$RUN/{lens}.json` (plan set: `$RUN/{lens}-<doc-slug>.json`, where `<doc-slug>` comes from the repo-relative document path and is unique in the set), missing required `scores`, a returned `lens` that differs from the dispatched lens, or a harness error (after the optional one re-dispatch). | Yes |
    | `skipped` | Selected, but it could not analyze. Example: no architecture pack (a `SKIPPED:` observation). | Yes |
    | `not_selected` | Auto-selection, config or a `lenses:<list>` token did not pick it. The Header gives the reason. | No |
 

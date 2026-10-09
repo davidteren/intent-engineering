@@ -613,8 +613,11 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        // Same file, within 3 lines, and the same defect: same principle or same title.
-        let same_defect = (u.principle != "" && u.principle == f.principle) || match_key(u.title) == match_key(f.title);
+        // Same defect: same normalized title, or the same smell id when both have one.
+        // A finding with no line (line 0) merges only on an identical normalized title.
+        let same_title = match_key(u.title) == match_key(f.title);
+        let same_defect = same_title;
+        if u.line != 0 && f.line != 0 && u.smell != "" && u.smell == f.smell { same_defect = true; }
         if seen_at < 0 && u.file_key == f.file_key && delta <= 3 && same_defect {
             seen_at = ui;
         }
@@ -623,18 +626,20 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
-        // One defect within 3 lines (titles may differ): keep the stronger copy, list the
-        // other lens's title and fix in `also`, and take the higher confidence.
+        // One defect within 3 lines (titles may differ). Each copy keeps its own severity and
+        // confidence. Keep the highest-severity copy that passes the gate; if none passes,
+        // keep the highest-severity copy. Agreement never raises confidence.
         let kept = unique[seen_at];
         let other = f;
-        if comes_first(f, kept) {
+        let f_pass = passes_gate_at(f, gate);
+        let k_pass = passes_gate_at(kept, gate);
+        if (f_pass && !k_pass) || (f_pass == k_pass && comes_first(f, kept)) {
             f.lenses = kept.lenses;
             f.also = kept.also;
             other = kept;
             unique[seen_at] = f;
         }
         unique[seen_at].also.push(#{ lens: other.lens, severity: other.severity, title: other.title, suggested_fix: other.suggested_fix });
-        if other.confidence > unique[seen_at].confidence { unique[seen_at].confidence = other.confidence; }
         if other.fix_class != "gated_auto" && unique[seen_at].fix_class == "gated_auto" { unique[seen_at].fix_class = other.fix_class; }
         let already = false;
         for lid in unique[seen_at].lenses {

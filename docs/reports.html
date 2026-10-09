@@ -24,7 +24,7 @@
 <script>
 (function(){
   var t=null;
-  try{t=localStorage.getItem("fit-theme")}catch(e){}
+  try{t=localStorage.getItem("fit-theme")||localStorage.getItem("ie-theme")}catch(e){}
   if(t!=="light"&&t!=="dark"){
     t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
   }
