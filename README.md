@@ -182,6 +182,11 @@ The Grok workflow writes only run scratch. It does not publish under
 correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
 UX, and architecture packs.
 
+For plans, a document review such as `ce-doc-review` (which `ce-plan` runs on markdown
+plans) checks coherence, feasibility, scope and security. `/fit-validate-plan` checks
+surprise, convention, simplicity and missing UX states. Neither replaces the other. Run
+`/fit-validate-plan` last, on the final text, before implementation.
+
 ## Install (local dogfooding)
 
 ```

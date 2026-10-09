@@ -54,6 +54,15 @@ for the design see **PLAN.md**.
   but smell findings still show and net-new blocked use still gets P1 (before, review
   and audit suppressed every architecture finding on an approved path). Each
   unidentified-pattern `suggested_fix` now holds a ready-to-paste `approved` entry.
+- **Mechanical `fit-validate-plan` verdict (#56).** The verdict is Revise first when any
+  P0 or P1 survives the gate or a selected lens failed; otherwise Ready to implement.
+  A markdown reply ends with one `Verdict: … Lowest score: … Blocking: … Failed lenses:
+  … Report: …` line (new eval case 4). Several documents run as separate flows, one
+  report each. Plan lenses search the whole document before they call a rule missing,
+  search call sites before they call code unused, and word a fix that rests on unseen
+  framework behavior as a test. Caller checks go in a `Check | Result` table in
+  Coverage. `findings-schema.json` gives plan meanings for P0 and P1. The skill
+  description and the README place it after document review and before implementation.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

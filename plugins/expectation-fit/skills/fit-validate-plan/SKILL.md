@@ -1,6 +1,6 @@
 ---
 name: fit-validate-plan
-description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists."
+description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists. Run it on the final plan text, after any document review (for example ce-doc-review) and before implementation. It does not replace a document review."
 argument-hint: "[mode:agent] [out:<path>] [path/to/plan-or-spec.md]"
 ---
 
@@ -19,6 +19,9 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
+
+If you get several documents, run the full flow once for each one. Each run gets its own
+run id and report. Never put two documents in one lens dispatch.
 
 ## Stage 1 — Read & classify
 
@@ -94,13 +97,23 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
 with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
 Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
-before coding. The verdict blocks on `requirements`-level or design-blocking gaps;
-advisory gaps are noted but don't block. Do **not** claim Ready to implement if any
-selected lens **failed**. No time estimates.
+before coding. The verdict is **Revise first** when any P0 or P1 survives the confidence
+gate, or any selected lens **failed**. Otherwise it is **Ready to implement**. P2 and P3
+gaps do not block. No time estimates.
+
+Caller checks: if the request lists must-hold checks, keep them out of the lens prompts.
+After the merge, rate each check as pass, fail or not addressed, with the plan line. Show
+the results as a `Check | Result` table in Coverage. A failed check is also a finding
+with its own severity.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). End a markdown reply with this line, where `Blocking`
+counts the P0 and P1 findings that survive the gate:
+
+```text
+Verdict: <verdict>. Lowest score: <n>/10. Blocking: <n>. Failed lenses: <names or none>. Report: $REPORT_PATH
+```
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)

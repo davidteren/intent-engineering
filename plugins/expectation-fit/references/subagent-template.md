@@ -30,7 +30,13 @@ Repo root: {repo_root}. Build every path from it. Run git as git -C {repo_root}.
 Base: {base} (review only)
 Plan: {plan_path} (review only, when plan: is given)
 {For code: FILES + DIFF, or the file/path set for audit}
-{For plan: the document content + Document type: requirements | plan}
+{For plan: the document content + Document type: requirements | plan.
+ Before you report a rule as missing, search the whole document and cite where you
+ looked. If the rule is stated but weakly placed, say that instead.
+ Before you say code is unused, missing or called, search its call sites and quote the
+ result. When a finding or fix rests on framework behavior or runtime order that you did
+ not see run, say so. Word that fix as a test the implementer runs first, not as a rule
+ to adopt.}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
  workspace paths for in-scope files}
 </scope>
