@@ -20,7 +20,7 @@ read the source docs for detection heuristics; this index is the quick lookup.
 | Topic | Source doc | Lens |
 |-------|-----------|------|
 | Naming | `resources/agnostic/naming.md` | predictability + convention |
-| Defaults & Configuration | `resources/agnostic/defaults-and-configuration.md` | convention + simplicity |
+| Defaults & Configuration | `resources/agnostic/defaults-and-configuration.md` | convention + simplicity + predictability |
 | Error Handling | `resources/agnostic/error-handling.md` | predictability |
 | API & Interface Design | `resources/agnostic/api-design.md` | predictability + convention |
 | Accessibility | `resources/agnostic/accessibility.md` | experience |

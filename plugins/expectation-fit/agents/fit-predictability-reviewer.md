@@ -23,6 +23,7 @@ Load your detection heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/` — the
 - `agnostic/naming.md`
 - `agnostic/error-handling.md`
 - `agnostic/api-design.md`
+- `agnostic/defaults-and-configuration.md` (the "Surprising defaults" section only)
 
 ## What you're hunting for
 

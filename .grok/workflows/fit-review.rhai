@@ -391,7 +391,7 @@ let catalog = [
     #{
         id: "predictability",
         agent: "fit-predictability-reviewer.md",
-        docs: "resources/principles/least-astonishment.md, resources/principles/dwim.md, resources/principles/wysiwyg.md, resources/agnostic/naming.md, resources/agnostic/error-handling.md, resources/agnostic/api-design.md",
+        docs: "resources/principles/least-astonishment.md, resources/principles/dwim.md, resources/principles/wysiwyg.md, resources/agnostic/naming.md, resources/agnostic/error-handling.md, resources/agnostic/api-design.md, resources/agnostic/defaults-and-configuration.md (Surprising defaults section only)",
         hunts: "name/behavior mismatch, hidden side effects, surprising returns, silent failures",
         selected: run_predictability,
     },

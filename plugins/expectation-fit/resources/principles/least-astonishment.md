@@ -63,6 +63,12 @@ exception in their head forever, because the code no longer says what it does.
 - Naming that breaks convention: nouns for verbs, no `is_`/`has_` on predicates,
   `-able` interfaces that aren't, async functions without an async signal.
 - A "clever" one-liner where the straightforward version would read as written.
+- A comment, docstring or test name that says repo code exists, when that code is
+  not at HEAD. Watch for "already exists", "handled by X", "see Y", and
+  present-tense descriptions of behavior. Check HEAD, not the plan or a later PR in
+  the stack. Skip names outside the repo, such as gems, services or other repos. Do
+  not flag a clear note about future work, such as "added in a follow-up PR". Fix:
+  remove the claim, or reword it as future work and cite the follow-up PR or issue.
 
 ### UX / frontend
 - A control whose label doesn't match what it does ("Save" that also publishes;

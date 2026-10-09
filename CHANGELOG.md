@@ -26,6 +26,12 @@ for the design see **PLAN.md**.
   an unconfirmed absence claim caps at confidence 50 (template and Grok skeptic). The
   template has one shared severity rubric, and `findings-schema.json` points to it. The
   simplicity lens searches the requirements before a YAGNI cut.
+- **Predictability escape classes (#58).** New smells for a comment, docstring or test
+  name that claims code missing at HEAD (`least-astonishment.md`), a destructive step
+  that runs before its last check (`error-handling.md`), and a config writer that
+  coerces any input shape (`defaults-and-configuration.md`). The predictability lens now
+  reads the "Surprising defaults" section of `defaults-and-configuration.md` (agent,
+  lens catalog, Grok workflow and principle index).
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
