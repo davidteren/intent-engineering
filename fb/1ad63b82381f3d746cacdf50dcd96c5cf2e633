@@ -1,0 +1,38 @@
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_cd602a4c6e542b 4,19-20,75
+plugins/expectation-fit/references/subagent-template.md
+  s_139c48e2134bb7::t_8c7ff6cf821252 35-41,69-70,117-120
+CHANGELOG.md
+  s_139c48e2134bb7::t_cdb8b7fcf7f820 48-62
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_ff2950e73b3eff 370-372,379,381-390,405
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_cd602a4c6e542b 4,28-30,58-61,139,194-195,203-204,216-218
+plugins/expectation-fit/skills/fit-validate-plan/evals.json
+  s_139c48e2134bb7::t_06c3860091a189 18-22
+plugins/expectation-fit/skills/fit-review/evals.json
+  s_139c48e2134bb7::t_06c3860091a189 28-32
+AGENTS.md
+  s_139c48e2134bb7::t_cdb8b7fcf7f820 130-133
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_7462e7c5fad53f 53-55,63-65,75-77,107-109,111-114,126-129
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_cd602a4c6e542b 4,19-20,66,81-84,92-93,106-108
+  s_139c48e2134bb7::t_347e97bd512772 109-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fb1ad63b82381f3d746cacdf50dcd96c5cf2e633",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
