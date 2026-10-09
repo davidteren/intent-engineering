@@ -1,0 +1,55 @@
+docs/reports.html
+  s_139c48e2134bb7::t_b40a190e2c1b00 98
+plugins/expectation-fit/README.md
+  s_139c48e2134bb7::t_f86da0739a2931 164-165,193-194
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_5b4c33a499886f 71-72
+AGENTS.md
+  s_139c48e2134bb7::t_694e0adf920e29 139-142,163-165
+scripts/check-contracts.rb
+  s_139c48e2134bb7::t_c62374e81ad5ea 18-20
+  s_139c48e2134bb7::t_667bf6125bb984 115-134
+CHANGELOG.md
+  s_139c48e2134bb7::t_f86da0739a2931 13-14,33-36
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_7eee8a06924d62 65-66,78-79,86-88,152-155,184-185,193-195,231-232,313-319,345,360-362,373-374,391-392
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_c62374e81ad5ea 50-52,228-234,275-277,419,439-444,446
+.grok/workflows/README.md
+  s_139c48e2134bb7::t_474900798ca30c 40,70-72
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_b1a58a5f7fcc7c 96-97,107-111,120-122,186-190,250-252,266-267
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_50c54effc985e5 63-66
+plugins/expectation-fit/CHANGELOG.md
+  s_139c48e2134bb7::t_f86da0739a2931 21
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_5b4c33a499886f 79-80
+  s_139c48e2134bb7::t_ddcf586f44d22e 34-36,90-91
+docs/index.html
+  s_139c48e2134bb7::t_b40a190e2c1b00 334
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_474900798ca30c 396-397,614-627,638-640,642,650
+plugins/expectation-fit/skills/fit-setup/SKILL.md
+  s_139c48e2134bb7::t_101c1c79d80be8 50-53,147-148,150-151,153-157,378-379,423-425,479-481,502-505
+plugins/expectation-fit/skills/fit-setup/evals.json
+  s_139c48e2134bb7::t_101c1c79d80be8 37
+README.md
+  s_139c48e2134bb7::t_f86da0739a2931 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "55f76ee5cb40b1f0d73861e059d4f3d9115809b4",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
