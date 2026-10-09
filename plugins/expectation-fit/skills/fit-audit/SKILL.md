@@ -1,7 +1,7 @@
 ---
 name: fit-audit
 description: "Audit a whole codebase, subsystem, or feature against the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) and produce a posture report — per-dimension 0-10 scores plus the top surprise/convention/complexity/UX/structural gaps. Use to assess an existing codebase or area, not a specific diff. Sampling-aware for large targets."
-argument-hint: "[mode:agent] [out:<path>] [<path/glob/subsystem to audit, default: whole repo>]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [<path/glob/subsystem to audit, default: whole repo>]"
 ---
 
 # Expectation Fit — Codebase Audit
@@ -18,6 +18,7 @@ surfaced first. This is a read-only assessment — it never edits code.
 | `mode:agent` | Emit JSON instead of markdown. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-audit[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
@@ -56,10 +57,10 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
   `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`). Never gate
   architecture on a closed two-stack list.
 
-Honor config `lenses:` toggles over these defaults. Pass repo `CLAUDE.md`/`AGENTS.md`
-paths (`<standards-paths>`) and the resolved `conventions.notes` to every selected lens.
-Keep `conventions.sources` and `conventions.auto` with the convention lens only.
-Announce the team.
+Honor config `lenses:` toggles over these defaults; a `lenses:<list>` token wins over both.
+Pass repo `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
+`conventions.notes` to every selected lens. Keep `conventions.sources` and
+`conventions.auto` with the convention lens only. Announce the team.
 
 ## Stage 3 — Dispatch
 
@@ -89,13 +90,10 @@ just needs the merged per-lens return.
 
 ## Stage 4 — Merge & score
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
-   policy **before** the confidence gate as in `fit-review` Stage 5: **`severity_align`
-   then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
-   survive). `approved` silences blocked, instead_of and unidentified findings on its
-   path. Smell findings still show, and net-new blocked use still gets P1. Keep other
-   `blocked` / preferred-instead_of findings (no apply — audit is read-only).
-2. Assemble the **posture table** from each **clean** lens's `scores` (read
+1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+   with Context: audit. No apply, because audit is read-only.
+2. Assemble the **posture table** from the `scores` of each lens with status `clean`
+   or `ok` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the
    product. Omit or mark failed lenses rather than inventing scores.
@@ -112,13 +110,19 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
 stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
-each lens failed/skipped/clean, Config line), Verdict = the **top 3 posture gaps to fix first** with
-why. Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
+each lens status per the report-template Lens status table, Config line), Verdict = the **top 3 posture gaps to fix first** with
+why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear when a lens status or a partial read blocks it. No apply,
 no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
 `$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+
+## Fallback
+
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+backfill rule. Everything else unchanged.
 
 ---
 

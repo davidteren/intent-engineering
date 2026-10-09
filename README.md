@@ -128,8 +128,8 @@ the plugin defaults (`config/defaults/`):
 `conventions.auto.roots` to sibling apps; child cwds inherit via walk-up.
 **Upgrade:** `/fit-setup upgrade` merges missing capabilities only (does not wipe notes).
 
-Merge rule: project overrides global key-by-key; lists replace (the `conventions` block can
-opt into append via `extends: true`; pattern lists are replace-only). See
+Merge rule: project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
+The `conventions` block has `extends`; pattern lists are replace-only. See
 `references/config-resolution.md`.
 
 ---

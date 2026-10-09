@@ -88,6 +88,10 @@ then commit `.expectation-fit/`. Project config **supersedes** the plugin defaul
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
   service object, …).
 
+Calling a lens agent directly (not through a `fit-*` skill)? Run the config-resolution
+block in `references/config-resolution.md` first and pass the result to the lens. Never
+hardcode `Config: defaults`.
+
 ### First-run shapes
 
 **Monolith** (single app repo):
@@ -108,8 +112,7 @@ inside them. Non-interactive: `multi-repo` and/or `roots:backend,frontend`.
 defaults and merges **missing** keys only (never wipes your notes). Optional later:
 `/fit-from-pr-learnings` to mine PR triage into notes/severities.
 
-Merge rule: project overrides global key-by-key; lists replace unless the block sets
-`extends: true`. See `references/config-resolution.md`.
+Merge rule: project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`. See `references/config-resolution.md`.
 
 ## Reports
 
@@ -124,6 +127,11 @@ After a successful publish, run scratch is deleted (`artifacts.cleanup_runs: tru
 Override the published path with `out:<path>`. Configure permanently via
 `artifacts.*` in `.expectation-fit/ways-of-working.yaml`. Pass `mode:agent` for a single JSON
 object (also written under the publish dir as `.json`) for programmatic callers.
+
+One run is a sample. A second run can find defects the first run missed, so "No findings
+surfaced in this pass" is not proof of none. A lens takes seconds to two minutes on a
+small diff, and up to 50 minutes at maximum effort. When the harness reports times,
+Coverage shows them in a Cost line.
 
 ## Install
 

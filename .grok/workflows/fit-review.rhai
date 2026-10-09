@@ -295,6 +295,7 @@ fn lens_prompt(target, plugin_root, lens_id, agent_file, docs, hunts, intent_tex
     p += "Do not write any file. The orchestrator stores your return as Layer A scratch.\n";
     p += "If you cannot read the target, start an observation with failed: and return no findings.\n";
     p += "An empty findings list is valid only after you have inspected the target.\n";
+    p += "Your first observation is READ: <what you read> of <what you were given>. Page a long diff to its last line, tests included. Name any part you did not read.\n";
     p += "At most 8 findings. Name the broken expectation. Concrete suggested_fix.\n";
     p += "Skip formatter/linter nits. Flag principle tensions instead of picking a side.\n";
     p += "</output-contract>\n";
@@ -378,7 +379,7 @@ if changed_files != "" {
     cfg_prompt += "Changed files (diff headers):\n";
     cfg_prompt += changed_files;
 }
-cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated, only paths that read_file or grep showed exist), a 2-3 line intent, and policy_notes (severity_align, overrides, pattern policy, artifact dirs — prose, not silent omit).\n";
+cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated, only paths that read_file or grep showed exist), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs, and one selection reason per catalog lens — prose, not silent omit).\n";
 cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience: apply the experience rule in lens-catalog.md to the changed files. Any template, view, partial, component, or client controller path turns it on, even in a backend-heavy diff, unless lenses.experience is off. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += no_shell();
 cfg_prompt += "Do not guess a stack that the catalog does not list.\n";
@@ -492,6 +493,7 @@ if jobs.len() > 0 {
 
 let statuses = [];
 let observations = [];
+let rejected = [];
 let findings = [];
 observations.push("Config source: " + config_source + ". confidence_gate=" + gate.to_string() + ".");
 if type_of(config_source) == "string" && config_source.starts_with("defaults") {
@@ -547,8 +549,8 @@ for lens in catalog {
                         findings.push(#{
                             lens: lens.id,
                             lenses: [lens.id],
+                            also: [],
                             title: title,
-                            title_key: norm(title),
                             file: file,
                             file_key: norm(file),
                             principle: if f.principle == () { "" } else { f.principle },
@@ -569,6 +571,7 @@ for lens in catalog {
                     }
                 } else {
                     dropped_bad += 1;
+                    rejected.push(#{ finding: f, lens: lens.id, why: "malformed" });
                 }
             }
             if dropped_bad > 0 {
@@ -589,7 +592,7 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        if u.file_key == f.file_key && u.title_key == f.title_key && delta <= 3 {
+        if u.file_key == f.file_key && delta <= 3 {
             seen_at = ui;
         }
         ui += 1;
@@ -597,12 +600,19 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
+        // One defect within 3 lines, titles may differ: keep the stronger copy and list
+        // the other lens's title and fix in `also`.
         let kept = unique[seen_at];
+        let other = f;
         if comes_first(f, kept) {
-            let prior = kept.lenses;
-            f.lenses = prior;
+            f.lenses = kept.lenses;
+            f.also = kept.also;
+            other = kept;
             unique[seen_at] = f;
         }
+        unique[seen_at].also.push(#{ lens: other.lens, severity: other.severity, title: other.title, suggested_fix: other.suggested_fix });
+        if other.confidence > unique[seen_at].confidence { unique[seen_at].confidence = other.confidence; }
+        if other.fix_class != "gated_auto" && unique[seen_at].fix_class == "gated_auto" { unique[seen_at].fix_class = other.fix_class; }
         let already = false;
         for lid in unique[seen_at].lenses {
             if lid == f.lens { already = true; }
@@ -613,10 +623,6 @@ for f in findings {
 
 let ui2 = 0;
 for u in unique {
-    if u.lenses.len() >= 2 {
-        if u.confidence == 50 { unique[ui2].confidence = 75; }
-        else if u.confidence == 75 { unique[ui2].confidence = 100; }
-    }
     for ov in overrides {
         if ov != () && ov.file_substr != () && ov.severity != () {
             if unique[ui2].file_key.index_of(norm(ov.file_substr)) >= 0 {
@@ -643,7 +649,6 @@ for f in unique {
 }
 
 let verified = [];
-let rejected = [];
 let gated = [];
 for f in ranked {
     if passes_gate_at(f, gate) { gated.push(f); }
@@ -663,6 +668,8 @@ for f in ranked {
     if n < MAX_FINDINGS {
         capped.push(f);
         n += 1;
+    } else {
+        rejected.push(#{ finding: f, why: "over_max_findings" });
     }
 }
 
@@ -726,6 +733,20 @@ if unverifiable_count > 0 {
 let confirmed = verified;
 log(confirmed.len().to_string() + "/" + capped.len().to_string() + " gated findings survived verification");
 
+// Status words follow the report-template Lens status table: after the gate, a lens
+// with reported findings is "ok", not "clean".
+let si = 0;
+for s in statuses {
+    if s.status == "clean" {
+        let n = 0;
+        for f in confirmed {
+            for lid in f.lenses { if lid == s.lens { n += 1; } }
+        }
+        if n > 0 { statuses[si].status = "ok"; }
+    }
+    si += 1;
+}
+
 let any_failed = false;
 let selected_skipped = false;
 for s in statuses {
@@ -780,7 +801,7 @@ merge_prompt += "Lens statuses JSON:\n";
 merge_prompt += json_encode(statuses);
 merge_prompt += "\nObservations JSON:\n";
 merge_prompt += json_encode(observations);
-merge_prompt += "\nRejected JSON (verifier_failed / unverifiable / not_real / below_confidence_gate):\n";
+merge_prompt += "\nRejected JSON (malformed / over_max_findings / verifier_failed / unverifiable / not_real / below_confidence_gate). List each one under Rejected in Coverage with title, file:line, lens, severity, confidence and why:\n";
 merge_prompt += json_encode(rejected);
 merge_prompt += "\nConfirmed findings JSON:\n";
 merge_prompt += json_encode(confirmed);

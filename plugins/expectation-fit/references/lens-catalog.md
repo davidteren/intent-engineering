@@ -60,8 +60,9 @@ preference (`enrich`/`prefer`/`report`/`off`) further controls whether the archi
 defers to an installed external static-analysis tool instead of duplicating it. Resolve config
 first, then select.
 
-This is agent judgment, not keyword matching. Announce the selected lenses (with the
-one-line reason for each conditional lens) before dispatching.
+This is agent judgment, not keyword matching. Before dispatching, announce every catalog
+lens with its selection and a one-line reason, for example
+`experience: not_selected, no user-facing paths in scope`.
 
 ## Context adaptation
 

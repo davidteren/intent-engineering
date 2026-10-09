@@ -7,6 +7,61 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Fixed
+- **`fit-review` defines empty, plan-only and docs-only diffs (#59).** An empty diff
+  dispatches no lens (even one set to `on`) and still writes the normal report with a
+  "Nothing to review" line and the verdict Ready. `FILES` now comes from the head the
+  lenses read, so remote scopes see the right change. A plan-only diff hands off to one
+  `fit-validate-plan` run over all changed docs, which now accepts several paths as one
+  set with one report and one flow per document. A docs-only diff keeps the same lens team and adds a claim-check
+  line to the intent.
+- **The `fit-review` fix step applies only gated fixes and checks for copies (#60).**
+  Stage 5 step 7 and the subagent-template apply rules say that observations are never
+  applied. The `fix(fit-review)` commit and the Applied section hold only fixes that
+  passed the step 7 gate; callers commit other fixes separately. Before a fix that
+  replaces text, the step searches for other copies and reclassifies the fix to manual
+  when it cannot fix them all in the touched file. The shared rules tell lenses that a
+  fix which prints or runs untrusted text must say how it makes that text safe. New
+  refusal case in `evals.json`.
+- **The merge stage lists every dropped finding and verifies before apply (#47).** Coverage
+  has a Rejected list (title, file:line, lens, severity, confidence, `why`) in place of
+  counts by anchor, and a Re-grades log for every orchestrator change to severity or
+  confidence. Caller constraints limit what `fit-review` fixes, never what it reports
+  (`accepted_by_caller`). Agreement between lenses no longer raises confidence, in the
+  skill and the Grok workflow. Dedup merges findings on one defect within 3 lines even
+  when titles differ, and keeps `gated_auto` only when every copy has it. Interactive
+  `fit-review` re-reads each finding with a read-only sub-agent before it applies, and
+  `evals.json` gains the refusal case.
+- **Reports no longer look cleaner or more complete than the run was (#46).** The Lens
+  status table in `references/report-template.md` gives each word one meaning and adds
+  `ok` (ran, findings shown) next to `clean` (ran, no finding shown); `skipped` now means
+  only "selected but could not analyze", and `not_selected` covers the rest. Both
+  runtimes set `clean` or `ok` after the confidence gate. The all-clear line reads "No
+  findings surfaced in this pass", the Header names every catalog lens with a reason,
+  Coverage prints a READ line per lens and an optional Cost line, and a partial read
+  blocks the all-clear line and Ready. `fit-review` hands the diff to lenses as
+  `$RUN/diff.patch`. `check-contracts.rb` checks that every Grok status word has a row.
+- **Lens runs without subagents or file writes have rules, and reports show how lenses ran (#43).**
+  `references/subagent-template.md` now names the agent to dispatch per lens
+  (`expectation-fit:fit-<lens>-reviewer`, or a general agent that reads the agent file),
+  forbids one agent for two lenses, defines a compact reply, covers hosts that forbid
+  file writes, and adds a single-agent fallback section that all three orchestrators use.
+  Convention and architecture lenses open observations with `Config: <source>`. The
+  report Header carries `Execution: subagents | single-agent`, and a lens whose returned
+  `lens` differs from the dispatched one fails. New `lenses:<list>` token on `fit-review`,
+  `fit-validate-plan` and `fit-audit`. `check-contracts.rb` ties the template's agent
+  prefix to the plugin name in `plugin.json`.
+- **Off-schema findings are repaired, not dropped, and mode:agent has a full example (#53).**
+  The shared merge steps moved from `fit-review` Stage 5 into a new "Merge and gate"
+  section of `references/report-template.md`, and all three orchestrators point there.
+  Step 1 now repairs word severities, off-anchor confidences, unknown `fix_class` values
+  and `file:line` values, and Coverage lists each repair and drop. The template and every
+  lens agent list the allowed values. The `mode:agent` section has a complete example,
+  field rules, and verdict words per context, and the reply stays raw JSON. `base:` now
+  works with a PR target. The config docs state that nested maps merge at every depth.
+  `check-contracts.rb` checks the allowed values, the example fields that `fit-review`
+  Stage 6 names, and that no skill cites a `fit-review` Stage for a shared rule.
+
 ### Changed
 - **Renamed to Expectation Fit (#41).** The plugin is now `expectation-fit` (marketplace
   `expectation-fit-marketplace`). Skills and agents use the `fit-` prefix: `fit-review`,
@@ -111,8 +166,8 @@ for the design see **PLAN.md**.
 - **Mechanical `fit-validate-plan` verdict (#56).** The verdict is Revise first when any
   P0 or P1 survives the gate or a selected lens failed; otherwise Ready to implement.
   A markdown reply ends with one `Verdict: … Lowest score: … Blocking: … Failed lenses:
-  … Report: …` line (new eval case 4). Several documents run as separate flows, one
-  report each. Plan lenses search the whole document before they call a rule missing,
+  … Report: …` line (new eval case 4). Several documents run as separate flows (one
+  lens dispatch and one report section each) inside one run and one report (#59). Plan lenses search the whole document before they call a rule missing,
   search call sites before they call code unused, and word a fix that rests on unseen
   framework behavior as a test. Caller checks go in a `Check | Result` table in
   Coverage. `findings-schema.json` gives plan meanings for P0 and P1. The skill

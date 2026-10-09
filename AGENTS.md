@@ -107,10 +107,12 @@ expectation-fit/                       dev repo + marketplace
 3. **Dispatch** each lens in parallel using `references/subagent-template.md`, binding
    `run_artifact_dir = $RUN` (Layer A). Each lens reads its `resources/` heuristic docs,
    returns compact JSON per the schema, and writes full detail to `$RUN/{lens}.json`.
-4. **Merge / dedup / gate** (`references/report-template.md`): dedup by file+line+title,
-   promote findings agreed by 2+ lenses, suppress below the confidence gate (default
-   anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
-   and pattern policy (incl. `preferred`).
+4. **Merge / dedup / gate** (`references/report-template.md` "Merge and gate"): repair
+   off-schema findings, merge findings on one defect within 3 lines (titles may differ),
+   note agreeing lenses (agreement does not raise confidence), apply `severity_align`
+   then explicit severity overrides and pattern policy (incl. `preferred`), then suppress
+   below the confidence gate (default anchor 75; P0 survives 50+). Every dropped finding
+   is listed under Rejected with its reason.
 5. **Report** to the published path `$REPORT_PATH` under `docs/expectation-fit/`
    (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
 
@@ -125,7 +127,9 @@ script-owned verdict, report in run scratch. It must not move into
 `plugins/expectation-fit/`. See `.grok/workflows/README.md`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
-the apply stage), `out:<path>` (override published report path). Path resolution:
+the apply stage), `out:<path>` (override published report path), `lenses:<list>` (run
+only the listed lenses; overrides auto-selection and config toggles; Coverage marks the
+others `not_selected`). Path resolution:
 `references/config-resolution.md` → Artifact paths. Defaults: run
 `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-<skill>[-scope].md`.
 Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —
@@ -212,9 +216,8 @@ The plugin works out of the box with defaults; a repo tunes it via committable
   **snake_case pattern ids** from `resources/patterns/<stack>.yaml`.
 - `thresholds.yaml` — architecture metric limits, namespaced `rails.<unit>.<metric>`.
 
-**Merge rule:** project overrides global. Scalars/maps replace key-by-key. **Lists
-replace** the whole global list — *unless* the owning block sets `extends: true` (then
-append). The `conventions` block carries an `extends` flag; the `patterns.*` lists are
+**Merge rule:** project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
+An `extends: true` list appends to the global list. The `conventions` block carries an `extends` flag; the `patterns.*` lists are
 **replace-only** (no `extends` knob today). A threshold is a *signal*, not a verdict — the
 lens judges responsibilities, not just the number.
 

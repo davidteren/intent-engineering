@@ -1,7 +1,7 @@
 ---
 name: fit-validate-plan
 description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists. Run it on the final plan text, after any document review (for example ce-doc-review) and before implementation. It does not replace a document review."
-argument-hint: "[mode:agent] [out:<path>] [path/to/plan-or-spec.md]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [path/to/plan-or-spec.md ...]"
 ---
 
 # Expectation Fit — Plan Validation
@@ -18,14 +18,17 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | `mode:agent` | Emit JSON; no interactive routing. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
-| remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
+| remainder | Path to the document, or several paths. Several paths form one set: one run, one report, with one flow per document inside it. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
-If you get several documents, run the full flow once for each one. Each run gets its own
-run id and report. Never put two documents in one lens dispatch.
+If you get several documents, one run accepts the whole set: one run id and one report.
+Inside that run, run one flow per document: one lens dispatch per document and one
+report section per document. Never put two documents in one lens dispatch.
 
 ## Stage 1 — Read & classify
 
-Read the document. Classify by **content shape**, not path (path is a tie-breaker):
+Read each document. Classify each one by **content shape**, not path (path is a
+tie-breaker):
 
 - **`requirements`** (what-to-build): actors, flows, acceptance examples, R/A/F IDs,
   user/business framing, no implementation units. A requirements doc may legitimately
@@ -34,8 +37,10 @@ Read the document. Classify by **content shape**, not path (path is a tie-breake
   tests, technical decisions, sequencing. A plan that commits to building UI must
   enumerate the states.
 
-Pass `Document type:` to every lens — it changes how strict each lens is (a
-requirements doc is allowed to defer detail a plan must pin down).
+Pass `Document type:` to every lens, per document. It changes how strict each lens is
+(a requirements doc is allowed to defer detail a plan must pin down). For a set, each
+document's dispatch also lists the paths of the other documents in the set, so the lens
+can flag a conflict across documents.
 
 ## Stage 2 — Select lenses
 
@@ -55,7 +60,8 @@ validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
   assess described UX completeness (interaction states, user flows, IA, accessibility commitments,
   AI-slop risk).
 
-Pass repo `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
+A `lenses:<list>` token wins over the toggles and these rules. Pass repo
+`CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
 `conventions.notes` to every selected lens. Keep `conventions.sources` and
 `conventions.auto` with the convention lens only. Announce the team.
 
@@ -67,7 +73,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE_SLUG` | sanitized plan basename, or empty |
+| `SCOPE_SLUG` | sanitized plan basename (the first one, plus `-set` for several), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
@@ -78,15 +84,17 @@ Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
 policy:** pass `model: sonnet` to convention and experience; let predictability and
 simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
-that cite the doc location (`line` = the relevant section's start line, or 0 when none
-applies) and describe the gap a planner/implementer would hit. Missing required
+that cite the doc location (`file` = the document path; `line` = the relevant section's
+start line, or 0 when none applies) and describe the gap a planner/implementer would
+hit. For a set, each lens returns one flat `scores` object per document dispatch. Missing required
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
 ## Stage 4 — Merge & rate
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
-   (as `fit-review` Stage 5; no apply — it's a doc).
-2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
+1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+   with Context: plan, once per document. No apply, because the input is a doc.
+2. Build the dimensional rating table (scoring rubric) from lenses with status
+   `clean` or `ok`: `Lens |
    Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
    actionable gaps.
 3. Collect tensions (e.g. simplicity vs convention in the proposed approach) and
@@ -95,13 +103,15 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 ## Stage 5 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
-type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
-with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (each doc
+with its type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
+with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens status per the report-template Lens status table),
 Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
-before coding. The verdict is **Revise first** when any P0 or P1 survives the confidence
-gate, or any selected lens **failed**. Otherwise it is **Ready to implement**. P2 and P3
-gaps do not block. No time estimates.
+before coding. For a set, give each document its own section with its Dimensional
+Ratings, Findings/Gaps and Tensions; the Header, Coverage and Verdict cover the whole set. The verdict is **Revise first** when any P0 or P1 survives the confidence
+gate in any document of the set, or when a lens status or a partial read blocks it (see
+the report-template Lens status table). Otherwise it is **Ready to implement**. P2 and
+P3 gaps do not block. No time estimates.
 
 Caller checks: if the request lists must-hold checks, keep them out of the lens prompts.
 After the merge, rate each check as pass, fail or not addressed, with the plan line. Show
@@ -119,6 +129,12 @@ Verdict: <verdict>. Lowest score: <n>/10. Blocking: <n>. Failed lenses: <names o
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)
+
+## Fallback
+
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+backfill rule. Everything else unchanged.
 
 ---
 

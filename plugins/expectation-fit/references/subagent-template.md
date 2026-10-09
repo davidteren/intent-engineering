@@ -1,7 +1,15 @@
 # Lens Sub-agent Template
 
 How a skill spawns a lens. The orchestrator fills the `{slots}` and dispatches via the
-Agent tool (subagent_type = the lens agent name). **Model per lens:** pass
+Agent tool:
+
+One agent per lens. Use the registered agent `expectation-fit:fit-<lens>-reviewer` when the
+host has it. Otherwise use a general agent. Its first step is to read
+`${CLAUDE_PLUGIN_ROOT}/agents/fit-<lens>-reviewer.md` in full. Never give one agent two
+lenses or another tool's persona. Put extra context in `<intent>` or `<scope>`. Spawn
+each lens as a plain one-shot subagent, never as an agent-team member.
+
+**Model per lens:** pass
 `model: "sonnet"` (mid-tier) for convention, experience, and architecture; let
 predictability and simplicity use their `model: inherit` frontmatter (the session model) —
 they are the always-on lenses and benefit from session-model depth on high-stakes diffs.
@@ -37,8 +45,12 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
 Repo root: {repo_root}. Build every path from it. Run git as git -C {repo_root}.
 Base: {base} (review only)
 Plan: {plan_path} (review only, when plan: is given)
-{For code: FILES + DIFF, or the file/path set for audit}
-{For plan: the document content + Document type: requirements | plan.
+{For code review: FILES, the diff file path ($RUN/diff.patch), its line count and the
+ `git diff --stat` output. For audit: the file/path set}
+Read the diff file with offset and limit, page by page, to its last line, tests
+included. Name any part you did not read.
+{For plan: the document content + Document type: requirements | plan, for each
+ document in the set.
  Before you report a rule as missing, search the whole document and cite where you
  looked. If the rule is stated but weakly placed, say that instead.
  Before you say code is unused, missing or called, search its call sites and quote the
@@ -56,8 +68,20 @@ this template. This is NOT the published report path (Layer B).
 
 Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
+Compact means merge-tier fields only. Leave why_it_matters and evidence out of the reply.
+They go only in the file.
+Your first observation is "READ: <what you read> of <what you were given>", for
+example "READ: lines 1-1734 of diff.patch (1734 lines), 12 of 12 files". The
+convention lens also names the standards files it read.
+Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
-using the Write tool. Return ONLY the JSON — no prose.
+using the Write tool. Write and fix that file only with the Write tool, never with a
+shell command. Return ONLY the JSON — no prose.
+
+If the prompt says not to write files, skip the Write step. Put why_it_matters and
+evidence in the reply. This overrides the Write step in your agent's Output section.
+A program reads this reply. Style and handoff rules for chat replies to a person do not
+apply.
 
 EXCEPTION — Context: plan-assist is an advisory inline pass: do NOT write an artifact,
 and prose IS allowed (the deliverable is a checklist, not JSON). The artifact-write
@@ -92,7 +116,7 @@ Anchored. Synthesis gates at 75 (P0 survives at 50+).
   (caller not in the diff; platform unknown). Routes to observations / FYI. Still
   needs a concrete evidence quote.
 - **25 / 0 — suppress.** Speculative; no evidence in scope. Exist in the enum only so
-  synthesis can count drops.
+  synthesis can list the drops under Rejected (`below_confidence_gate`).
 
 **A failed search is unknown, not proof.** An empty result, a shell error (for example
 `no matches found`), or a path that does not resolve proves nothing. Cap a claim of
@@ -123,13 +147,17 @@ Orchestrator apply rules (review interactive only): apply only when
 `fix_class == gated_auto` **and** `confidence >= 75` **and** severity is P2 or P3 **and** the
 finding carries no `tension`; reclassify
 over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
-remote scopes.
+remote scopes. Observations are never applied. They stay in the Observations section.
 
 ## Shared rules
 
 - **Name the surprise.** Every finding states the expectation that was set and the
   actual behavior. "Surprising" without naming the expectation is not a finding.
-- **Concrete fixes only.** No "consider" / "might want to". A specific change.
+- **Concrete fixes only.** No "consider" / "might want to". A specific change. A fix
+  must not add a risk. Text from the repo, a file, the environment or the user is
+  untrusted. A fix that prints or runs such text says how it makes the text safe. For
+  example, escape control characters, quote shell arguments, and stop tools like git
+  from reading names as patterns.
 - **Set `fix_class` honestly.** Default to `manual` when the fix is non-mechanical.
 - **Respect local conventions.** Repo `CLAUDE.md`/`AGENTS.md` and existing patterns
   win over generic ideals. A consistent repo-local choice is not a violation.
@@ -142,6 +170,10 @@ remote scopes.
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were
   settled.
+- **Show the config.** The convention and architecture lenses start their observations
+  with `Config: <source>`, right after the READ line. If a project `.expectation-fit/` (or legacy `.intense/`)
+  exists but the prompt did not pass its resolved values, that line names it as not
+  applied.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
 - **No-change items go to observations.** When the honest fix is no change, a later
   decision, or something that does not exist yet, put the item in observations, not
@@ -153,3 +185,14 @@ remote scopes.
 - **No duplicating the linter.** Skip what a formatter/linter catches; focus on
   semantic surprises. If a linter rule could enforce it but is off, file one P3
   finding whose fix enables that rule.
+
+## When you cannot spawn agents
+
+This mode is a fallback. Prefer a host that can spawn agents. For `fit-review` in Grok,
+use the repo's `.grok/workflows/fit-review.rhai`.
+
+- Run each selected lens as its own pass.
+- Before each pass, read that lens's agent file in full, and its resource docs.
+- Record that lens's JSON before you start the next pass.
+- Never copy findings from another review tool, such as ce-code-review or cubic.
+- Set `Execution: single-agent` in the report Header.

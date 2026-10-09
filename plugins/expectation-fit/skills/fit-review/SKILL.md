@@ -1,7 +1,7 @@
 ---
 name: fit-review
 description: "Review code changes through the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) — surfacing surprise, non-idiomatic patterns, needless complexity, UX gaps, and structural anti-patterns. Default (interactive) mode applies safe, verified fixes and commits on a clean tree (never pushes); mode:agent reports JSON only. Use on a PR, branch, or local changes before merging."
-argument-hint: "[mode:agent] [out:<path>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
 ---
 
 # Expectation Fit — Code Review
@@ -26,9 +26,10 @@ number/URL or branch.
 |-------|--------|
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
-| `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
+| `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). Its decision lines go verbatim, with their ids, to every lens in `<known-context>` (Stage 2). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 
 ## Operating principles
 
@@ -40,6 +41,9 @@ number/URL or branch.
   diff. Note uncertainty in Coverage; don't stop to ask.
 - **Explicit mutations only.** Never `git checkout`/`switch` or `gh pr checkout`. A PR
   or branch argument selects *scope*, not permission to switch trees.
+- **Caller constraints limit what the run fixes, never what it reports.** A finding that
+  a caller constraint covers ("do not change X") goes to Rejected with why
+  `accepted_by_caller`.
 - **Read the repo's standards.** Convention findings hinge on local `CLAUDE.md`/
   `AGENTS.md` and existing patterns — those override generic ideals.
 
@@ -47,7 +51,9 @@ number/URL or branch.
 
 Compute the diff. Reuse the scope logic familiar from standard code-review skills:
 
-- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`.
+- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`. The
+  diff is the current checkout against `BASE`. A PR or branch target given with `base:`
+  supplies only the intent (Stage 2).
 - **PR number/URL** — `gh pr view` for metadata; do not checkout. Classify
   `local-aligned` (HEAD == PR head, not cross-repo, head is ancestor of HEAD) vs
   `pr-remote`. In `pr-remote`, lenses inspect via `git show <ref>:<path>` / diff hunks
@@ -55,10 +61,31 @@ Compute the diff. Reuse the scope logic familiar from standard code-review skill
 - **Branch name** — resolve `origin/<branch>` without checkout; `branch-remote` scope.
 - **No argument** — current branch vs its detected base.
 
-Produce: `BASE`, `FILES` (`git diff --name-only $BASE`), `DIFF` (`git diff -U10 $BASE`),
-`UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
-scope; list them in Coverage. If no base resolves, stop — don't fall back to
-`git diff HEAD` (it would miss committed work).
+Produce: `BASE`, `HEAD_REF` (the head the lenses read: the working tree in
+`local-aligned`/standalone scope, the PR head ref in `pr-remote`, `origin/<branch>` in
+`branch-remote`), `FILES` (`git diff --name-only $BASE`, or `git diff --name-only $BASE
+$HEAD_REF` in remote scopes), `DIFF` (the same range with `-U10`), and `UNTRACKED`
+(`git ls-files --others --exclude-standard`). Untracked files are out of scope; list
+them in Coverage. If no base resolves, stop — don't fall back to `git diff HEAD` (it
+would miss committed work).
+
+**Empty diff.** If `FILES` is empty, dispatch no lens. Still load config and resolve the
+report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:agent`)
+with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
+Findings line:
+`Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
+Set the verdict to Ready, and stop. This stop comes before lens selection, so a lens set
+to `on` does not run.
+
+**Plan-only diff.** Hand off when no changed file is code and at least one is a plan,
+spec or requirements doc. Such a doc has implementation units (U1, U2), R/A/F ids, or
+actors and flows (see fit-validate-plan Stage 1). Files that steer agents count as code
+here: SKILL.md, agent, command and rule files, AGENTS.md and CLAUDE.md. When unsure,
+take the normal path. To hand off, say: "No code in this diff; running fit-validate-plan
+instead." Run `fit-validate-plan` once on all changed docs, with the same `mode:agent`
+and `out:` tokens. Its report and verdict are the result of this run. Write no review
+report. In `mode:agent`, the reply keeps the plan verdict words (Ready to implement /
+Revise first).
 
 Also capture **`TREE_CLEAN`**: `git status --porcelain` empty at this moment (before any
 write). Stage 5 uses this flag for the optional commit (do not re-check after apply).
@@ -74,6 +101,11 @@ With `plan:`, also quote the plan's decision lines verbatim, with their ids, int
 sections are examples, not a required format. Without `plan:`, do not look for a plan
 in the PR body or commit log: a stale plan would hide real findings. Coverage says
 `Plan: <path>` or `Plan: none`.
+
+If the diff changes only docs, a CHANGELOG or a version number, add this line to the
+intent: "Check each changed claim against the code and the other docs: versions, status
+lines and links. Also read the docs outside the diff that state the same fact." Lens
+selection does not change.
 
 ## Stage 3 — Select lenses
 
@@ -103,7 +135,8 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
   `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`).
 
 Honor the config `lenses:` toggles over these defaults (`off` forces a lens off even if
-relevant; `on` forces it on; `auto` = the judgment above).
+relevant; `on` forces it on; `auto` = the judgment above). A `lenses:<list>` token wins
+over both: run exactly the listed lenses.
 
 Find standards paths first: Glob `**/CLAUDE.md` and `**/AGENTS.md` whose directory is an
 ancestor of a changed file. Pass them in `<standards-paths>`, with the resolved
@@ -111,8 +144,9 @@ ancestor of a changed file. Pass them in `<standards-paths>`, with the resolved
 `conventions.auto` with the convention lens only, because auto discovery can expand to
 many files.
 
-Announce the lens team with a one-line reason for each conditional lens before
-dispatching. This is progress reporting, not a confirmation prompt.
+Before dispatching, announce every catalog lens with its selection and a one-line
+reason, for example `experience: not_selected, no user-facing paths in scope`. This is
+progress reporting, not a confirmation prompt.
 
 ## Stage 4 — Dispatch
 
@@ -131,6 +165,10 @@ Bind **`run_artifact_dir = $RUN`** (Layer A only). Bind `repo_root` to
 `git rev-parse --show-toplevel`, `base` to `BASE` from Stage 1, and `plan_path` to the
 `plan:` path when one is given.
 
+Write the Stage 1 `DIFF` to `$RUN/diff.patch`. Pass each lens that path, its line count
+and `git diff --stat $BASE`, not the diff inline. A large diff then never gets cut off
+in the lens prompt.
+
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
 convention, experience, and **architecture**; let predictability and simplicity inherit
@@ -142,60 +180,61 @@ capacity errors are backpressure, not failure). Each lens writes `$RUN/{lens}.js
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape (including
-**Lens status**: failed / skipped / clean).
+**Lens status**).
 
-1. **Validate** each return; assign per-lens status (failed / skipped / clean). Drop
-   malformed *findings* (record the count) but mark the **lens failed** on non-JSON,
-   missing `$RUN/{lens}.json`, or a selected lens that never returned. One re-dispatch
-   is allowed on non-JSON; still failed after that.
-2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
-   keep highest severity + confidence; record which lenses flagged it.
-3. **Cross-lens agreement** — 2+ lenses on the same fingerprint: promote one anchor
-   step (50->75, 75->100). Note the agreeing lenses.
-4. **Apply config policy before the confidence gate** (order matters — see
-   config-resolution):
-   1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
-      `conventions.auto` discovery, promote findings that match a gate theme under the
-      **smell-first** rules (e.g. `callback-hell` + `callback-check.yml` → at least
-      `min_severity`, default P1). Never demote. Record each promotion in Coverage.
-      Mark those findings `severity_aligned: true` for the gate exception below.
-   2. **`severity_overrides`** (wins over align on conflict): string or
-      `{ severity:, because: }` — copy `because` into Coverage. A key that is not a
-      principle id or a canonical smell id goes in Coverage as
-      `ignored severity_overrides key: <key>`.
-   3. Pattern policy: `approved` silences blocked, instead_of and unidentified
-      findings on its path. Smell findings still show, and net-new blocked use still
-      gets P1. Keep preferred-`instead_of` introductions in **changed** code at P1.
-5. **Confidence gate** — suppress findings below the resolved `confidence_gate`
-   (default anchor 75), EXCEPT:
-   - P0 at confidence 50+, or
-   - findings that received a **`severity_align` promotion** at confidence 50+
-     (CI-backed floors must not be dropped solely for mid confidence).
-   Record suppressions by anchor.
-6. **Collect tensions** — a finding carrying a `tension` stays in Findings at its
-   severity and also appears in the Tensions section.
+Run steps 1 to 6 of **Merge and gate** in
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` (validate and repair, dedup,
+agreement, config policy, confidence gate, tensions). Then:
+
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity P2 or P3, a
    concrete `suggested_fix`, and carries no `tension`. Apply only when the working tree is what was reviewed
-   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
-   run affected tests/lint; if they fail, revert that fix and report it instead. If
-   **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
+   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`.
+
+   **Verify first:** one read-only sub-agent re-reads the cited lines of every finding
+   that passes this gate, with this prompt: "Adversarially verify this finding against
+   the target the lenses used. Set real=true only with concrete evidence you inspected
+   yourself. If you cannot open the file, the claim is wrong, or the evidence is thin,
+   set real=false." Apply only confirmed findings. A refuted finding goes to Rejected
+   with why `not_real`. In the Fallback, the orchestrator re-reads the lines itself and
+   Coverage says so.
+
+   **Check for copies:** before a fix that replaces text, search the repo for a key
+   phrase of the old text. Also check every copy that a lens named in a finding or an
+   observation. If all copies sit in the touched file and take the same edit, fix them
+   all in one commit. Otherwise do not apply the fix: reclassify it to manual and list
+   each copy in it. Historical text, such as CHANGELOG entries and dated reports, does
+   not count as a copy.
+
+   After applying, run affected tests/lint; if they fail, revert that fix and report it
+   instead. If **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
    `fix(fit-review): <summary>` commit; if it was false, apply but leave uncommitted.
+   The `fix(fit-review)` commit holds only fixes that pass this gate. A caller that fixes
+   other findings commits those fixes separately, after this skill reports.
+
    Push back (don't apply) when a lens is wrong; skip taste calls and conflicting
-   suggestions but surface what was skipped. Never push.
+   suggestions but surface what was skipped. Never push. Observations are never
+   applied. They stay in the Observations section.
 
 ## Stage 6 — Report
 
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — including the mode:agent section
 there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
-verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
+verdict, completed_at in the Header. Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
-lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
-selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
-ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
+lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (the status of
+every catalog lens per the report-template Lens status table, READ lines, Cost), Verdict
+(Ready / Ready with fixes / Not ready). **Do not** use Ready / all-clear when a lens
+status or a partial read blocks it. No time
 estimates. Every finding actionable.
+
+**mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
+`scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
+`lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
+`observations`, `coverage.execution`, `coverage.lens_status`, `artifact_path`. The
+report-template example shows each one.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
@@ -211,7 +250,8 @@ catches.
 
 ## Fallback
 
-No parallel sub-agents: run lenses sequentially. Concurrency cap: use the queue/
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
 backfill rule. Everything else unchanged.
 
 ---
