@@ -1,0 +1,87 @@
+plugins/expectation-fit/README.md
+  s_139c48e2134bb7::t_caa4d841eb86a3 50
+plugins/expectation-fit/resources/frameworks/phoenix-architecture.md
+  s_139c48e2134bb7::t_0f379c0985e370 215-218
+  s_139c48e2134bb7::t_d2f7f39a912854 45
+  s_139c48e2134bb7::t_8b793cb1b43d40 230-231
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_de1fc6a51eea21 411-412
+plugins/expectation-fit/resources/frameworks/react-architecture.md
+  s_139c48e2134bb7::t_78bbf775d3e67d 199-202
+  s_139c48e2134bb7::t_28ca0123d14a03 51
+  s_139c48e2134bb7::t_1863b42edc448d 214-215
+plugins/expectation-fit/agents/fit-architecture-reviewer.md
+  s_139c48e2134bb7::t_ecb7c39facddb2 67-69
+  s_139c48e2134bb7::t_efc1729ea81f78 34-38
+  s_139c48e2134bb7::t_42e2e156cbff31 131-137
+  s_139c48e2134bb7::t_ecef3d27b9378b 91-92
+  s_139c48e2134bb7::t_d1271ed0a8a902 105-111
+  s_139c48e2134bb7::t_e9023b56f9a51b 64
+CHANGELOG.md
+  s_139c48e2134bb7::t_7b1b2a488346a6 44-56
+plugins/expectation-fit/config/defaults/patterns.yaml
+  s_139c48e2134bb7::t_cb21bc8455a6af 55-56
+  s_139c48e2134bb7::t_7e5b2d7517fb87 47-49
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_8d29649cf01a5f 156-158
+plugins/expectation-fit/references/stack-catalog.md
+  s_139c48e2134bb7::t_8b8431a05c9e6c 29
+  s_139c48e2134bb7::t_9a69e993d09340 41-42
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_3d96b06682352d 70-72
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_b074b7c195a7e1 16
+plugins/expectation-fit/resources/frameworks/rails-architecture.md
+  s_139c48e2134bb7::t_75e40150e59f09 235
+  s_139c48e2134bb7::t_b8d4e54f402e39 82-83
+  s_139c48e2134bb7::t_041a27794e2824 35
+  s_139c48e2134bb7::t_4de364b33f5398 239-240
+  s_139c48e2134bb7::t_a71d2505295a7a 6
+  s_139c48e2134bb7::t_464c0483220a1f 210-219
+plugins/expectation-fit/resources/patterns/README.md
+  s_139c48e2134bb7::t_dc587f93b6c8d0 35-41
+  s_139c48e2134bb7::t_e04daf539776de 74-77
+plugins/expectation-fit/skills/fit-audit/evals.json
+  s_139c48e2134bb7::t_b72100727a2e35 18-22
+AGENTS.md
+  s_139c48e2134bb7::t_71e627cf2af590 148
+plugins/expectation-fit/references/findings-schema.json
+  s_139c48e2134bb7::t_2174308e41f44f 91
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_6f9166ba867167 93-95
+plugins/expectation-fit/skills/fit-setup/SKILL.md
+  s_139c48e2134bb7::t_6d6d89f7504bfd 181
+plugins/expectation-fit/resources/frameworks/python-architecture.md
+  s_139c48e2134bb7::t_6d0307b5d50932 42
+  s_139c48e2134bb7::t_d2ca6404d45c85 243-246
+  s_139c48e2134bb7::t_fe0bb2429656b8 264-265
+README.md
+  s_139c48e2134bb7::t_a52f79ffe21319 183
+  s_139c48e2134bb7::t_c83da45579ab34 63
+plugins/expectation-fit/config/defaults/ways-of-working.yaml
+  s_139c48e2134bb7::t_ea78780911a81f 21-25
+plugins/expectation-fit/resources/frameworks/laravel-architecture.md
+  s_139c48e2134bb7::t_e838b55c68c5c6 215-218
+  s_139c48e2134bb7::t_8e73a9a8578934 48
+  s_139c48e2134bb7::t_32f24783b68ac4 233-234
+plugins/expectation-fit/resources/frameworks/express-architecture.md
+  s_139c48e2134bb7::t_6a9ddebf749d30 53
+  s_139c48e2134bb7::t_2468f0ea65e7ff 249-250
+  s_139c48e2134bb7::t_10503a1af76f27 232-235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e7708bcbc6d6722ca75a187c31f5bb0a4f3e7326",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
