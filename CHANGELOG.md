@@ -7,6 +7,26 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-09
+
+### Breaking
+The plugin is renamed from intent-engineering to expectation-fit (#41). Old names map to
+new names as follows:
+
+| Before (intent-engineering 0.8.x) | Now (expectation-fit 0.9.0) |
+|---|---|
+| `/ie-review` | `/fit-review` |
+| `/ie-audit` | `/fit-audit` |
+| `/ie-validate-plan` | `/fit-validate-plan` |
+| `/ie-plan-assist` | `/fit-plan-assist` |
+| `/ie-from-pr-learnings` | `/fit-from-pr-learnings` |
+| `/ie-init` | `/fit-setup` |
+| `ie-<lens>-reviewer` agents | `fit-<lens>-reviewer` agents |
+| `intent-engineering@intent-engineering-marketplace` | `expectation-fit@expectation-fit-marketplace` |
+| `.intense/` config folder | `.expectation-fit/` (the legacy `.intense/` is still read) |
+| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (the legacy variable is still read) |
+| Reports in a tracked folder by default | Reports default to `.expectation-fit/reports/` (git-ignored) |
+
 ### Fixed
 - **`fit-review` defines empty, plan-only and docs-only diffs (#59).** An empty diff
   dispatches no lens (even one set to `on`) and still writes the normal report with a

@@ -131,7 +131,7 @@ monotonic across the whole report.
    |---|---|---|
    | `clean` | Ran. The report shows no finding from this lens. | No |
    | `ok` | Ran. The report shows N findings from this lens, applied fixes included. Coverage writes "ok, N findings". | No. The findings set the verdict. |
-   | `failed` | Non-JSON return, missing `$RUN/{lens}.json`, missing required `scores`, a returned `lens` that differs from the dispatched lens, or a harness error (after the optional one re-dispatch). | Yes |
+   | `failed` | Non-JSON return, missing `$RUN/{lens}.json` (plan set: `$RUN/{lens}-<doc-slug>.json`), missing required `scores`, a returned `lens` that differs from the dispatched lens, or a harness error (after the optional one re-dispatch). | Yes |
    | `skipped` | Selected, but it could not analyze. Example: no architecture pack (a `SKIPPED:` observation). | Yes |
    | `not_selected` | Auto-selection, config or a `lenses:<list>` token did not pick it. The Header gives the reason. | No |
 
@@ -157,7 +157,8 @@ this order. Each step runs in every context unless its mark says otherwise. Read
 `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for the field rules.
 
 1. **Validate and repair.** Assign each lens a status (see Lens status under Coverage). Mark the lens
-   **failed** on a non-JSON return, a missing `$RUN/{lens}.json`, a returned `lens`
+   **failed** on a non-JSON return, a missing `$RUN/{lens}.json` (plan set: a missing
+   `$RUN/{lens}-<doc-slug>.json` for any document), a returned `lens`
    that differs from the dispatched lens, or a selected lens that never returned. One re-dispatch is allowed on a non-JSON return; a lens that is
    still non-JSON after that is failed. Repair off-schema findings; do not drop them:
    - Severity `low`, `medium`, `high` or `critical` becomes `P3`, `P2`, `P1` or `P0`.
@@ -303,7 +304,7 @@ Complete example (a review run without `out:`):
     },
     "files_reviewed": 4,
     "untracked": [],
-    "repairs": []
+    "regrades": []
   },
   "artifact_path": null,
   "plugin_version": "0.9.0",
@@ -315,6 +316,13 @@ Complete example (a review run without `out:`):
   "base_sha": "3f2c1a9"
 }
 ```
+
+**mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
+`scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
+`lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
+`observations`, `coverage.execution`, `coverage.lens_status`, `coverage.regrades`,
+`artifact_path`, `plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`,
+`tree_clean`, `base_sha`, and `status` on each finding. The example above shows each one.
 
 Field rules:
 
@@ -333,17 +341,18 @@ Field rules:
   set). Audit: `target` (the path, glob or subsystem).
 - `finding_counts` counts findings per severity after the confidence gate. All four keys
   are always present.
-- `actionable_findings` is the caller's apply list: findings that pass the `fit-review`
-  apply gate (`gated_auto`, confidence 75 or more, P2 or lower, a concrete
-  `suggested_fix`). `mode:agent` applies nothing, so the caller decides. It is empty in
-  audit and plan.
+- `actionable_findings` is the caller's apply list: findings that pass the full
+  `fit-review` apply gate in `${CLAUDE_PLUGIN_ROOT}/skills/fit-review/SKILL.md` (Stage 5
+  step 7). `mode:agent` applies nothing, so the caller decides. It is empty in audit and
+  plan.
 - `rejected` lists every finding that the merge did not report, with `title`, `file`,
   `line`, `lens`, `severity`, `confidence` and `why` (see Rejected under Coverage).
 - `coverage.execution` is `subagents` or `single-agent`.
 - `coverage.lens_status` has one key per catalog lens, with the words from the Lens
   status table.
-- `coverage.repairs` lists each re-grade (Merge and gate step 1) by lens and title, with
-  its reason. Drops go to `rejected`.
+- `coverage.regrades` lists every re-grade from any merge step (repairs in Merge and
+  gate step 1, dedup, `severity_align`, `severity_overrides` and pattern policy), by lens
+  and title, with its reason. Drops go to `rejected`.
 
 Verdict words, by context. Use only these words:
 

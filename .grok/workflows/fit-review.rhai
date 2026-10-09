@@ -338,6 +338,11 @@ if !target_looks_like_path {
     if ("" + target).index_of(" ") >= 0 {
         pause("verification", "Pass target as a ref, range, or path with no spaces. Put notes elsewhere.");
     }
+    // The workflow reads the checked-out tree, so the target must be HEAD.
+    let t = "" + target;
+    if t != "HEAD" && !t.ends_with("..HEAD") {
+        pause("verification", "This workflow reviews the checked-out tree. Check out the branch, then pass target HEAD (or a path).");
+    }
     if base_ref == () || !is_commit_sha("" + base_ref) {
         pause("verification", "Pass base as a commit SHA.");
     } else {
@@ -347,6 +352,9 @@ if !target_looks_like_path {
             pause("verification", "Pass base as a commit SHA.");
         }
     }
+}
+if !target_looks_like_path && diff_text == "" {
+    pause("verification", "The diff since base is empty. Nothing to review. Check base and target.");
 }
 let changed_files = "";
 if type_of(diff_text) == "string" && diff_text != "" {
@@ -580,6 +588,7 @@ for lens in catalog {
                         });
                     } else {
                         dropped_bad += 1;
+                        rejected.push(#{ finding: f, lens: lens.id, why: "malformed" });
                     }
                 } else {
                     dropped_bad += 1;
@@ -604,7 +613,9 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        if u.file_key == f.file_key && delta <= 3 {
+        // Same file, within 3 lines, and the same defect: same principle or same title.
+        let same_defect = (u.principle != "" && u.principle == f.principle) || match_key(u.title) == match_key(f.title);
+        if seen_at < 0 && u.file_key == f.file_key && delta <= 3 && same_defect {
             seen_at = ui;
         }
         ui += 1;
@@ -612,8 +623,8 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
-        // One defect within 3 lines, titles may differ: keep the stronger copy and list
-        // the other lens's title and fix in `also`.
+        // One defect within 3 lines (titles may differ): keep the stronger copy, list the
+        // other lens's title and fix in `also`, and take the higher confidence.
         let kept = unique[seen_at];
         let other = f;
         if comes_first(f, kept) {
@@ -771,10 +782,16 @@ for lens in catalog {
         }
     }
 }
-let verdict = "Ready with fixes";
-if confirmed.len() == 0 && !any_failed && config_ok && !selected_skipped {
-    verdict = "Ready";
+// Review verdict rule (report-template): any confirmed P0 or P1 is Not ready, a
+// confirmed P2 is Ready with fixes, otherwise Ready. The blockers below override it.
+let worst = 4;
+for f in confirmed {
+    let r = severity_rank(f.severity);
+    if r < worst { worst = r; }
 }
+let verdict = "Ready";
+if worst <= 1 { verdict = "Not ready"; }
+else if worst == 2 { verdict = "Ready with fixes"; }
 if any_failed || !config_ok || selected_skipped || unverifiable_count > 0 {
     verdict = "Not ready";
 }

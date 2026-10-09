@@ -4,13 +4,13 @@ Living status **snapshot** — the current state of the project, not a log. For 
 history of changes and decisions, see **[CHANGELOG.md](CHANGELOG.md)**. For the design and
 phase detail, **PLAN.md**. For how to work in this repo, **AGENTS.md**.
 
-**State:** ✅ feature-complete · 🚀 published & released (**v0.8.0**) · **Updated:** 2026-09-08
+**State:** ✅ feature-complete · 🚧 **v0.9.0** on `release/0.9.0`, pending release (latest published: v0.8.0) · **Updated:** 2026-10-09
 
 ### Last session handoff
 
-1. **What this is:** Expectation Fit plugin **v0.8.0**, plus a refreshed GitHub Pages site.
-2. **What we finished:** Light and dark site themes, finding-as-hero, social preview, HTML reports.
-3. **What you do next:** Open the live site and check both themes.
+1. **What this is:** The Expectation Fit plugin, on the 0.9.0 release branch.
+2. **What we finished:** The rename and 21 fixes are merged on `release/0.9.0`.
+3. **What you do next:** Merge the release PR, then tag v0.9.0, update installs, and check the live site at https://davidteren.github.io/intent-engineering/.
 
 ---
 
@@ -31,7 +31,7 @@ Phoenix, React) + per-stack pattern catalogs.
   `conventions.auto`, smell-first `severity_align`, `patterns.preferred`).
 - **Knowledge base:** 9 principle docs, **15** framework docs (9 convention + 6
   architecture packs), 6 agnostic docs (+ UX smell cards), 6 pattern catalogs.
-- **Automated check:** `scripts/check-contracts.rb` — **141** checks across 12 sections.
+- **Automated check:** `scripts/check-contracts.rb` — **161** checks across 12 sections.
 - **Two-layer artifacts:** `.expectation-fit/runs/` scratch and `.expectation-fit/reports/` reports; both ignore themselves.
 - **Optional Grok runtime** — `.grok/workflows/fit-review.rhai`. Report-only. Not shipped
   inside the Claude plugin dir. See `.grok/workflows/README.md`.
@@ -40,8 +40,8 @@ Phoenix, React) + per-stack pattern catalogs.
 
 - **Repo (public, MIT):** https://github.com/davidteren/intent-engineering
 - **Landing site:** https://davidteren.github.io/intent-engineering/ (GitHub Pages, `docs/`)
-- **Release:** **`v0.8.0` (Latest)** — init wizard, multi-repo placement, auto sources,
-  severity_align, preferred patterns, fit-from-pr-learnings. Prior: `v0.7.0`.
+- **Release:** **`v0.9.0` pending release** (rename to expectation-fit plus 21 fixes, on
+  `release/0.9.0`). Latest published: `v0.8.0`.
 - **CI:** `contracts` workflow on every PR + `main`.
 
 Install:
@@ -53,11 +53,10 @@ Install:
 
 ## Health
 
-- Contract suite green (141 checks).
+- Contract suite green (161 checks).
 - 5 agents + 6 skills under `plugins/expectation-fit/`.
 - Dogfood report: [`docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md`](docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md).
 
-## Open question — potential name/positioning change (PARKED)
+## Rename
 
-Considering renaming **"Expectation Fit"** — parked until the owner re-opens it.
-See earlier STATUS / CHANGELOG discussion; do not act without explicit go-ahead.
+Done in 0.9.0: intent-engineering is now Expectation Fit (#41).

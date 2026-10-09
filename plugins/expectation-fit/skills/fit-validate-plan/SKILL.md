@@ -24,7 +24,11 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 
 If you get several documents, one run accepts the whole set: one run id and one report.
 Inside that run, run one flow per document: one lens dispatch per document and one
-report section per document. Never put two documents in one lens dispatch.
+report section per document. Never put two documents in one lens dispatch. Each
+dispatch in a set writes its own file, `$RUN/{lens}-<doc-slug>.json`, so dispatches do
+not overwrite each other. `<doc-slug>` is the document path under the slug rule in
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (`slug_of`). A single-document
+run keeps `$RUN/{lens}.json`.
 
 ## Stage 1 — Read & classify
 
@@ -89,7 +93,8 @@ Plan mode requires `scores` (dimensional rating per the scoring rubric) plus fin
 that cite the doc location (`file` = the document path; `line` = the exact plan line of
 the evidence quote, or 0 when none applies) and describe the gap a planner/implementer
 would hit. For a set, each lens returns one flat `scores` object per document dispatch. Missing required
-`scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
+`scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool); in a
+set, each dispatch writes `$RUN/{lens}-<doc-slug>.json` (bind `{doc_slug}`).
 
 With `prior:`, fill the `<prior>` slot with the prior gaps and its two plan rules: mark
 each prior gap closed or still open, with its plan line; drop a score only when the lens

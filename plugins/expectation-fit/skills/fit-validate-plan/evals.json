@@ -25,6 +25,11 @@
       "id": 5,
       "prompt": "fit-validate-plan prior:.expectation-fit/reports/<last>-validate-plan-my-plan.md docs/plans/my-plan.md (the plan was edited after round 1)",
       "expected_output": "Re-check run. Header shows plan_sha256, supersedes: <prior report> and round 2. Each prior gap is marked closed or still open with its plan line. The rating table has a Prior column, and a score drops only when a lens names the new gap. Decisions the plan marks as settled stay closed unless a lens cites new evidence. The verdict line shows how many applicable lenses ran."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-validate-plan docs/plans/a-plan.md docs/plans/b-plan.md",
+      "expected_output": "One run with one run id and one report, with one report section per document. Each lens dispatch covers one document and writes its own file under the run folder: {lens}-a-plan.json and {lens}-b-plan.json, never one shared {lens}.json. A missing per-document file marks that lens failed."
     }
   ]
 }

@@ -159,13 +159,41 @@ steps, turn on auto-update for the marketplace in `/plugin` (Marketplaces tab). 
 report's `Provenance:` line names the version and plugin folder that ran, so you can
 see when a stale copy produced it.
 
+## Upgrading from intent-engineering
+
+Version 0.9.0 renames the plugin. Old names map to new names as follows:
+
+| Before (intent-engineering 0.8.x) | Now (expectation-fit 0.9.0) |
+|---|---|
+| `/ie-review` | `/fit-review` |
+| `/ie-audit` | `/fit-audit` |
+| `/ie-validate-plan` | `/fit-validate-plan` |
+| `/ie-plan-assist` | `/fit-plan-assist` |
+| `/ie-from-pr-learnings` | `/fit-from-pr-learnings` |
+| `/ie-init` | `/fit-setup` |
+| `ie-<lens>-reviewer` agents | `fit-<lens>-reviewer` agents |
+| `intent-engineering@intent-engineering-marketplace` | `expectation-fit@expectation-fit-marketplace` |
+| `.intense/` config folder | `.expectation-fit/` (the legacy `.intense/` is still read) |
+| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (the legacy variable is still read) |
+| Reports in a tracked folder by default | Reports default to `.expectation-fit/reports/` (git-ignored) |
+
+To switch an existing install:
+
+```
+/plugin marketplace remove intent-engineering-marketplace
+/plugin marketplace add https://github.com/davidteren/intent-engineering
+/plugin install expectation-fit
+/plugin uninstall intent-engineering@intent-engineering-marketplace
+```
+
+Then run `/fit-setup upgrade` to move `.intense/` to `.expectation-fit/`.
+
 ## Grok (optional, source repo only)
 
-This installable plugin is Claude Code. The development repo also has a Grok
-workflow at `.grok/workflows/fit-review.rhai`. Marketplace install does **not**
-ship that file. Clone the repo and run `/workflow fit-review` from a Grok
-session. Report is run scratch. No product-code apply. See
-[`.grok/workflows/README.md`](../../.grok/workflows/README.md).
+This installable plugin is Claude Code. There is also an optional Grok workflow
+in the source repository (not shipped with the plugin). Clone the repo and run
+`/workflow fit-review` from a Grok session; the README next to the workflow
+explains its arguments. Report is run scratch. No product-code apply.
 
 ## Conventions this plugin assumes
 

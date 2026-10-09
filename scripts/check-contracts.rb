@@ -34,7 +34,7 @@
 #      and a Sources section with >=2 links; every resource doc is cited (no orphans) in
 #      principle-index.md or lens-catalog.md.
 #  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift); allowed finding
-#      values in the template + agents; the mode:agent example has every Stage 6 field;
+#      values in the template + agents; the mode:agent example has every listed field;
 #      no skill cites fit-review Stage for a shared merge rule.
 #  12. Skill evals.json (optional; present files must parse; refusal cases preferred).
 
@@ -628,7 +628,8 @@ end
   end
 end
 
-# mode:agent example (issue #53): parse it, and require every field fit-review Stage 6 names.
+# mode:agent example (issue #53): parse it, and require every field the report-template
+# mode:agent field list names (the single source; fit-review Stage 6 points at it).
 report_tpl = read("references/report-template.md")
 agent_section = report_tpl[/## mode:agent \(JSON\)(.*)/m, 1].to_s
 example_src = agent_section[/```json\n(.*?)```/m, 1]
@@ -638,10 +639,9 @@ rescue JSON::ParserError => e
   bad "report-template.md: mode:agent example is not valid JSON (#{e.message})"
   nil
 end
-review_skill = read("skills/fit-review/SKILL.md")
-stage6_fields = review_skill[/\*\*mode:agent fields:\*\*(.*?)\n\n/m, 1].to_s.scan(/`([a-z_.]+)`/).flatten
+stage6_fields = agent_section[/\*\*mode:agent fields:\*\*(.*?)\n\n/m, 1].to_s.scan(/`([a-z_.]+)`/).flatten
 if stage6_fields.empty?
-  bad "skills/fit-review/SKILL.md: Stage 6 must name the mode:agent fields (**mode:agent fields:** line)"
+  bad "report-template.md: the mode:agent section must list its fields (**mode:agent fields:** line)"
 elsif example
   missing = stage6_fields.reject do |path|
     keys = path.split(".")
@@ -649,9 +649,9 @@ elsif example
     parent.is_a?(Hash) && parent.key?(keys[-1])
   end
   if missing.empty?
-    ok "report-template.md: mode:agent example has all #{stage6_fields.size} Stage 6 fields"
+    ok "report-template.md: mode:agent example has all #{stage6_fields.size} listed fields"
   else
-    bad "report-template.md: mode:agent example missing Stage 6 field(s): #{missing.join(', ')}"
+    bad "report-template.md: mode:agent example missing listed field(s): #{missing.join(', ')}"
   end
 end
 
@@ -671,13 +671,25 @@ end
 status_rows = report_tpl.scan(/^\s*\|\s*`([a-z_]+)`\s*\|/).flatten
 grok_path = File.expand_path("../.grok/workflows/fit-review.rhai", __dir__)
 if File.file?(grok_path)
-  grok_words = File.read(grok_path).scan(/(?:status:\s*|status\s*=\s*|lens_status\s*=\s*)"([a-z_]+)"/).flatten.uniq
+  grok_src = File.read(grok_path)
+  grok_words = grok_src.scan(/(?:status:\s*|status\s*=\s*|lens_status\s*=\s*)"([a-z_]+)"/).flatten.uniq
   missing = grok_words - status_rows
-  if missing.empty?
+  if grok_words.empty?
+    bad "fit-review.rhai: no lens status words found (the extraction pattern no longer matches)"
+  elsif missing.empty?
     ok "Grok status words #{grok_words.sort.inspect} all have a Lens status row"
   else
     bad "report-template.md Lens status table missing Grok status word(s): #{missing.join(', ')}"
   end
+  # Review verdict rule: a confirmed P0 or P1 sets Not ready in the Grok runtime too.
+  verdict_code = grok_src[/Review verdict rule.*?\nif any_failed/m].to_s
+  if verdict_code.include?("P0") && verdict_code.include?("P1") && verdict_code.include?('"Not ready"')
+    ok "fit-review.rhai: verdict code maps P0 and P1 to Not ready"
+  else
+    bad "fit-review.rhai: verdict code must map a confirmed P0 or P1 to Not ready"
+  end
+else
+  bad "fit-review.rhai not found"
 end
 
 # ---------------------------------------------------------------------------
@@ -749,6 +761,12 @@ if config_res.include?("EXPECTATION_FIT_CONFIG_DIR") && config_res.include?("con
   ok "config-resolution.md documents EXPECTATION_FIT_CONFIG_DIR and config: override"
 else
   bad "config-resolution.md: missing EXPECTATION_FIT_CONFIG_DIR or config: escape hatch"
+end
+# Legacy fallback (0.9.0 rename): .intense/ and INTENSE_CONFIG_DIR must stay documented.
+if config_res.include?(".intense") && config_res.include?("INTENSE_CONFIG_DIR")
+  ok "config-resolution.md documents the legacy .intense/ and INTENSE_CONFIG_DIR fallback"
+else
+  bad "config-resolution.md: missing the legacy .intense/ or INTENSE_CONFIG_DIR fallback"
 end
 if config_res.include?("conventions.sources")
   ok "config-resolution.md documents conventions.sources"

@@ -132,9 +132,14 @@ the user explicitly asks to migrate placement.
 
 **Legacy folder (`.intense/`, before 0.9.0).** When `PROJECT_CONFIG` ends in `/.intense`,
 offer the move first: `git mv .intense .expectation-fit` when the folder is tracked, else
-`mv`. Ask once, show the command, and never move without a yes. If both folders exist,
-stop and list them; `.expectation-fit/` already wins the walk-up. After a move, print the
-git state of the new folder so the user can commit it.
+`mv`. Ask once, show the command, and never move without a yes. If both folders hold
+one of the three yaml files (`ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml`),
+stop and list them; `.expectation-fit/` already wins the walk-up. When
+`.expectation-fit/` exists but holds only `runs/` or `reports/`, move each
+`.intense/*.yaml` file into it one by one (`git mv .intense/<file> .expectation-fit/<file>`
+for a tracked file, else `mv`). Never `git mv` the whole folder into an existing folder,
+because that nests it as `.expectation-fit/.intense/`. After a move, print the git state
+of the new folder so the user can commit it.
 
 ---
 
@@ -369,7 +374,7 @@ Build and **show** a table (do not write yet):
 | `conventions.auto` block | present / missing / partial | mode curated; roots for multi-repo | add missing keys only |
 | `conventions.auto.roots` | empty / set | detected siblings | set if empty and multi-repo |
 | `severity_align` | present / missing | curated_gates | add if missing |
-| `artifacts.*` | present / legacy `report_dir` only | two-layer defaults | carry legacy `report_dir` over as `artifacts.report_dir` |
+| `artifacts.*` | present / legacy `report_dir` only / old default values | two-layer defaults | carry legacy `report_dir` over as `artifacts.report_dir`; offer the new defaults for old values (U4) |
 | `patterns.preferred` | empty / set | optional interactor preference | ask if rails + empty |
 | `patterns.blocked` / approved | … | … | ask if preferred chosen |
 | Missing config **files** | ways / patterns / thresholds | stack-aware scaffold | create missing files only |
@@ -401,6 +406,11 @@ existing non-empty lists or notes.
   Name the legacy folder in the summary. Say that its old run folders stay. The user can
   delete them by hand, after keeping any report.md or report.json. This skill deletes
   nothing outside `.expectation-fit/`.
+- **Old default values** (before 0.9.0): `artifacts.report_dir: docs/intent-engineering`,
+  `artifacts.run_dir: .intense/runs`, or a top-level `report_dir`. Name each one and
+  offer the new defaults: reports go to `.expectation-fit/reports/` and runs to
+  `.expectation-fit/runs/`, both git-ignored. Keep the old value when the user wants
+  committed reports. Change nothing without a yes.
 - **Copied title:** when a file still starts with the template title `(GLOBAL DEFAULTS)`,
   offer to replace that title with the Step 3 project header.
 - Show a **diff-style** summary before write; confirm once.

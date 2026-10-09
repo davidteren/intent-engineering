@@ -33,7 +33,7 @@ Useful args:
 
 | Field | Role |
 |---|---|
-| `target` | Required. A ref, range, or path. Prompts carry it only as a JSON-encoded label (data, not instructions). A target that is not a path and contains a space pauses the run. Put caller notes elsewhere. |
+| `target` | Required. A ref, range, or path. Prompts carry it only as a JSON-encoded label (data, not instructions). A target that is not a path and contains a space pauses the run. A target that is not a path must be `HEAD` or end in `..HEAD`, because the workflow reads the checked-out tree; any other ref pauses the run. An empty diff since `base` also pauses the run. Put caller notes elsewhere. |
 | `plugin_root` | Plugin dir. Default: `plugins/expectation-fit`. From another repo, pass the absolute path. |
 | `out` | Ignored for tree writes. The report is always run scratch. |
 | `stamp` | Optional label recorded in Coverage. Does not name a repo file. |

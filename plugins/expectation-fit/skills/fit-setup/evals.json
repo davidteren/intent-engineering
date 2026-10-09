@@ -30,6 +30,16 @@
       "id": 6,
       "prompt": "fit-setup fresh with Rails stack; user accepts prefer interactors",
       "expected_output": "patterns.yaml includes preferred interactor instead_of service_object when user said yes; does not also block service_object for the same stance (avoid duplicate findings). Optional approved app/services/** if grandfather chosen. Pattern ids must exist in rails catalog."
+    },
+    {
+      "id": 7,
+      "prompt": "fit-setup upgrade in a repo that has only .intense/ways-of-working.yaml (no .expectation-fit/ folder)",
+      "expected_output": "Config is read from the legacy .intense/ folder, and Coverage names that folder as the config source. Upgrade offers to move .intense/ to .expectation-fit/ (git mv when tracked, else mv), shows the command, and does not move anything without a yes."
+    },
+    {
+      "id": 8,
+      "prompt": "fit-setup upgrade in a repo where .intense/ holds ways-of-working.yaml and patterns.yaml, and .expectation-fit/ holds only runs/",
+      "expected_output": "Does not stop, because only .intense/ holds config yaml. After a yes, moves each .intense/*.yaml file into .expectation-fit/ one by one (git mv for tracked files). Never moves the whole folder, so there is no .expectation-fit/.intense/ nesting. runs/ stays where it is. Prints the git state of .expectation-fit/."
     }
   ]
 }

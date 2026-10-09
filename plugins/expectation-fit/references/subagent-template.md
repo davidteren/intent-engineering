@@ -82,7 +82,9 @@ example "READ: lines 1-1734 of diff.patch (1734 lines), 12 of 12 files". The
 convention lens also names the standards files it read.
 Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
-using the Write tool. Write and fix that file only with the Write tool, never with a
+using the Write tool. Plan set only: when the orchestrator binds {doc_slug}, write
+{run_artifact_dir}/{lens}-{doc_slug}.json instead, so per-document dispatches do not
+overwrite each other. Write and fix that file only with the Write tool, never with a
 shell command. Return ONLY the JSON — no prose.
 
 If the prompt says not to write files, skip the Write step. Put why_it_matters and
@@ -101,6 +103,8 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 
 ## Slot bindings (orchestrator)
 
+- `{doc_slug}`: plan sets only. Bind it to the document path under the `slug_of` rule
+  in config-resolution.md. Leave it unbound for every other run.
 - `{run_artifact_dir}` — bind to the skill's resolved `$RUN` (Layer A scratch only).
   Never leave it unbound — a literal executor cannot invent the path. Do **not** bind
   this to the published report path.
@@ -159,11 +163,9 @@ Every finding must set `fix_class`. Interactive `/fit-review` may apply only
 | **`manual`** | Needs design input, multi-hunk/multi-file change, or a clear but non-mechanical fix. Default for architecture smells and most convention/UX gaps. | Pure learning notes (use advisory). |
 | **`advisory`** | Report-only: tension notes, trade-off framing with no single correct edit. | Actionable bugs you can fix concretely (use manual or gated_auto). |
 
-Orchestrator apply rules (review interactive only): apply only when
-`fix_class == gated_auto` **and** `confidence >= 75` **and** severity is P2 or P3 **and** the
-finding carries no `tension`; reclassify
-over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
-remote scopes. Observations are never applied. They stay in the Observations section.
+Orchestrator apply rules (review interactive only): the full apply gate lives in
+`fit-review` Stage 5 step 7 (`${CLAUDE_PLUGIN_ROOT}/skills/fit-review/SKILL.md`). Do not
+restate it here. Observations are never applied. They stay in the Observations section.
 
 ## Shared rules
 
@@ -209,7 +211,7 @@ remote scopes. Observations are never applied. They stay in the Observations sec
 ## When you cannot spawn agents
 
 This mode is a fallback. Prefer a host that can spawn agents. For `fit-review` in Grok,
-use the repo's `.grok/workflows/fit-review.rhai`.
+use the optional Grok workflow in the source repository (not shipped with the plugin).
 
 - Run each selected lens as its own pass.
 - Before each pass, read that lens's agent file in full, and its resource docs.

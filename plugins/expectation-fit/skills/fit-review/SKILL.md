@@ -13,9 +13,9 @@ lenses, plus architecture on a supported framework), merges and confidence-gates
 findings, and writes a report. This is the runtime complement
 to the principle docs under `${CLAUDE_PLUGIN_ROOT}/resources/`.
 
-Grok users: this skill is the Claude orchestrator. The source repo also has an
-optional Grok workflow at `.grok/workflows/fit-review.rhai` (subset, report in
-scratch, no apply). See `.grok/workflows/README.md`.
+Grok users: this skill is the Claude orchestrator. There is also the optional Grok
+workflow in the source repository (not shipped with the plugin): a subset, with the
+report in scratch and no apply.
 
 ## Argument parsing
 
@@ -257,12 +257,9 @@ Not ready, per the report-template verdict rule). **Do not** use Ready / all-cle
 a lens status or a partial read blocks it. No time estimates. Every finding actionable.
 Stop re-running at Ready. Log P3 items without another round.
 
-**mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
-`scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
-`lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
-`observations`, `coverage.execution`, `coverage.lens_status`, `artifact_path`,
-`plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`, `tree_clean`,
-`base_sha`, and `status` on each finding. The report-template example shows each one.
+**mode:agent fields:** see the mode:agent section of
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Its field list and example are the
+single source.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
