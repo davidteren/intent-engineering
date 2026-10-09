@@ -1,0 +1,27 @@
+CHANGELOG.md
+  s_139c48e2134bb7::t_8488cc89f85ff3 11-18
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_e3d2bad4b6fbd7 47-48
+plugins/expectation-fit/references/subagent-template.md
+  s_139c48e2134bb7::t_8fcb4ae80ae621 110,116-120
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_cc091e4ac36173 159-163,167-177,179-181,183-184
+plugins/expectation-fit/skills/fit-review/evals.json
+  s_139c48e2134bb7::t_0d42a8d64f6678 33-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7f1e625e4460f010679b20b2eb733a69b88321a9",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
