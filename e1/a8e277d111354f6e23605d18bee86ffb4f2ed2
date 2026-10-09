@@ -1,0 +1,56 @@
+.grok/workflows/README.md
+  s_139c48e2134bb7::t_1f854ece796669 70-71
+plugins/expectation-fit/references/subagent-template.md
+  s_139c48e2134bb7::t_3bf64100eaa4ce 18-21
+  s_139c48e2134bb7::t_992cc883ebf2e1 69-71,128-129
+plugins/expectation-fit/agents/fit-convention-reviewer.md
+  s_139c48e2134bb7::t_fa937886978005 94
+plugins/expectation-fit/agents/fit-simplicity-reviewer.md
+  s_139c48e2134bb7::t_fa937886978005 86
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_787d03c1233936 334-337
+  s_139c48e2134bb7::t_92459287d26a82 283-284,362-368
+  s_139c48e2134bb7::t_910428e3a662c8 338
+plugins/expectation-fit/skills/fit-validate-plan/evals.json
+  s_139c48e2134bb7::t_005f08e10bc7c9 22
+plugins/expectation-fit/skills/fit-from-pr-learnings/SKILL.md
+  s_139c48e2134bb7::t_114974a7cd4047 105-107
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_992cc883ebf2e1 101-102,112-113
+  s_139c48e2134bb7::t_3bf64100eaa4ce 173
+  s_139c48e2134bb7::t_005f08e10bc7c9 164
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_1f854ece796669 311-312,314,423,446-447,623-626
+  s_139c48e2134bb7::t_a1341abe08f0b5 638
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_992cc883ebf2e1 368
+plugins/expectation-fit/agents/fit-experience-reviewer.md
+  s_139c48e2134bb7::t_fa937886978005 99
+plugins/expectation-fit/skills/fit-setup/SKILL.md
+  s_139c48e2134bb7::t_582985cbef44cf 133-154,443-444
+plugins/expectation-fit/agents/fit-predictability-reviewer.md
+  s_139c48e2134bb7::t_fa937886978005 85
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_3bf64100eaa4ce 94-95,136
+plugins/expectation-fit/agents/fit-architecture-reviewer.md
+  s_139c48e2134bb7::t_690bcbfd3f6518 40-42
+  s_139c48e2134bb7::t_fa937886978005 191
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_3bf64100eaa4ce 100-102,205-206,212-213,306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e1a8e277d111354f6e23605d18bee86ffb4f2ed2",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
