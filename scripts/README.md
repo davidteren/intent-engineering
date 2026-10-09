@@ -68,5 +68,5 @@ YAML-structural checks to brittle grep — so this stays Ruby on purpose.
 
 Append a new `section("N. …")` block and call `ok(msg)` / `bad(msg)` (hard) or `note(msg)`
 (warning). Keep checks **deterministic and structural** — no flaky heuristics; a check that
-can false-positive is worse than no check. Natural future additions are noted in
-`wip/improvements.md`.
+can false-positive is worse than no check. File ideas for new checks as issues in this
+repo.

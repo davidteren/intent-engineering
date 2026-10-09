@@ -59,6 +59,12 @@ for the design see **PLAN.md**.
   guard may qualify a finding but not suppress a whole class, and replaces the old local
   install path with a `claude -p ... --plugin-dir` dev loop. `README.md` installs from
   GitHub.
+- **Repo upkeep: dogfood gaps become issues, and the site drops release facts (#61).**
+  "Dogfood as you go" in `AGENTS.md` adds a contributor step to file each confirmed plugin
+  gap as a public-safe issue. The PR template and `scripts/README.md` no longer send
+  follow-ups to `wip/`. `docs/index.html` links to `/releases/latest` and `/releases`
+  and names no current version or check count. The "New architecture stack" bullet names
+  every place that lists the stacks.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

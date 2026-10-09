@@ -270,7 +270,8 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   `stack-catalog.md` row to **Arch pack ✅** and add a `principle-index.md` row. The
   architecture lens + `fit-setup` read the registry, so **no skill edits are needed** — the
   registry is the only detection wiring. The contract check (section 10) enforces that a ✅
-  row, its files, and its threshold namespace all agree.
+  row, its files, and its threshold namespace all agree. Also add the stack to the lists in
+  both READMEs, STATUS.md, the marketplace.json description and docs/index.html.
 - **New design pattern** → add to `resources/patterns/<stack>.yaml` with all required
   fields (`id`, `name`, `intent`, `recognition`, `good_use`, `misuse`). Ids are snake_case,
   stable, and may be referenced by `.expectation-fit/patterns.yaml`.
@@ -310,6 +311,9 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   checks over direct pushes to `main` when branch protection expects CI.
 - **Dogfood as you go.** Run the plugin from this checkout against your change with the
   dev loop below, fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
+  Contributor step: file each confirmed plugin gap as an issue in this repo before the
+  session ends. This repo is public, so remove private repo names, paths and findings
+  first.
 - Clean git history is preferred; the owner may ask to squash to a single commit.
 
 ## Dev loop (run this checkout)
