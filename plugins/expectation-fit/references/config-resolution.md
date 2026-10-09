@@ -367,16 +367,27 @@ caller passes `out:`. Without `out:`, `REPORT_PATH` stays empty and `artifact_pa
 
 **Run id + published filename** — this block is the **canonical** orchestrator procedure.
 `fit-review`, `fit-audit`, and `fit-validate-plan` **must not re-author it**; they only bind
-slots (`SKILL_SLUG`, `SCOPE_SLUG`, `OUT_ARG`, `EXT`) and follow this block.
+slots (`SKILL_SLUG`, `SCOPE`, `OUT_ARG`, `EXT`) and follow this block. `SCOPE` is the
+raw branch, PR, plan path or target; the block normalizes it into `SCOPE_SLUG`, so
+parallel runs name reports the same way.
 
 ```bash
 # CANONICAL_ORCHESTRATOR_PATHS — single source of truth (do not duplicate in skills)
 STAMP=$(date +%Y%m%d-%H%M%S)
 RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
 # skill slug: audit | review | validate-plan
-# SCOPE_SLUG: optional, sanitized path/branch fragment, or empty
+# SCOPE: raw branch / PR / plan path / target, or empty
 # EXT=md normally; json when mode:agent
-# AGENT_MODE=1 when mode:agent, else empty
+# Slug rule: take the basename; drop the extension only for an existing file; lowercase;
+# replace each run of other characters with one hyphen; trim end hyphens.
+#   docs/plans/2026-09-28-007-feat-prd-15-Topic-plan.md -> 2026-09-28-007-feat-prd-15-topic-plan
+#   feat/ep-04-search -> ep-04-search    release/1.2.0 -> 1-2-0    (empty) -> (empty)
+slug_of() {
+  [ -n "$1" ] || return 0
+  s=$(basename -- "$1"); [ -f "$1" ] && s="${s%.*}"
+  printf '%s' "$s" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//'
+}
+SCOPE_SLUG=$(slug_of "$SCOPE")
 # RUN_DIR / REPORT_DIR / CLEANUP already resolved from artifacts.* (above)
 # PROJECT_BASE = project base (see "Base directory for conventions.sources globs")
 abs() { case "$1" in /*) echo "$1" ;; *) echo "${PROJECT_BASE}/$1" ;; esac; }
@@ -391,7 +402,7 @@ if [ -n "$OUT_ARG" ]; then
     *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
     *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
   esac
-elif [ -z "$AGENT_MODE" ]; then
+elif [ "$EXT" != json ]; then   # mode:agent without out: writes no file
   REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
 fi
 if [ -n "$REPORT_PATH" ]; then

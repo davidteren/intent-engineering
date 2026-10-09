@@ -1,7 +1,7 @@
 ---
 name: fit-audit
 description: "Audit a whole codebase, subsystem, or feature against the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) and produce a posture report — per-dimension 0-10 scores plus the top surprise/convention/complexity/UX/structural gaps. Use to assess an existing codebase or area, not a specific diff. Sampling-aware for large targets."
-argument-hint: "[mode:agent] [out:<path>] [<path/glob/subsystem to audit, default: whole repo>]"
+argument-hint: "[mode:agent] [out:<path>] [prior:<report-path>] [<path/glob/subsystem to audit, default: whole repo>]"
 ---
 
 # Expectation Fit — Codebase Audit
@@ -16,7 +16,8 @@ surfaced first. This is a read-only assessment — it never edits code.
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON instead of markdown. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
@@ -71,7 +72,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `audit` |
-| `SCOPE_SLUG` | sanitized target slug, or empty |
+| `SCOPE` | raw target (the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 

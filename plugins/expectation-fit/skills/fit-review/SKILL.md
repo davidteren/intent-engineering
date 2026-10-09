@@ -1,7 +1,7 @@
 ---
 name: fit-review
 description: "Review code changes through the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) — surfacing surprise, non-idiomatic patterns, needless complexity, UX gaps, and structural anti-patterns. Default (interactive) mode applies safe, verified fixes and commits on a clean tree (never pushes); mode:agent reports JSON only. Use on a PR, branch, or local changes before merging."
-argument-hint: "[mode:agent] [out:<path>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
+argument-hint: "[mode:agent] [out:<path>] [base:<ref>] [prior:<report-path>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
 ---
 
 # Expectation Fit — Code Review
@@ -25,8 +25,9 @@ number/URL or branch.
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). Outside-repo only when explicitly given. |
-| `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). Outside-repo only when explicitly given. |
+| `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. To re-review after fix commits, pass the head_sha of the last report (local checkout only). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
 
@@ -54,7 +55,10 @@ exclusions below.
 
 Compute the diff. Reuse the scope logic familiar from standard code-review skills:
 
-- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`.
+- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`. When
+  `<ref>` is a SHA, first check `git merge-base --is-ancestor <ref> HEAD`. If the check
+  fails (for example after a rebase), review the whole branch against its detected base
+  and say so in Coverage.
 - **PR number/URL** — `gh pr view` for metadata; do not checkout. Classify
   `local-aligned` (HEAD == PR head, not cross-repo, head is ancestor of HEAD) vs
   `pr-remote`. In `pr-remote`, lenses inspect via `git show <ref>:<path>` / diff hunks
@@ -132,7 +136,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `review` |
-| `SCOPE_SLUG` | sanitized branch/PR slug, or empty |
+| `SCOPE` | raw branch or PR (the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
@@ -187,7 +191,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
-   concrete `suggested_fix`. Apply only when the working tree is what was reviewed
+   concrete `suggested_fix`, and that does not name a prior declined #N or match a
+   prior declined row by the dedup key (step 2). Apply only when the working tree is what was reviewed
    (`local-aligned`/standalone), never in `pr-remote`/`branch-remote`, and only while
    HEAD still equals `REVIEWED_SHA`. If HEAD moved, skip apply and print
    `Reviewed <sha>; HEAD moved to <sha>`. After applying,
@@ -195,7 +200,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
    `fix(fit-review): <summary>` commit and record its real SHA
    (`git rev-parse --short HEAD`) for Applied; if it was false, apply but leave
-   uncommitted.
+   uncommitted. Set each finding's Status at run time: `fixed <sha>` for applied ones,
+   `declined: <reason>` for push-backs and skipped taste calls, else `open`.
    Push back (don't apply) when a lens is wrong; skip taste calls and conflicting
    suggestions but surface what was skipped. Never push.
 
@@ -207,8 +213,9 @@ JSON and write it to `$REPORT_PATH` only when `out:` was passed (never into `$RU
 Sections: Header (per report-template, with the Provenance line), Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
 selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
-ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
-estimates. Every finding actionable.
+ready, per the report-template verdict rule). **Do not** use Ready / all-clear when any
+selected lens **failed**. No time estimates. Every finding actionable. Stop re-running
+at Ready. Log P3 items without another round.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when

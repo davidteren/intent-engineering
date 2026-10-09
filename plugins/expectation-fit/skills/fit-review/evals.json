@@ -25,6 +25,11 @@
       "id": 5,
       "prompt": "fit-review (the branch also adds an earlier report under docs/expectation-fit/, and the project sets artifacts.report_dir: docs/expectation-fit)",
       "expected_output": "Loads config before it builds FILES and DIFF. The earlier report is excluded by pathspec, so it is not in the review scope or in any finding. The Coverage file count leaves it out."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-review base:<head_sha of last report> prior:.expectation-fit/reports/<last>-review.md (the last report declined #3 and fixed #1)",
+      "expected_output": "Reviews only the commits since base (base is an ancestor of HEAD); prior: does not change the diff range. Every lens gets the fixed and declined rows in the <prior> slot. A lens does not raise #1 or #3 again without new evidence, and if it does it cites the evidence and names the prior #N. The finding that matches declined #3 is never auto-applied. Each finding has a Status (open, fixed <sha>, or declined: <reason>). Verdict follows the severity rule."
     }
   ]
 }

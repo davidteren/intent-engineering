@@ -45,6 +45,21 @@ for the design see **PLAN.md**.
   `fit-audit` shows commits ahead of the default branch; `fit-validate-plan` warns when
   the checkout is behind its upstream. The Grok workflow resolves one absolute plugin
   root (or pauses), and its report carries the Provenance and `Runtime:` lines.
+- **Re-runs build on the last report (#52).** New shared token `prior:<report-path>`
+  (review, audit, validate-plan): the prior report's `fixed` and `declined` rows reach
+  every lens through one `<prior>` slot, and a Shared rule forbids re-raising them
+  without new evidence. Findings tables gain a `Status` column (`open`, `fixed <sha>`,
+  `declined: <reason or link>`), also as a JSON `status` field; interactive
+  `fit-review` sets it at run time and never auto-applies a prior declined item. The
+  review verdict now follows severity (Not ready with an open P0/P1, Ready with fixes
+  with an open P2, else Ready; a failed lens still blocks Ready), and `fit-review` stops
+  re-running at Ready. `base:<head_sha of the last report>` is documented as the delta
+  re-review; a SHA that is not an ancestor of HEAD falls back to a full-branch review.
+  The canonical path block takes the raw scope and applies one slug rule, and each
+  `out:` row says to pass a folder. `fit-validate-plan` stamps `plan_sha256`, shows lens
+  coverage in the verdict, and with `prior:` marks each prior gap closed or open, adds a
+  Prior column and a `supersedes` line with the round. A Shared rule keeps decisions the
+  document marks as settled closed.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

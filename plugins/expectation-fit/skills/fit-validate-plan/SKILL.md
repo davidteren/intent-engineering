@@ -1,7 +1,7 @@
 ---
 name: fit-validate-plan
 description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists."
-argument-hint: "[mode:agent] [out:<path>] [path/to/plan-or-spec.md]"
+argument-hint: "[mode:agent] [out:<path>] [prior:<report-path>] [path/to/plan-or-spec.md]"
 ---
 
 # Expectation Fit — Plan Validation
@@ -16,7 +16,8 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | Token | Effect |
 |-------|--------|
 | `mode:agent` | Emit JSON; no interactive routing. Writes a report file only with `out:`. |
-| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Turns the run into a re-check: each prior gap is marked closed or still open. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
@@ -62,7 +63,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE_SLUG` | sanitized plan basename, or empty |
+| `SCOPE` | raw plan path (the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
@@ -77,6 +78,10 @@ that cite the doc location (`line` = the exact plan line of the evidence quote, 
 when none applies) and describe the gap a planner/implementer would hit. Missing required
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
 
+With `prior:`, fill the `<prior>` slot with the prior gaps and its two plan rules: mark
+each prior gap closed or still open, with its plan line; drop a score only when the lens
+names the new gap. Lenses still read the whole plan and can raise new gaps.
+
 ## Stage 4 — Merge & rate
 
 1. Validate, assign per-lens status (failed / skipped / clean). Before dedup, grep the
@@ -84,7 +89,8 @@ when none applies) and describe the gap a planner/implementer would hit. Missing
    hit; with no hit, list the line as unverified in Coverage. Then dedup and
    confidence-gate (as `fit-review` Stage 5; no apply — it's a doc).
 2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
-   Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
+   Dimension | Score | Prior | Gap`, lowest first (`Prior` is the score from the
+   `prior:` report, or `-`). Findings ≤ 7/10 dimensions become
    actionable gaps.
 3. Collect tensions (e.g. simplicity vs convention in the proposed approach) and
    observations.
@@ -97,8 +103,11 @@ report-template, with the Provenance line), Dimensional Ratings (worst first), F
 with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean;
 when `git rev-list --count HEAD..@{u}` is above zero, add `Checkout is N commits behind
 <upstream> as of last fetch. Code facts may be stale.` Never run `git fetch`),
-Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
-before coding. The verdict blocks on `requirements`-level or design-blocking gaps;
+Verdict = **Ready to implement / Revise first** with lens coverage (report-template
+Verdict), listing the blocking gaps to resolve before coding. The Header carries
+`plan_sha256` (`shasum -a 256 <plan> | cut -c1-64`), and with `prior:` also
+`supersedes: <prior report>` and the round (the prior round plus one; round 1 without
+`prior:`). The verdict blocks on `requirements`-level or design-blocking gaps;
 advisory gaps are noted but don't block. Do **not** claim Ready to implement if any
 selected lens **failed**. No time estimates.
 

@@ -15,6 +15,11 @@
       "id": 3,
       "prompt": "fit-validate-plan mode:agent out:/tmp/fit-validate.json docs/plans/my-plan.md",
       "expected_output": "Emits the JSON reply and writes it at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source. git status --porcelain is the same before and after the run."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-validate-plan prior:.expectation-fit/reports/<last>-validate-plan-my-plan.md docs/plans/my-plan.md (the plan was edited after round 1)",
+      "expected_output": "Re-check run. Header shows plan_sha256, supersedes: <prior report> and round 2. Each prior gap is marked closed or still open with its plan line. The rating table has a Prior column, and a score drops only when a lens names the new gap. Decisions the plan marks as settled stay closed unless a lens cites new evidence. The verdict line shows how many applicable lenses ran."
     }
   ]
 }

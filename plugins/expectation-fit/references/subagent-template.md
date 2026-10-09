@@ -32,6 +32,13 @@ Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
  workspace paths for in-scope files. <ref> = {reviewed_sha}}
 </scope>
 
+<prior>
+{only with prior:<report-path>: the fixed and declined rows of the prior report
+ (#N, file:line, title, status). Empty otherwise.
+ plan context also gets: "Mark each prior gap closed or still open, with its plan line."
+ and "Drop a score only when you name the new gap."}
+</prior>
+
 <output-contract>
 {run_artifact_dir} = the orchestrator's resolved **run scratch** dir (Layer A — its $RUN,
 e.g. .expectation-fit/runs/<run-id>/). The skill MUST bind run_artifact_dir = $RUN when it fills
@@ -59,6 +66,8 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 - `{plugin_root}`: the absolute plugin root. Before dispatch, replace each plugin-root
   variable with the absolute plugin root. The harness does not substitute reference
   files, so a lens prompt must never carry a literal plugin-root variable.
+- `<prior>`: the orchestrator reads the `prior:` report and passes its `fixed` and
+  `declined` rows. `prior:` never changes the diff range; `base:` keeps that job.
 - `{reviewed_sha}`: `fit-review` binds its pinned `REVIEWED_SHA` (remote scopes).
 - `{lens}`, `{standards_paths}`, intent, scope — as shown in the template.
 
@@ -105,6 +114,10 @@ remote scopes.
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were
   settled.
+- **Respect prior decisions.** Do not raise a prior fixed or declined item again
+  without new evidence. If you do, cite the evidence and name the prior #N.
+- **Respect settled decisions.** When the document marks a decision as settled, treat it
+  as settled. Reopen it only with new evidence.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
 - **No duplicating the linter.** Skip what a formatter/linter catches; focus on
   semantic surprises.

@@ -50,9 +50,9 @@ goes in the keyed detail line, not the cell.
 
 ```
 ### P0 -- Critical surprise
-| # | File | Issue | Principle | Lens | Conf |
-|---|------|-------|-----------|------|------|
-| 1 | `app/models/order.rb:42` | `fetch_total` also writes a cache row | least-astonishment | predictability | 100 |
+| # | File | Issue | Principle | Lens | Conf | Status |
+|---|------|-------|-----------|------|------|--------|
+| 1 | `app/models/order.rb:42` | `fetch_total` also writes a cache row | least-astonishment | predictability | 100 | open |
 
 - **#1** -- `fetch_total` is named as a pure read but persists a cache row as a side
   effect; a caller reading the name will not expect a write (and will be surprised in
@@ -60,7 +60,9 @@ goes in the keyed detail line, not the cell.
   the write to an explicit `refresh_total_cache!`.
 ```
 
-Five columns. Keyed `- **#N** --` detail line for findings whose one-liner isn't
+Seven columns. `Status` is `open`, `fixed <sha>` or `declined: <reason or link>`; it is
+the per-finding decision record that a later run reads through `prior:<report-path>`.
+Keyed `- **#N** --` detail line for findings whose one-liner isn't
 self-sufficient (usually P0/P1). Same table shape for every severity — never render
 one severity as field-blocks and another as a table. Numbering is stable and
 monotonic across the whole report.
@@ -70,8 +72,9 @@ monotonic across the whole report.
 1. **Header** — scope or target, intent, context (review/audit/plan), the
    **Provenance line** (above), `completed_at`, and the lens team with the one-line
    reason for each conditional lens. Audit adds the stack and the sampling note. Plan
-   adds the document path and type. Skills point here; they do not list Header fields
-   of their own.
+   adds the document path and type, `plan_sha256` (hash of the plan file at run time),
+   and on a re-check `supersedes: <prior report>` and the round number. Skills point
+   here; they do not list Header fields of their own.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
    Fix | Lens`, then validation outcome + commit status. Name the fix commit by its real
    SHA from `git rev-parse --short HEAD` after the commit, never a placeholder. Applied
@@ -101,8 +104,14 @@ monotonic across the whole report.
    - **clean** — valid return, analyzed, zero findings remaining after the confidence
      gate (or findings present and listed).
 8. **Verdict** — review: Ready / Ready with fixes / Not ready. audit: top 3 posture
-   gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps.
+   gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps,
+   and the lens coverage (for example `Ready to implement (3 of 4 lenses; experience
+   off by config)`; a lens that did not run counts as not run, even with `prior:`).
    **Never** Ready / all-clear / Ready to implement when any selected lens **failed**.
+   **Review verdict rule:** Not ready while a P0 or P1 finding is open. Ready with fixes
+   while a P2 finding is open. Otherwise Ready. Open means a Findings row with Status
+   `open`; `fixed` and `declined` rows count as closed. A failed selected lens still
+   blocks Ready.
 
 No time estimates. No praise. Every finding actionable.
 
@@ -114,7 +123,10 @@ only when the caller passes `out:` (then `$REPORT_PATH` is that path, and
 `artifact_path` is its absolute path). Without `out:`, write no report file and set
 `artifact_path` to `null`. Never write the mode:agent report into the run-scratch dir
 (`$RUN`); that dir is deleted when `cleanup_runs` is true. A `mode:agent` run leaves
-`git status --porcelain` unchanged (run scratch ignores itself).
+`git status --porcelain` unchanged (run scratch ignores itself). Each item in
+`findings` carries `status` (`open`, `fixed <sha>` or `declined: <reason or link>`);
+`mode:agent` callers write their triage into that field. Plan reports add
+`plan_sha256`.
 
 ```json
 {
