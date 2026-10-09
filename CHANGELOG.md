@@ -17,6 +17,15 @@ for the design see **PLAN.md**.
   offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
   reports from before the rename stay in `docs/intent-engineering/` as history.
 
+### Fixed
+- **Config settings no longer fail silently or vary by run (#49).** The defaults drop the
+  dead `silent-failure` override example, and Coverage lists any unknown
+  `severity_overrides` key as ignored (new `fit-review` eval case 5). Lens toggles are
+  quoted, so YAML 1.1 loaders read strings, and `check-contracts.rb` fails on a bare
+  `on`. The curated workflow gate rule is mechanical (whole-file body tokens, no
+  `pull_request:` token, no "when unsure" rule). Auto discovery lists candidates with
+  `git ls-files`, so agent worktrees are not read.
+
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
   read-only on a real Hotwire/Rails app (ongela) and folded the false positives

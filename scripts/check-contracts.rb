@@ -15,7 +15,7 @@
 #
 # Run from anywhere:  ruby scripts/check-contracts.rb
 # Checks:
-#   1. All shipped JSON parses; all shipped YAML parses.
+#   1. All shipped JSON parses; all shipped YAML parses; default lens toggles load as strings.
 #   2. Lens identity agrees 4 ways: findings-schema `lens` enum == agents/ basenames
 #      == lens-catalog rows == scoring-rubric rows.
 #   3. Agent frontmatter: name == filename stem, name in the lens enum, tools + model present.
@@ -113,6 +113,17 @@ yaml_files.each do |abs|
   ok "#{abs.sub(PLUGIN + '/', '')} parses"
 rescue StandardError => e
   bad "#{abs.sub(PLUGIN + '/', '')} does not parse: #{e.message}"
+end
+
+# Lens toggles must load as strings. A bare `on`/`off` is a YAML 1.1 boolean.
+toggles = (YAML.safe_load(read("config/defaults/ways-of-working.yaml")) || {})["lenses"] || {}
+bad_toggles = toggles.reject { |_, v| %w[on off auto].include?(v) }
+if toggles.empty?
+  bad "ways-of-working.yaml: no lens toggles parsed"
+elsif bad_toggles.empty?
+  ok "ways-of-working.yaml: #{toggles.size} lens toggles load as \"on\"/\"off\"/\"auto\" strings"
+else
+  bad_toggles.each { |k, v| bad "ways-of-working.yaml: lenses.#{k} loads as #{v.inspect}; quote it (\"on\"/\"off\"/\"auto\")" }
 end
 
 # ---------------------------------------------------------------------------

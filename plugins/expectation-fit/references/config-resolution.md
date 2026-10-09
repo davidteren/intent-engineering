@@ -87,22 +87,28 @@ conventions:
 | `workflows` (curated) | `.github/workflows/*.{yml,yaml}` that match **gate signals** (below) |
 | `workflows` (all) | `.github/workflows/*.{yml,yaml}` (minus exclude) |
 
+**Listing method.** In each root, list candidate files with
+`git -C <root> ls-files --cached --others --exclude-standard`. Match the pack globs against
+that list. Do not use `find`: it walks into agent worktrees and reads no ignore file.
+Outside a git repo, walk the tree and skip `.git` and `.claude/worktrees`.
+
 **Scope of auto-discovered agents / instructions:** discovery may find many files under
 `roots`, but the convention lens **applies** an `AGENTS.md`/`CLAUDE.md` only to files
 whose path is under that doc's directory (ancestor chain of the changed file). Nested
 app rules do **not** apply workspace-wide. Path-scoped `.github/instructions/**` still
 honor `applyTo` frontmatter.
 
-**Workflow gate signals** (`mode: curated` only) — keep a workflow if **any** hold:
+**Workflow gate signals** (`mode: curated` only). The rule is mechanical: keep a
+workflow when a name token or a body token matches **and** no `exclude` glob matches.
+Drop every other workflow.
 
-- Filename contains: `rubocop`, `eslint`, `semgrep`, `callback`, `migration`, `secret`,
+- File name contains: `rubocop`, `eslint`, `semgrep`, `callback`, `migration`, `secret`,
   `detect-secret`, `brakeman`, `lint`, `test`, `rspec`, `jest`, `playwright`, `contract`,
-  `security`, `codeql`, `typecheck`, `tsc`, `prettier`, `danger`, `pr-title`
-- File body (first ~80 lines) mentions: `pull_request:`, `bin/check`, `rubocop`, `eslint`,
-  `semgrep`, `rspec`, `jest`, `playwright`, `strong_migrations`, `online_migrations`
-
-Drop workflows that are clearly infra-only after exclude (labeler, terraform branch
-create/delete, image deploy dispatch, renovate-only). When unsure in `curated`, **exclude**.
+  `security`, `codeql`, `typecheck`, `tsc`, `prettier`, `danger`, `pr-title`, `mutation`
+- File body (read the whole file) mentions: `bin/check`, `bin/ci`, `rubocop`, `eslint`,
+  `semgrep`, `rspec`, `jest`, `playwright`, `strong_migrations`, `online_migrations`,
+  `pytest`, `npm test`, `go test`, `mix test`, `phpunit`, `rails test`, `brakeman`,
+  `ruff`, `vitest`
 
 **Path-scoped instructions:** files under `.github/instructions/` often have YAML
 frontmatter `applyTo: "glob,glob"`. The convention lens **must** honor `applyTo` when
@@ -317,7 +323,7 @@ When no project `.expectation-fit/` is found, use defaults — the plugin works 
 |--------|----------|--------|
 | `lenses.*` | skill lens-selection | `on`/`off`/`auto` decides which lenses run (turn an agent off here) |
 | `tools.architecture` | `fit-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
-| `severity_overrides` | synthesis | remap severity by principle/smell id (string or `{ severity, because }`). Applied **after** severity_align. |
+| `severity_overrides` | synthesis | remap severity by principle/smell id (string or `{ severity, because }`). Applied **after** severity_align. A valid key is a principle id in `findings-schema.json` or a canonical smell id. List any other key in Coverage as `ignored severity_overrides key: <key>`. |
 | `severity_align` | synthesis | promote severity when a curated CI gate matches a finding theme (`mode: off\|curated_gates`). See Severity align with CI gates. |
 | `conventions.notes` | `fit-convention-reviewer` | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md) |
 | `conventions.sources` | `fit-convention-reviewer` | explicit path globs for high-authority files. Resolve from project base. |

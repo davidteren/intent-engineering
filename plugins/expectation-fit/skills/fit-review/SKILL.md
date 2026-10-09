@@ -152,7 +152,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
       `min_severity`, default P1). Never demote. Record each promotion in Coverage.
       Mark those findings `severity_aligned: true` for the gate exception below.
    2. **`severity_overrides`** (wins over align on conflict): string or
-      `{ severity:, because: }` — copy `because` into Coverage.
+      `{ severity:, because: }` — copy `because` into Coverage. A key that is not a
+      principle id or a canonical smell id goes in Coverage as
+      `ignored severity_overrides key: <key>`.
    3. Pattern policy: suppress architecture findings only when the path is `approved`
       **and** the change is not a **net-new** introduction of a blocked / preferred-
       `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in

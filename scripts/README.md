@@ -21,7 +21,7 @@ Exit `0` = all good; exit `1` = at least one failure. Output is one line per che
 
 | # | Section | Asserts |
 |---|---------|---------|
-| 1 | Parse | every shipped `*.json` and `*.yaml` parses |
+| 1 | Parse | every shipped `*.json` and `*.yaml` parses; the default lens toggles load as the strings `on`, `off` or `auto` |
 | 2 | Lens identity (4-way) | the 5 lens ids agree across `findings-schema.json` enum, `agents/fit-*-reviewer.md` basenames, `lens-catalog.md` rows, and `scoring-rubric.md` rows |
 | 3 | Agent frontmatter | each agent's `name` == filename stem, is in the lens enum, and has `tools` + `model` |
 | 4 | Path resolution | every `${CLAUDE_PLUGIN_ROOT}/…` path (and backticked index/catalog paths) resolves on disk; placeholders skipped |

@@ -20,6 +20,11 @@
       "id": 4,
       "prompt": "fit-review (dirty tree with uncommitted user work)",
       "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-review (project .expectation-fit/ways-of-working.yaml sets severity_overrides: { silent-failure: P1 })",
+      "expected_output": "silent-failure is not a principle id or a canonical smell id, so no finding changes severity. Coverage lists: ignored severity_overrides key: silent-failure."
     }
   ]
 }
