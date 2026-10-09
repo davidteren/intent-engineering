@@ -424,8 +424,8 @@ and the project base for relative source globs. Do not use a shorter list here.
 ## External tool preference (`tools.architecture`)
 
 Resolves like any scalar (project value replaces default; default `enrich`). It controls how
-`fit-architecture-reviewer` treats an **installed** external static-analysis tool (reek/flog/
-brakeman, ruff/radon, phpstan/phpmd, eslint/madge, credo) so a team that already runs one
+`fit-architecture-reviewer` treats an **installed** external static-analysis tool (reek/flog,
+ruff/radon, phpstan/phpmd, eslint/madge, credo) so a team that already runs one
 isn't given duplicate findings:
 
 | Mode | Behavior |

@@ -178,7 +178,7 @@ ask short questions and write answers into the files. Defaults differ by profile
 |----------|------------------|--------------------|
 | Which files? | All | All |
 | Lens toggles | predict/convention/simplicity **on**; experience/architecture **auto** | same |
-| `tools.architecture` | `enrich` (or `prefer` if reek/rubocop/eslint/phpstan/credo already in CI) | same |
+| `tools.architecture` | `enrich` | same |
 | `conventions.auto.mode` | `curated` | `curated` + **roots** filled from detected siblings |
 | `severity_align.mode` | `curated_gates` | `curated_gates` |
 | Prefer interactor over service_object? | **ask** (Rails Arch pack only) | **ask** (if any rails root) |

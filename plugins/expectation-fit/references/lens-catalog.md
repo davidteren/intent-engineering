@@ -9,10 +9,10 @@ framework-specific and code/audit-only.
 
 | Lens (agent) | Principles | Resource docs it reads | Hunts for |
 |--------------|-----------|------------------------|-----------|
-| `fit-predictability-reviewer` | least-astonishment, DWIM, WYSIWYG | `principles/least-astonishment.md`, `principles/dwim.md`, `principles/wysiwyg.md`, `agnostic/naming.md`, `agnostic/error-handling.md`, `agnostic/api-design.md` | Name/behavior mismatch, hidden side effects, surprising return types, inconsistent branch returns, silent failures, controls that don't do what their label implies, preview/state divergence |
+| `fit-predictability-reviewer` | least-astonishment, DWIM, WYSIWYG | `principles/least-astonishment.md`, `principles/dwim.md`, `principles/wysiwyg.md`, `agnostic/naming.md`, `agnostic/error-handling.md`, `agnostic/api-design.md`, `agnostic/defaults-and-configuration.md` ("Surprising defaults" section only) | Name/behavior mismatch, hidden side effects, surprising return types, inconsistent branch returns, silent failures, controls that don't do what their label implies, preview/state divergence |
 | `fit-convention-reviewer` | convention-over-configuration, framework idiom | `principles/convention-over-configuration.md`, the matching `frameworks/<stack>.md`, `agnostic/naming.md`, `agnostic/defaults-and-configuration.md` | Reinvented conventions, config where convention exists, one-off patterns fighting the repo/framework, non-idiomatic structure/naming. **Reads repo `CLAUDE.md`/`AGENTS.md` FIRST — local conventions override community defaults.** |
 | `fit-simplicity-reviewer` | Occam, KISS, YAGNI | `principles/occams-razor.md`, `principles/software-philosophies.md`, `agnostic/defaults-and-configuration.md` | Needless abstraction, premature generality, speculative config, layers that don't earn their keep, simpler equivalent exists. Guards the flip side: don't oversimplify away real requirements. |
-| `fit-experience-reviewer` | HIG, look-and-feel, UX | `principles/human-interface-guidelines.md`, `principles/look-and-feel.md`, `principles/ux-design.md`, `agnostic/accessibility.md`, `agnostic/information-architecture.md`, `agnostic/ux-interaction-smells.md` | Missing interaction states, non-semantic/unlabelled controls, form/destructive feedback gaps, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak IA, AI-slop design |
+| `fit-experience-reviewer` | HIG, look-and-feel, UX | `principles/human-interface-guidelines.md`, `principles/look-and-feel.md`, `principles/ux-design.md`, `agnostic/accessibility.md`, `agnostic/information-architecture.md`, `agnostic/ux-interaction-smells.md` | Missing interaction states, non-semantic/unlabelled controls, form/destructive feedback gaps, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak IA, AI-slop design; CLI and developer output (error and recovery messages, exit codes, stdout/stderr; see the "CLI and developer output" section of `ux-interaction-smells.md`) |
 | `fit-architecture-reviewer` | structural quality (Occam/SRP applied), design patterns | `frameworks/<stack>-architecture.md`, `patterns/<stack>.yaml`, resolved `.expectation-fit/` config | Fat models/routers, God objects/modules, fat controllers, misused service objects, callback hell, business logic in schemas, layer leaks, Law of Demeter; classifies pattern instances, raises unidentified patterns, enforces allow/block/approved policy. **Framework-specific (Rails + Python + Laravel + Express + Phoenix + React today), code/audit only.** Heuristic-first; optional reek/flog/brakeman (Ruby), ruff/radon (Python), phpstan/phpmd (Laravel), or eslint/madge (Express/React), credo/boundary (Phoenix) enrichment. |
 
 ## Lens selection (per context)
@@ -32,11 +32,15 @@ e.g. `app/views/**` + `*.erb` and `app/components/**` (Rails), `templates/**/*.h
 Jinja (Python: Django/Flask), `views/**/*.ejs` / `*.pug` / `*.hbs` (Express),
 `resources/views/**/*.blade.php` (Laravel), `lib/*_web/**` with `*.heex` / function
 components (Phoenix), `*.jsx` / `*.tsx` / `*.vue` and component dirs (React / JS / Vue),
-`app/javascript/controllers/**` (Stimulus), plus CLI help/prompt text — **even in an
+`app/javascript/controllers/**` (Stimulus), plus CLI help, output, error and recovery
+messages, exit codes and the stdout/stderr split, and changed steps in a README, guide or
+upgrade page — **even in an
 otherwise backend-heavy change**; a mixed backend+frontend diff must not skip the lens.
 The list is illustrative, not exhaustive: any file that renders or drives UI for the
-stack counts. Skip only when there is no user-facing surface at all (pure
-backend/library/infra).
+stack counts. A library or gem counts when it ships any of these. Skip only when nothing
+in scope changes output, messages or steps that a person or a calling script relies on.
+Drift between a doc's claims and the code stays with predictability. Experience judges
+whether a person can follow the steps.
 
 **`fit-architecture-reviewer`** runs when a supported framework is detected. The supported
 stacks, their detection signals, and the rule-pack files each loads are listed in

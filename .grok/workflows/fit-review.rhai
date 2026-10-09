@@ -430,7 +430,7 @@ let catalog = [
     #{
         id: "predictability",
         agent: "fit-predictability-reviewer.md",
-        docs: "resources/principles/least-astonishment.md, resources/principles/dwim.md, resources/principles/wysiwyg.md, resources/agnostic/naming.md, resources/agnostic/error-handling.md, resources/agnostic/api-design.md",
+        docs: "resources/principles/least-astonishment.md, resources/principles/dwim.md, resources/principles/wysiwyg.md, resources/agnostic/naming.md, resources/agnostic/error-handling.md, resources/agnostic/api-design.md, resources/agnostic/defaults-and-configuration.md (Surprising defaults section only)",
         hunts: "name/behavior mismatch, hidden side effects, surprising returns, silent failures",
         selected: run_predictability,
     },
@@ -452,7 +452,7 @@ let catalog = [
         id: "experience",
         agent: "fit-experience-reviewer.md",
         docs: "resources/principles/human-interface-guidelines.md, resources/principles/look-and-feel.md, resources/principles/ux-design.md, resources/agnostic/accessibility.md, resources/agnostic/information-architecture.md, resources/agnostic/ux-interaction-smells.md",
-        hunts: "missing interaction states, weak labels, broken keyboard or focus, accessibility gaps",
+        hunts: "missing interaction states, weak labels, broken keyboard or focus, accessibility gaps, terminal output, exit codes and help text",
         selected: run_experience,
     },
     #{
@@ -682,6 +682,8 @@ if capped.len() > 0 {
         p += "\nReturn confirmed only with concrete evidence you read yourself. Put the correct file:line in evidence.\n";
         p += "Return unverifiable if you cannot open the cited code. Return not_real only after you read the code and the claim is wrong. Judge the claim, not the line numbers.\n";
         p += "Use read_file and grep. Do not trust the JSON alone.\n";
+        p += "Judge only whether the claim is true. The lens that filed it does not change the verdict.\n";
+        p += "A failed or empty search is unknown, not proof. A claim of absence needs a second method or a direct read; otherwise return unverifiable.\n";
         vjobs.push(#{
             prompt: p,
             label: "verify:" + f.file,

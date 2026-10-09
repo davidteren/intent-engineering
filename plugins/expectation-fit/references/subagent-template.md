@@ -34,8 +34,17 @@ Already reported: {prior: paths}
 
 <scope>
 Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
+Repo root: {repo_root}. Build every path from it. Run git as git -C {repo_root}.
+Base: {base} (review only)
+Plan: {plan_path} (review only, when plan: is given)
 {For code: FILES + DIFF, or the file/path set for audit}
-{For plan: the document content + Document type: requirements | plan}
+{For plan: the document content + Document type: requirements | plan.
+ Before you report a rule as missing, search the whole document and cite where you
+ looked. If the rule is stated but weakly placed, say that instead.
+ Before you say code is unused, missing or called, search its call sites and quote the
+ result. When a finding or fix rests on framework behavior or runtime order that you did
+ not see run, say so. Word that fix as a test the implementer runs first, not as a rule
+ to adopt.}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
  workspace paths for in-scope files}
 </scope>
@@ -63,6 +72,12 @@ and JSON-only clauses above do not apply when Context is plan-assist.
   this to the published report path.
 - `{lens}`, `{standards_paths}`, `{conventions_notes}`, intent, known-context, scope — as
   shown in the template. Every lens gets `{standards_paths}` and `{conventions_notes}`.
+- `{repo_root}`: bind to `git rev-parse --show-toplevel` in every skill that dispatches
+  lenses.
+- `{base}`: review only. Bind to `BASE` from `fit-review` Stage 1. Drop the line in
+  other contexts.
+- `{plan_path}`: review only. Bind to the `plan:` path. Drop the line when no plan is
+  given.
 
 ## Shared confidence rubric (all lenses)
 
@@ -79,6 +94,20 @@ Anchored. Synthesis gates at 75 (P0 survives at 50+).
 - **25 / 0 — suppress.** Speculative; no evidence in scope. Exist in the enum only so
   synthesis can count drops.
 
+**A failed search is unknown, not proof.** An empty result, a shell error (for example
+`no matches found`), or a path that does not resolve proves nothing. Cap a claim of
+absence ("unused", "missing", "never called") at 50, unless a second search method or a
+direct read of the file confirms it.
+
+## Shared severity rubric (all lenses)
+
+Rate by user impact. High confidence never raises severity.
+
+- P0: data loss, a security hole, or a broken public contract.
+- P1: normal use is blocked, loses work, or gets a wrong result.
+- P2: a real problem with a workaround, including a misleading exit code or status.
+- P3: wording, a docs or help sentence that overclaims, or style that a linter could enforce.
+
 ## Shared `fix_class` rubric (all lenses)
 
 Every finding must set `fix_class`. Interactive `/fit-review` may apply only
@@ -86,12 +115,12 @@ Every finding must set `fix_class`. Interactive `/fit-review` may apply only
 
 | Class | Use when | Do **not** use when |
 |-------|----------|---------------------|
-| **`gated_auto`** | Single-file (or one adjacent import/rename), mechanical, reversible edit; a normal reviewer would accept without design debate; concrete `suggested_fix` names the edit. Examples: rename a misnamed `get_*` that writes; rethrow instead of bare `rescue`; align one return branch shape. | Multi-file refactors; API/shape redesign; new abstractions; UX redesign; "extract service"; anything needing product judgment. |
+| **`gated_auto`** | Single-file (or one adjacent import/rename), mechanical, reversible edit; a normal reviewer would accept without design debate; concrete `suggested_fix` names the edit. Examples: rename a misnamed `get_*` that writes; rethrow instead of bare `rescue`; align one return branch shape. | Multi-file refactors; API/shape redesign; new abstractions; UX redesign; "extract service"; anything needing product judgment; anything callers outside the repo can see: a published package's public classes, signatures or default values, or a documented CLI flag. |
 | **`manual`** | Needs design input, multi-hunk/multi-file change, or a clear but non-mechanical fix. Default for architecture smells and most convention/UX gaps. | Pure learning notes (use advisory). |
-| **`advisory`** | Report-only: tension notes, residual risks, "watch this", trade-off framing with no single correct edit. | Actionable bugs you can fix concretely (use manual or gated_auto). |
+| **`advisory`** | Report-only: tension notes, trade-off framing with no single correct edit. | Actionable bugs you can fix concretely (use manual or gated_auto). |
 
 Orchestrator apply rules (review interactive only): apply only when
-`fix_class == gated_auto` **and** `confidence >= 75` **and** severity ≤ P2 **and** the
+`fix_class == gated_auto` **and** `confidence >= 75` **and** severity is P2 or P3 **and** the
 finding carries no `tension`; reclassify
 over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
 remote scopes.
@@ -114,5 +143,13 @@ remote scopes.
   `tension` field and present the trade-off — do not pick a side as if it were
   settled.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
+- **No-change items go to observations.** When the honest fix is no change, a later
+  decision, or something that does not exist yet, put the item in observations, not
+  in findings.
+- **Check the base before you blame the change (review).** Read the base version of
+  the file (`git -C {repo_root} show {base}:<path>`) before you file. If the base
+  already has the code or gap, put it in observations as "Pre-existing: <note>",
+  unless your lens file sets its own rule.
 - **No duplicating the linter.** Skip what a formatter/linter catches; focus on
-  semantic surprises.
+  semantic surprises. If a linter rule could enforce it but is off, file one P3
+  finding whose fix enables that rule.

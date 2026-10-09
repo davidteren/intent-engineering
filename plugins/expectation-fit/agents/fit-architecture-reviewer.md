@@ -31,8 +31,11 @@ Prefix **`SKIPPED:`** is required so the orchestrator promotes this into Coverag
 
 The `python` pack is FastAPI-first but covers any layered Python service (the smells are
 about transport/validation/application/integration layering, not FastAPI specifically).
-Detect it from `pyproject.toml`/`setup.cfg`/`setup.py` + `.py` sources; resolve `python.*`
-thresholds and `patterns/python.yaml`.
+Detect it per the `python` row of the stack catalog: it needs a web or worker framework
+signal. Then resolve `python.*` thresholds and `patterns/python.yaml`. A Python CLI or
+library without that signal has no architecture pack: return
+`{"lens":"architecture","findings":[],"observations":["SKIPPED: python CLI or library, no architecture pack"]}`,
+unless `lenses.architecture: on`.
 
 ## Read first
 
@@ -58,11 +61,12 @@ thresholds and `patterns/python.yaml`.
 - **External tools — honor the resolved `tools.architecture` preference** (default `enrich`;
   see `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`). Probe for the stack's smell
   tools named in its `<stack>-architecture.md` "Tool enrichment" section (Ruby:
-  `reek`/`flog`/`brakeman`; Python: `ruff`/`radon`/`vulture`/`import-linter`; Laravel:
+  `reek`/`flog`; Python: `ruff`/`radon`/`vulture`/`import-linter`; Laravel:
   `phpstan`/`phpmd`; Express/React: `eslint`/`madge`; Phoenix: `credo`/`boundary`) — e.g.
   `command -v reek`. Then:
-  - **`enrich`** (default): run your heuristics; if a tool is present you MAY run it read-only
-    and fold its output in as *corroboration* (raising confidence). Never required.
+  - **`enrich`** (default): run your heuristics; if a tool is present, run it read-only on the
+    reviewed files and fold its output in as *corroboration* (raising confidence). An absent
+    tool is never a failure.
   - **`prefer`**: if the tool is present, run it read-only, map each finding to the findings
     schema (`smell`/`principle`, `severity`, `confidence: 100`, `file`/`line`, `fix`), and
     **suppress your own heuristic findings that overlap** (same file + unit + concern) — emit
@@ -84,7 +88,8 @@ thresholds and `patterns/python.yaml`.
   (logic in actions, too many/non-RESTful actions), misused service object (multiple
   public methods, service that's secretly a God object, anemic pass-through), callback
   hell, query logic in views / fat helper, Law of Demeter chains.
-  - **Pattern classification:** for each structural unit in a pattern-bearing location,
+  - **Pattern classification:** for each structural unit in a pattern-bearing location
+    (defined once in `${CLAUDE_PLUGIN_ROOT}/resources/patterns/README.md`),
     match it against the catalog by signature (Ruby: gem, included module/base class, path,
     name suffix, characteristic methods; Python: import, decorator, base class, path,
     name suffix, characteristic functions). Recognition signals are **any-of**, not all-of:
@@ -97,7 +102,13 @@ thresholds and `patterns/python.yaml`.
 - **Unidentified patterns:** a unit that matches no catalog pattern and no `allowed`
   entry → raise `pattern: unidentified` at the configured `unknown_pattern.severity`
   (default P3) so a human classifies it or extends the catalog. Only when
-  `unknown_pattern.raise` is true.
+  `unknown_pattern.raise` is true. Each `suggested_fix` holds a ready-to-paste
+  `approved` entry, for example:
+  ```yaml
+  approved:
+    - path: lib/current_scope/resolvers/**
+      reason: "Strategy; reviewed 2026-08-22"
+  ```
 - **Policy enforcement** (from `.expectation-fit/patterns.yaml`):
   - **preferred** entries (`id` + `instead_of: [ids…]`, optional `when` / `note`):
     when **changed** code introduces or substantially grows a pattern listed in
@@ -117,10 +128,13 @@ thresholds and `patterns/python.yaml`.
   - **One finding per unit:** if the same unit matches both `preferred.instead_of` and
     `blocked` for the same pattern id, emit **one** finding (preferred framing wins:
     title + `suggested_fix` name the preferred id). Do not double-report.
-  - **approved** instance/path → suppress findings about **pre-existing** blocked /
-    instead_of use on that path; note in observations. **Net-new files** under an
-    approved path that introduce a blocked pattern still get P1 (grandfather is not a
-    license for new classes of the blocked shape).
+  - **approved** instance/path → `approved` silences blocked, instead_of and
+    unidentified findings on its path. Smell findings still show, and net-new blocked
+    use still gets P1. Note each suppression in observations. (Grandfather is not a
+    license for new classes of the blocked shape.)
+  - **Never report a preferred or blocked rule as met.** Write one observation per rule.
+    Give the number of units checked, the paths read and the matches. If no unit could
+    be classified, write "could not check".
   - **allowed** pattern → never flag for merely existing; still check good_use/misuse.
     Prefer listing **desired** shapes in `allowed` (e.g. interactor), not shapes you
     are trying to stop growing (those belong in `blocked` + optional `preferred`).

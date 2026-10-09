@@ -30,6 +30,11 @@
       "id": 6,
       "prompt": "fit-review plan:docs/plans/my-plan.md (the diff follows KTD-2 of the plan; one lens thinks KTD-2 itself causes a P2 defect)",
       "expected_output": "Every lens gets KTD-2 verbatim in known-context. No finding asks to undo KTD-2. The P2 finding quotes KTD-2 in evidence and names it in tension. It stays in Findings, appears in Tensions and is not auto-applied. Coverage names the plan."
+    },
+    {
+      "id": 7,
+      "prompt": "fit-review (interactive, published gem; the simplicity lens files a gated_auto P3 at confidence 75 that removes a default value from a public, documented class)",
+      "expected_output": "Reclassifies the finding to manual, because outside callers can see a public default. Never applies it and lists it under Findings. Commits nothing for it."
     }
   ]
 }

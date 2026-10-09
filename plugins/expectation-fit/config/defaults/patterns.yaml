@@ -44,15 +44,16 @@ blocked: []
   # - service_object   # e.g. "we standardized on interactors" (+ preferred + approved)
 
 # --- Approved (grandfathered) ---------------------------------------------------
-# Pre-approved specific instances/paths. Findings there are suppressed and noted in
-# Coverage. Use to grandfather legacy code without muting the whole rule.
+# Pre-approved specific instances/paths. `approved` silences blocked, instead_of and
+# unidentified findings on its path. Smell findings still show, and net-new blocked use
+# still gets P1. Suppressions are noted in Coverage.
 approved: []
   # - path: app/services/**
   #   reason: "legacy service layer; no NEW services — use interactors"
 
 # --- Unknown patterns -----------------------------------------------------------
-# A structural unit (class/module in a pattern-bearing location) that matches NO
-# known catalog pattern AND no allowed entry.
+# A structural unit (class/module in a pattern-bearing location, defined in
+# resources/patterns/README.md) that matches NO known catalog pattern AND no allowed entry.
 unknown_pattern:
   raise: true     # raise an "unidentified pattern" finding for a human to classify
   severity: P3    # advisory by default

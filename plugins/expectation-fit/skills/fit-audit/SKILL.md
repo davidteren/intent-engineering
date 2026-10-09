@@ -49,8 +49,7 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
 - Predictability + simplicity always on.
 - Convention on when stack/repo standards exist (catalog Convention doc and/or
   `CLAUDE.md`/`AGENTS.md`).
-- Experience on when the target has user-facing surfaces — any template / view /
-  component / client-controller path counts (see `lens-catalog.md`).
+- Experience on when the scope touches a surface in the `lens-catalog.md` list.
 - **Architecture on when a detected stack has Arch pack ✅** in the stack catalog
   (and the audit target includes structural code). This is usually the highest-value
   pass in a codebase audit. Pass the resolved `thresholds` + pattern policy + the
@@ -75,7 +74,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only).
+`run_artifact_dir = $RUN` (Layer A only) and `repo_root` to `git rev-parse --show-toplevel`.
 
 Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
 pass `model: sonnet` to convention, experience, and architecture; let predictability
@@ -93,8 +92,9 @@ just needs the merged per-lens return.
 1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
    policy **before** the confidence gate as in `fit-review` Stage 5: **`severity_align`
    then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
-   survive), suppress `approved` paths, keep `blocked` / preferred-instead_of findings
-   (no apply — audit is read-only).
+   survive). `approved` silences blocked, instead_of and unidentified findings on its
+   path. Smell findings still show, and net-new blocked use still gets P1. Keep other
+   `blocked` / preferred-instead_of findings (no apply — audit is read-only).
 2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the

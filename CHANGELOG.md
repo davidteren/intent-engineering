@@ -72,6 +72,51 @@ for the design see **PLAN.md**.
   holds beyond the PR becomes a `conventions.notes` line, citing the report path and
   finding number, and the Step 4 confirm still gates every note. The report Header names
   the report read. New eval case 4.
+- **Lens judgment (#48).** The `gated_auto` rubric now excludes changes that outside
+  callers can see (public classes, signatures, defaults, documented CLI flags), so
+  `/fit-review` never applies them. A new eval case pins this. Lenses get `Repo root`,
+  `Base` and `Plan` lines in scope, check the base before they blame the change, and put
+  pre-existing and no-change items in observations. A failed or empty search is unknown:
+  an unconfirmed absence claim caps at confidence 50 (template and Grok skeptic). The
+  template has one shared severity rubric, and `findings-schema.json` points to it. The
+  simplicity lens searches the requirements before a YAGNI cut.
+- **Predictability escape classes (#58).** New smells for a comment, docstring or test
+  name that claims code missing at HEAD (`least-astonishment.md`), a destructive step
+  that runs before its last check (`error-handling.md`), and a config writer that
+  coerces any input shape (`defaults-and-configuration.md`). The predictability lens now
+  reads the "Surprising defaults" section of `defaults-and-configuration.md` (agent,
+  lens catalog, Grok workflow and principle index).
+- **Experience lens covers CLI, docs and developer output (#57).** `lens-catalog.md` is
+  the one selection rule: it now lists CLI output, error and recovery messages, exit
+  codes, the stdout/stderr split and changed README or upgrade steps, and a library or
+  gem counts when it ships any of these. `fit-review`, `fit-audit`, `fit-validate-plan`,
+  the Grok config prompt and `ways-of-working.yaml` point to it, and
+  `check-contracts.rb` fails on a restated skip rule. `ux-interaction-smells.md` has a
+  new "CLI and developer output" section (clig.dev added to Sources), a traced
+  framework-default guard, and a tighter live-region shape. `accessibility.md` limits
+  `role="tab"` to in-page panels.
+- **Architecture lens policy and tool fixes (#50).** The `python` arch pack now needs a
+  web or worker framework; a plain Python CLI or library returns `SKIPPED:` unless
+  `lenses.architecture: on`. brakeman is no longer listed as an architecture tool, and
+  `fit-setup` and the README no longer suggest `tools.architecture: prefer`. All six
+  stack docs and `findings-schema.json` gain a `long-method` smell id (Rails gains a
+  "General metrics" section). Under `enrich`, the lens runs a present tool, notes once
+  per run which tools ran, and Coverage shows that note. "Pattern-bearing location" is
+  defined once in `resources/patterns/README.md`, and the lens never reports a
+  preferred or blocked rule as met (new `fit-audit` eval case 4). **Behavior change:**
+  `approved` now silences blocked, instead_of and unidentified findings on its path,
+  but smell findings still show and net-new blocked use still gets P1 (before, review
+  and audit suppressed every architecture finding on an approved path). Each
+  unidentified-pattern `suggested_fix` now holds a ready-to-paste `approved` entry.
+- **Mechanical `fit-validate-plan` verdict (#56).** The verdict is Revise first when any
+  P0 or P1 survives the gate or a selected lens failed; otherwise Ready to implement.
+  A markdown reply ends with one `Verdict: … Lowest score: … Blocking: … Failed lenses:
+  … Report: …` line (new eval case 4). Several documents run as separate flows, one
+  report each. Plan lenses search the whole document before they call a rule missing,
+  search call sites before they call code unused, and word a fix that rests on unseen
+  framework behavior as a test. Caller checks go in a `Check | Result` table in
+  Coverage. `findings-schema.json` gives plan meanings for P0 and P1. The skill
+  description and the README place it after document review and before implementation.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

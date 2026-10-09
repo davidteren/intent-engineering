@@ -48,6 +48,7 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/react.yaml`) are
 | `god-context` | 6. God context (global state by accident) |
 | `god-module` | 7. God module / barrel-file hub |
 | `law-of-demeter` | 8. Law of Demeter violations |
+| `long-method` | General metrics |
 
 ### 1. God component (too large / mixes concerns) — `god-component`
 - **Signal:** A component over `react.component.max_loc`, with JSX nested past
@@ -195,6 +196,10 @@ Smell ids are **kebab-case**; design-pattern ids (in `patterns/react.yaml`) are
 (long parameter list -> a props object), and `react.general.max_nesting_depth` (deeply nested
 conditionals/ternaries in JSX -> early returns, extracted components) apply to any function.
 
+**`long-method`:** one function over `react.general.max_function_loc`. Severity: P2 when
+the function mixes responsibilities; P3 when it is cohesive but over twice the limit;
+otherwise an observation, not a finding.
+
 ## Tool enrichment (optional)
 
 These sharpen the heuristics; the lens must degrade gracefully when they are absent. Detect
@@ -206,7 +211,8 @@ anything; never block on them.
   god-module / barrel-file hubs.
 
 When a tool is present, treat its output as *corroborating evidence* that raises confidence —
-not as the source of truth. When absent, fall back to Read/Grep/Glob/Bash heuristics and say so.
+not as the source of truth. The lens notes once per run which tools ran. A finding names a tool
+only when that tool confirmed it.
 
 ## Relationship
 

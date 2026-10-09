@@ -26,7 +26,7 @@ and the whole pipeline picks it up. This is the registry that keeps stack knowle
 | Stack id | Detection signals | Convention doc | Arch pack | Architecture doc | Pattern catalog | Threshold ns |
 |----------|-------------------|----------------|:---------:|------------------|-----------------|--------------|
 | `rails` | `Gemfile` with `rails`; `config/application.rb`; `app/models` + `app/controllers` | `frameworks/rails.md` | ✅ | `frameworks/rails-architecture.md` | `patterns/rails.yaml` | `rails.*` |
-| `python` | `pyproject.toml` / `setup.py` / `setup.cfg`; `.py` sources (FastAPI-first, any layered service) | `frameworks/python.md` | ✅ | `frameworks/python-architecture.md` | `patterns/python.yaml` | `python.*` |
+| `python` | `pyproject.toml` / `setup.py` / `setup.cfg`; `.py` sources; **and** a web or worker framework dependency (`fastapi`, `django`, `flask`, `starlette`, `celery`, `rq`, or similar). FastAPI-first, any layered service | `frameworks/python.md` | ✅ | `frameworks/python-architecture.md` | `patterns/python.yaml` | `python.*` |
 | `laravel` | `composer.json` with `laravel/framework`; an `artisan` file; `app/` + `routes/` + `bootstrap/app.php` | `frameworks/laravel.md` | ✅ | `frameworks/laravel-architecture.md` | `patterns/laravel.yaml` | `laravel.*` |
 | `express` | `package.json` with `express`; `app.js`/`server.js` + `routes/` (any layered Node HTTP service) | `frameworks/express.md` | ✅ | `frameworks/express-architecture.md` | `patterns/express.yaml` | `express.*` |
 | `phoenix` | `mix.exs` with `:phoenix`; `lib/<app>_web/`; `.ex`/`.exs` sources | `frameworks/phoenix.md` | ✅ | `frameworks/phoenix-architecture.md` | `patterns/phoenix.yaml` | `phoenix.*` |
@@ -38,6 +38,8 @@ and the whole pipeline picks it up. This is the registry that keeps stack knowle
 **Arch pack `⬜`** = convention coverage only; the architecture lens skips the stack until
 both architecture files + a threshold namespace land. `ruby`, `typescript`, and `swift-ios`
 are convention-only by design — no arch pack is planned unless a real consumer appears.
+A Python CLI or library with no web or worker framework is also convention-only, like
+`ruby`: the `python` arch pack needs that framework signal.
 Research first, then author the packs, then flip the row to ✅.
 
 ## Adding a stack

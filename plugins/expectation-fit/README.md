@@ -47,7 +47,7 @@ codebase audit. After a reviewed PR merges, fold learnings back with `/fit-from-
   effect overuse, layer leaks, async/process misuse, Law of Demeter. Classifies design-pattern
   instances against a per-stack catalog, raises unidentified patterns, and enforces your
   `.expectation-fit/` allow/block/approved policy. Heuristic-first; optionally enriched by
-  `reek`/`flog`/`brakeman` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel),
+  `reek`/`flog` (Ruby), `ruff`/`radon` (Python), `phpstan`/`phpmd` (Laravel),
   `eslint`/`madge` (Express, React), or `credo`/`boundary` (Phoenix) if installed. Code/audit
   only, when a supported framework is detected.
 

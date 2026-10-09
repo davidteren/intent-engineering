@@ -64,6 +64,13 @@ didn't, so the surprise lands somewhere far away, long after the cause is gone.
 - Checking a return code and then not acting on the failure branch.
 - `on_error: continue` / blanket retry that masks a deterministic error as a
   transient one.
+- Destructive step before its last check: a delete, overwrite, truncate or drop
+  runs first. Then a check or an error can still stop the run. Examples are a
+  version, a missing module, a key, a lock, free space, or a failure partway
+  through the work. The user then has neither the old state nor the new one. List
+  every raise or non-zero exit after the destructive call, not only the one you
+  saw. Fix: build the new state next to the old one and swap it in on success. Or
+  keep a backup and restore it on failure.
 
 ### Inconsistent error model
 - The same failure raises in one path, returns an error code in another, returns

@@ -148,7 +148,7 @@ keep them in sync if you change one.
   **and** the `lens-catalog.md` row), `description`, `model`, `tools`, `color`.
 - `tools` is uniformly `Read, Grep, Glob, Bash, Write`. `Write` exists **only** to emit
   `{run_artifact_dir}/{lens}.json`. `Bash` is for measurement (architecture metrics;
-  optional read-only `reek`/`flog`/`brakeman` probes). Adding `Edit`/`MultiEdit` breaks
+  optional read-only `reek`/`flog` probes). Adding `Edit`/`MultiEdit` breaks
   the read-only contract.
 - `model: inherit` for the two always-on lenses (session model for high-stakes
   reasoning); `model: sonnet` for the three conditional lenses. Don't "standardize" all

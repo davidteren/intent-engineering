@@ -94,10 +94,8 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
   always a framework, repo standard, or sibling pattern to be consistent with). Detect
   the stack(s) from the catalog's Detection signals column; load matching
   `frameworks/<stack>.md` docs for every stack that has a Convention doc.
-- **`fit-experience-reviewer`:** when the diff touches a user-facing surface (UI
-  components, frontend files, templates/views/partials, CLI UX) **or** full-stack
-  changes that include those paths alongside backend. Skip only for pure
-  backend/lib/infra with no template/UI path.
+- **`fit-experience-reviewer`:** when the scope touches a surface in the
+  `lens-catalog.md` list.
 - **`fit-architecture-reviewer`:** when the catalog has **Arch pack ✅** for a detected
   stack **and** the diff touches structural code for that stack (not config/docs/test-only
   with no structural change). Use the catalog Detection signals and pack paths — never a
@@ -129,7 +127,9 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
-Bind **`run_artifact_dir = $RUN`** (Layer A only).
+Bind **`run_artifact_dir = $RUN`** (Layer A only). Bind `repo_root` to
+`git rev-parse --show-toplevel`, `base` to `BASE` from Stage 1, and `plan_path` to the
+`plan:` path when one is given.
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
@@ -163,10 +163,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
       `{ severity:, because: }` — copy `because` into Coverage. A key that is not a
       principle id or a canonical smell id goes in Coverage as
       `ignored severity_overrides key: <key>`.
-   3. Pattern policy: suppress architecture findings only when the path is `approved`
-      **and** the change is not a **net-new** introduction of a blocked / preferred-
-      `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
-      **changed** code at P1.
+   3. Pattern policy: `approved` silences blocked, instead_of and unidentified
+      findings on its path. Smell findings still show, and net-new blocked use still
+      gets P1. Keep preferred-`instead_of` introductions in **changed** code at P1.
 5. **Confidence gate** — suppress findings below the resolved `confidence_gate`
    (default anchor 75), EXCEPT:
    - P0 at confidence 50+, or
@@ -177,7 +176,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    severity and also appears in the Tensions section.
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
-   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, a
+   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity P2 or P3, a
    concrete `suggested_fix`, and carries no `tension`. Apply only when the working tree is what was reviewed
    (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
    run affected tests/lint; if they fail, revert that fix and report it instead. If

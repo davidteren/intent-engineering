@@ -15,6 +15,11 @@
       "id": 3,
       "prompt": "fit-validate-plan mode:agent out:/tmp/fit-validate.json docs/plans/my-plan.md",
       "expected_output": "Emits JSON report at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-validate-plan docs/plans/my-plan.md (after the confidence gate, two P2 findings remain, the lowest dimension score is 6/10, and every selected lens is clean)",
+      "expected_output": "Verdict is Ready to implement, because no P0 or P1 survives the gate. Both P2 findings are listed as gaps that do not block. The reply ends with: Verdict: Ready to implement. Lowest score: 6/10. Blocking: 0. Failed lenses: none. Report: <path>. Does not modify the plan."
     }
   ]
 }
