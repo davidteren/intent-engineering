@@ -27,6 +27,8 @@ Load heuristics from `${CLAUDE_PLUGIN_ROOT}/resources/`:
   product. Inline it until a second case actually arrives.
 - **Speculative generality (YAGNI)** — parameters, hooks, config, or extension points
   justified by "we might need it later"; generality with no present caller.
+  In a library or CLI that others install, one in-repo caller does not prove a
+  parameter or default unused.
 - **Knobs nobody sets** — a config option always set to the same value, or never set;
   a feature flag with one state.
 - **Premature optimization** — complexity added for performance with no evidence it's
@@ -46,6 +48,10 @@ failures that really occur; an abstraction with two-plus real uses today). If re
 the complexity would drop a real requirement, it's not a simplicity finding — and if a
 change strips needed handling to look simpler, flag *that* as the violation.
 
+Search the requirements before a YAGNI cut. In review, search the plan (the `Plan:`
+line in scope) and the docs it cites. In plan validation, search only the cited docs.
+If they ask for the item, do not ask to cut it. Set `tension` and cite the requirement id.
+
 ## Confidence calibration
 
 - **100** — the abstraction/option/dep provably has a single or zero use in scope; a
@@ -57,7 +63,8 @@ change strips needed handling to look simpler, flag *that* as the violation.
 
 ## What you don't flag
 
-- Naming/behavior surprises (predictability lens) unless caused by needless indirection.
+- Naming, behavior and user-facing text surprises (predictability lens), and missing
+  guidance or states (experience lens), unless a simplification caused them.
 - Framework conventions that add "unnecessary"-looking structure — that's the
   convention lens's call; if it's idiomatic, it's not your finding (note the tension).
 - Genuinely required complexity (see flip side).
@@ -65,7 +72,8 @@ change strips needed handling to look simpler, flag *that* as the violation.
 ## Output
 
 Return compact JSON per `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` with
-`"lens": "simplicity"` (principle: `occams-razor`, `kiss`, or `yagni`). Every finding
+`"lens": "simplicity"` (principle: `occams-razor`, `kiss`, or `yagni`; a flip-side finding
+may use the schema principle of the requirement that the change drops). Every finding
 must set `fix_class` per the shared rubric in
 `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` when unsure;
 `gated_auto` only for single-file mechanical reversible edits — e.g. inline a one-use

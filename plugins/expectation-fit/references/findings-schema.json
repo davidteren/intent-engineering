@@ -55,7 +55,7 @@
           "severity": {
             "type": "string",
             "enum": ["P0", "P1", "P2", "P3"],
-            "description": "P0 critical surprise (data loss, security, broken contract). P1 high-impact, hit in normal use. P2 moderate. P3 minor."
+            "description": "Rate by user impact per the Shared severity rubric in references/subagent-template.md. P0 data loss, a security hole, or a broken public contract. P1 normal use is blocked, loses work, or gets a wrong result. P2 a real problem with a workaround. P3 wording, an overclaiming docs sentence, or linter-enforceable style. High confidence never raises severity."
           },
           "confidence": {
             "type": "integer",

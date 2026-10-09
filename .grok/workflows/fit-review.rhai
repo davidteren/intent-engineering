@@ -638,6 +638,8 @@ if capped.len() > 0 {
         p += "\nSet real=true only with concrete evidence you independently inspected.\n";
         p += "If you cannot open the file, or the claim is wrong, or evidence is thin, set real=false.\n";
         p += "Empty evidence requires real=false. Use read_file, grep, and git. Do not trust the JSON alone.\n";
+        p += "Judge only whether the claim is true. The lens that filed it does not change the verdict.\n";
+        p += "A failed or empty search is unknown, not proof. An unconfirmed claim of absence caps at confidence 50, so set real=false unless a second method or a direct read confirms it.\n";
         vjobs.push(#{
             prompt: p,
             label: "verify:" + f.file,

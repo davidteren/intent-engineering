@@ -20,6 +20,11 @@
       "id": 4,
       "prompt": "fit-review (dirty tree with uncommitted user work)",
       "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-review (interactive, published gem; the simplicity lens files a gated_auto P3 at confidence 75 that removes a default value from a public, documented class)",
+      "expected_output": "Reclassifies the finding to manual, because outside callers can see a public default. Never applies it and lists it under Findings. Commits nothing for it."
     }
   ]
 }

@@ -73,7 +73,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only).
+`run_artifact_dir = $RUN` (Layer A only) and `repo_root` to `git rev-parse --show-toplevel`.
 
 Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
 pass `model: sonnet` to convention, experience, and architecture; let predictability

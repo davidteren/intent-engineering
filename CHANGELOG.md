@@ -17,6 +17,16 @@ for the design see **PLAN.md**.
   offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
   reports from before the rename stay in `docs/intent-engineering/` as history.
 
+### Fixed
+- **Lens judgment (#48).** The `gated_auto` rubric now excludes changes that outside
+  callers can see (public classes, signatures, defaults, documented CLI flags), so
+  `/fit-review` never applies them. A new eval case pins this. Lenses get `Repo root`,
+  `Base` and `Plan` lines in scope, check the base before they blame the change, and put
+  pre-existing and no-change items in observations. A failed or empty search is unknown:
+  an unconfirmed absence claim caps at confidence 50 (template and Grok skeptic). The
+  template has one shared severity rubric, and `findings-schema.json` points to it. The
+  simplicity lens searches the requirements before a YAGNI cut.
+
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
   read-only on a real Hotwire/Rails app (ongela) and folded the false positives

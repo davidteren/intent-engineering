@@ -121,7 +121,9 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
-Bind **`run_artifact_dir = $RUN`** (Layer A only).
+Bind **`run_artifact_dir = $RUN`** (Layer A only). Bind `repo_root` to
+`git rev-parse --show-toplevel`, `base` to `BASE` from Stage 1, and `plan_path` to the
+`plan:` path when one is given.
 
 Spawn each selected lens in parallel using `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
 with `Context: review`. **Model policy** (same as the template): pass `model: sonnet` to
@@ -166,7 +168,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 6. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
-   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
+   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity P2 or P3, and a
    concrete `suggested_fix`. Apply only when the working tree is what was reviewed
    (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
    run affected tests/lint; if they fail, revert that fix and report it instead. If
