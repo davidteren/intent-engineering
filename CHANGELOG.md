@@ -32,6 +32,15 @@ for the design see **PLAN.md**.
   coerces any input shape (`defaults-and-configuration.md`). The predictability lens now
   reads the "Surprising defaults" section of `defaults-and-configuration.md` (agent,
   lens catalog, Grok workflow and principle index).
+- **Experience lens covers CLI, docs and developer output (#57).** `lens-catalog.md` is
+  the one selection rule: it now lists CLI output, error and recovery messages, exit
+  codes, the stdout/stderr split and changed README or upgrade steps, and a library or
+  gem counts when it ships any of these. `fit-review`, `fit-audit`, `fit-validate-plan`,
+  the Grok config prompt and `ways-of-working.yaml` point to it, and
+  `check-contracts.rb` fails on a restated skip rule. `ux-interaction-smells.md` has a
+  new "CLI and developer output" section (clig.dev added to Sources), a traced
+  framework-default guard, and a tighter live-region shape. `accessibility.md` limits
+  `role="tab"` to in-page panels.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

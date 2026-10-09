@@ -493,6 +493,21 @@ orchestrator_skills.each do |rel|
   end
 end
 
+# Experience selection lives only in lens-catalog.md (#57). Restated skip rules drift; the
+# old wording wraps across line breaks, so match with \s+ rather than a substring.
+experience_drift = (Dir[File.join(PLUGIN, "skills/**/*.md")] +
+                    Dir[File.join(PLUGIN, "agents/*.md")] +
+                    Dir[File.join(PLUGIN, "references/*.md")]).select do |abs|
+  File.read(abs) =~ /pure\s+backend|template\/UI\s+path/
+end
+if experience_drift.empty?
+  ok "no restated experience skip rule (pure backend / template/UI path)"
+else
+  experience_drift.each do |abs|
+    bad "#{abs.sub(PLUGIN + '/', '')}: restates the experience skip rule; point to lens-catalog.md"
+  end
+end
+
 init_skill = read("skills/fit-setup/SKILL.md")
 bad "skills/fit-setup/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
 if init_skill =~ /Arch pack ✅\s*\(today:/ ||

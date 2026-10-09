@@ -111,8 +111,11 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
 - Live-updating region (an ActionCable / `turbo_stream` broadcast target) whose announced
   element does **not persist** across the update: screen-reader users get no signal. The live
   element (`aria-live`, or an implicit `role="status"` / `"alert"` / `"log"`) can be the
-  target itself or an ancestor, **as long as that element survives the update** — a target
-  that receives `append`/`prepend` and carries `aria-live` is valid. The failure is a
+  target itself or a small persistent `role="status"` element that receives only the
+  message, **as long as that element survives the update** — a target
+  that receives `append`/`prepend` and carries `aria-live` is valid. A live container whose
+  update re-renders all its content, such as a Turbo Frame swap or a whole form, is the
+  wrong shape. Append-only logs stay valid. The failure is a
   `turbo_stream.replace` that swaps the live node itself: the new node's `aria-live` does not
   announce, because the region must exist before its contents change. Exception: a
   `role="alert"` / `aria-live="assertive"` region is announced even when freshly inserted or
@@ -139,7 +142,18 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   or non-persisting live region; `role` in ERB with behavior added in a Stimulus
   `connect()`; `data: { turbo: false }` forms.
   (Quick greppable pointers — the full carve-outs live in the cards above.)
-- **CLI UX:** commands that mutate state with no confirmation flag and no dry-run.
+
+### CLI and developer output
+- Commands that mutate state with no confirmation flag and no dry-run.
+- An error names the raw input or an exception class name (`Errno::EISDIR`, `.`) instead
+  of the resolved value in plain words (the full folder path, the real file name).
+- A printed recovery command does not work as written for the case that prints it.
+  Trace it against the code for that case. Never run it: lenses are read-only.
+- A failed or not-ready result exits zero. A failure must exit non-zero.
+- Results go to stderr, or diagnostics go to stdout. Results belong on stdout and
+  diagnostics on stderr. Agents and scripts rely on that split, so check it before you
+  suggest more output.
+- Counts use mixed formats or wrong plurals ("1 files", "3 file(s)" next to "2 tests").
 
 ## Confidence anchors (experience lens)
 
@@ -154,6 +168,9 @@ UX review can approach architecture-pack rigor without inventing pixel scores.
   automatic; but `form_with` does not render errors unless the view does, and a native
   `<dialog>` is modal only when opened with `showModal()`. Score ≤25 (suppress) only when
   you confirm the default is in effect here; otherwise score the gap on its own merits.
+  Before a no-feedback or misleading-state finding, read the layout's flash rendering and
+  the controller's before_action guards. If you did not trace them, the finding depends on
+  unseen context: use confidence 50.
 - **Cross-surface & affordance guard** — check the rest of the app, not just the file, but
   keep the two cases distinct. For a *missing keyboard path*: downgrade to ≤50 / advisory
   only when another route or view offers an **equivalent, in-context** keyboard operation
@@ -182,3 +199,4 @@ hierarchy and exit paths.
 - [WebAIM — Keyboard accessibility](https://webaim.org/techniques/keyboard/)
 - [GOV.UK Design System — Error messages](https://design-system.service.gov.uk/components/error-message/)
 - [Apple HIG — Feedback / modality](https://developer.apple.com/design/human-interface-guidelines/)
+- [Command Line Interface Guidelines](https://clig.dev)

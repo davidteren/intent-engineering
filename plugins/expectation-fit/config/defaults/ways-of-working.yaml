@@ -13,8 +13,8 @@ lenses:
   predictability: on
   convention: on
   simplicity: on
-  experience: auto      # auto = on when a user-facing surface is present, including any
-                        # template/partial/component/client-controller path in the diff
+  experience: auto      # auto = on when the scope touches a surface in the
+                        # references/lens-catalog.md list
   architecture: auto    # auto = on only when a supported framework (e.g. Rails) is detected
 
 # --- External tool preference -----------------------------------------------------

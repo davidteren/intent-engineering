@@ -88,10 +88,8 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
   always a framework, repo standard, or sibling pattern to be consistent with). Detect
   the stack(s) from the catalog's Detection signals column; load matching
   `frameworks/<stack>.md` docs for every stack that has a Convention doc.
-- **`fit-experience-reviewer`:** when the diff touches a user-facing surface (UI
-  components, frontend files, templates/views/partials, CLI UX) **or** full-stack
-  changes that include those paths alongside backend. Skip only for pure
-  backend/lib/infra with no template/UI path.
+- **`fit-experience-reviewer`:** when the scope touches a surface in the
+  `lens-catalog.md` list.
 - **`fit-architecture-reviewer`:** when the catalog has **Arch pack ✅** for a detected
   stack **and** the diff touches structural code for that stack (not config/docs/test-only
   with no structural change). Use the catalog Detection signals and pack paths — never a

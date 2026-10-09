@@ -39,7 +39,7 @@ Robust.
 - Interactive element not reachable by Tab (e.g. clickable `<div>` with no `tabindex`).
 - `outline: none` / `outline: 0` with no replacement focus style.
 - Focus trap: focus enters a widget (modal, menu) and cannot leave with Tab/Esc.
-- Custom control (`role="button"`, `role="tab"`, slider) with no key handlers (Enter/Space/arrows).
+- Custom control (`role="button"`, `role="tab"`, slider) with no key handlers (Enter/Space/arrows). Use `role="tab"` only for in-page panels that switch without a page load. Navigation links that load a page use `aria-current="page"`.
 - Positive `tabindex` values (`tabindex="3"`) overriding natural DOM order.
 - Modal/dialog that does not move focus in on open or restore it on close.
 

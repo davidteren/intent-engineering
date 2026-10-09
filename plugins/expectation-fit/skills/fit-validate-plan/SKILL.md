@@ -48,8 +48,8 @@ validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
 - **convention:** on when the doc proposes structure/patterns/naming for a known stack
   or repo — does it reinvent what convention already provides? Read repo `CLAUDE.md`/
   `AGENTS.md` and the relevant `frameworks/<stack>.md`.
-- **experience:** on when the doc describes any user-facing surface — assess described
-  UX completeness (interaction states, user flows, IA, accessibility commitments,
+- **experience:** on when the scope touches a surface in the `lens-catalog.md` list —
+  assess described UX completeness (interaction states, user flows, IA, accessibility commitments,
   AI-slop risk).
 
 Announce the team.

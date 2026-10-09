@@ -336,7 +336,7 @@ if base_ref != () && base_ref != "" {
     cfg_prompt += "\n";
 }
 cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs — prose, not silent omit).\n";
-cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience on only for a user-facing surface or lenses.experience=on. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
+cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience on when the scope touches a surface in the references/lens-catalog.md list, or lenses.experience=on. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += "Use read_file and grep. Do not guess a stack that the catalog does not list.\n";
 
 let cfg = agent(cfg_prompt, #{
@@ -413,7 +413,7 @@ let catalog = [
         id: "experience",
         agent: "fit-experience-reviewer.md",
         docs: "resources/principles/human-interface-guidelines.md, resources/principles/look-and-feel.md, resources/principles/ux-design.md, resources/agnostic/accessibility.md, resources/agnostic/information-architecture.md, resources/agnostic/ux-interaction-smells.md",
-        hunts: "missing interaction states, weak labels, broken keyboard or focus, accessibility gaps",
+        hunts: "missing interaction states, weak labels, broken keyboard or focus, accessibility gaps, terminal output, exit codes and help text",
         selected: run_experience,
     },
     #{
