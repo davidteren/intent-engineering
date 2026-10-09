@@ -1,7 +1,7 @@
 ---
 name: fit-audit
 description: "Audit a whole codebase, subsystem, or feature against the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) and produce a posture report — per-dimension 0-10 scores plus the top surprise/convention/complexity/UX/structural gaps. Use to assess an existing codebase or area, not a specific diff. Sampling-aware for large targets."
-argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [<path/glob/subsystem to audit, default: whole repo>]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [prior:<report-path>] [<path/glob/subsystem to audit, default: whole repo>]"
 ---
 
 # Expectation Fit — Codebase Audit
@@ -15,20 +15,25 @@ surfaced first. This is a read-only assessment — it never edits code.
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Emit JSON instead of markdown. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-audit[-scope].md`. |
+| `mode:agent` | Emit JSON instead of markdown. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
 
+First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over `config/defaults/`).
+The resolved artifact folders feed the exclusions below.
+
 Resolve the audit set. Be explicit and bounded:
 
 1. Determine the file set: the given path/glob, or the repo's source dirs. Exclude
-   `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and
-   artifact dirs (resolved `artifacts.run_dir`, `artifacts.report_dir`, legacy
-   `wip/`, `.expectation-fit/runs/`, `docs/expectation-fit/`).
+   `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and the
+   artifact folders: build `EXCLUDES` per config-resolution (Scope exclusions) and
+   pass them to every `git ls-files` / `git diff` call that lists the set.
 2. Detect the stack(s) via `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`
    (Detection signals); load matching `frameworks/<stack>.md` docs. Do not hardcode a
    closed stack list.
@@ -40,8 +45,7 @@ Resolve the audit set. Be explicit and bounded:
 
 ## Stage 2 — Select lenses
 
-First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over `config/defaults/`); the
+Use the config resolved in Stage 1; the
 `lenses:` toggles are authoritative, and `thresholds` + pattern policy feed the
 architecture lens. **Always** state the Config source in Coverage (never silent
 defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
@@ -70,12 +74,13 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `audit` |
-| `SCOPE_SLUG` | sanitized target slug, or empty |
+| `SCOPE` | raw target (the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only) and `repo_root` to `git rev-parse --show-toplevel`.
+`run_artifact_dir = $RUN` (Layer A only), `repo_root` to `git rev-parse --show-toplevel`,
+and `plugin_root = $PLUGIN_ROOT`.
 
 Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
 pass `model: sonnet` to convention, experience, and architecture; let predictability
@@ -106,9 +111,11 @@ just needs the merged per-lens return.
 
 ## Stage 5 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
-stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
+Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Sections: Header (per
+report-template, with the Provenance line; append `; <N> commits ahead of <default>`
+from `git rev-list --count <default>..HEAD`, where `<default>` is the remote default
+branch, the same base `fit-review` detects), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
 each lens status per the report-template Lens status table, Config line), Verdict = the **top 3 posture gaps to fix first** with
 why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear when a lens status or a partial read blocks it. No apply,
@@ -116,7 +123,7 @@ no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc (absolute path).
 
 ## Fallback
 
@@ -129,7 +136,7 @@ backfill rule. Everything else unchanged.
 ## Reference files (read at runtime)
 
 Depends on `${CLAUDE_PLUGIN_ROOT}` resolving (standard in Claude Code). Read before
-Stage 2 — shared contract for every `fit-*` skill:
+Stage 1 — shared contract for every `fit-*` skill:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .expectation-fit config + artifact paths
 - `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`
@@ -138,3 +145,7 @@ Stage 2 — shared contract for every `fit-*` skill:
 - `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — audit scoring
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`
 - `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

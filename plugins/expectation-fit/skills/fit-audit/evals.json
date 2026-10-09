@@ -20,6 +20,11 @@
       "id": 4,
       "prompt": "fit-audit app/lib (Rails app; .expectation-fit/patterns.yaml prefers interactor instead_of service_object; no app/services folder; app/lib/sync/cleanup.rb has one public method, call)",
       "expected_output": "The architecture lens classifies cleanup.rb as service_object by its call method. It raises a P3 preferred-instead_of finding that names interactor. One observation names the units checked, the paths read and the matches. The report never says that the policy is met."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-audit mode:agent app/models",
+      "expected_output": "JSON reply only. Without out:, writes no report file and sets artifact_path to null. git status --porcelain is the same before and after the run. Never edits source."
     }
   ]
 }

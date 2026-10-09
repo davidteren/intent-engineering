@@ -29,7 +29,7 @@ concrete fixes.
 >
 > **How:** A small set of lenses (each grounded in a researched principle) run as parallel
 > agents. They return scored, deduplicated findings with concrete fixes, written to a
-> report under `docs/expectation-fit/`. The same lenses work in four contexts: planning, plan validation, code
+> local report under `.expectation-fit/reports/` (git-ignored). The same lenses work in four contexts: planning, plan validation, code
 > review, and codebase audit. Claude Code is the installable plugin. An optional Grok
 > review runtime lives in this repo under `.grok/workflows/`.
 
@@ -161,13 +161,14 @@ write `docs/`. Full notes: [`.grok/workflows/README.md`](.grok/workflows/README.
 ## Reports
 
 Claude skills use two layers: ephemeral run scratch under `.expectation-fit/runs/<run-id>/`
-(per-lens JSON; deleted after publish by default), and a published report under
-`docs/expectation-fit/<stamp>-<skill>[-scope].md`. Override the published path with
-`out:<path>`; set `artifacts.*` in `.expectation-fit/ways-of-working.yaml` for permanent
-defaults. Pass `mode:agent` for a single JSON object instead of markdown.
+(per-lens JSON; deleted after each run by default), and a report under
+`.expectation-fit/reports/<stamp>-<skill>[-scope].md`. Both folders ignore themselves,
+so reports stay out of git by default. Override the report path with `out:<path>`; set
+`artifacts.report_dir` in `.expectation-fit/ways-of-working.yaml` to commit reports (a
+`docs/` site is often public). Pass `mode:agent` for a single JSON reply instead of
+markdown; it writes a file only with `out:`.
 
-The Grok workflow writes only run scratch. It does not publish under
-`docs/expectation-fit/`.
+The Grok workflow writes only run scratch.
 
 ---
 
@@ -175,8 +176,8 @@ The Grok workflow writes only run scratch. It does not publish under
 
 1. Install the plugin (marketplace add + install — see below).
 2. Recommended once you review a repo more than once: `/fit-setup` to set up or upgrade `.expectation-fit/` (defaults work without it).
-3. Run `/fit-audit` on a path or `/fit-review` on your branch; open the report under
-   `docs/expectation-fit/`.
+3. Run `/fit-audit` on a path or `/fit-review` on your branch; open the report path that
+   the run prints (default `.expectation-fit/reports/`).
 4. **Grok (optional):** from a Grok session in this repo, run
    `/workflow fit-review {"target":"HEAD","base":"<merge-base commit SHA>"}` and watch
    `/workflows`. Get the SHA with `git merge-base origin/main HEAD`.

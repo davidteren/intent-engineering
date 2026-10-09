@@ -1,4 +1,4 @@
-# Expectation Fit — ephemeral lens run scratch (published reports: docs/expectation-fit/)
+# Expectation Fit: lens run scratch from older runs (new run and report folders ignore themselves)
 .expectation-fit/runs/
 .intense/runs/
 

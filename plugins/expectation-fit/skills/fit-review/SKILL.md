@@ -1,7 +1,7 @@
 ---
 name: fit-review
 description: "Review code changes through the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) — surfacing surprise, non-idiomatic patterns, needless complexity, UX gaps, and structural anti-patterns. Default (interactive) mode applies safe, verified fixes and commits on a clean tree (never pushes); mode:agent reports JSON only. Use on a PR, branch, or local changes before merging."
-argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [base:<ref>] [prior:<report-path>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
 ---
 
 # Expectation Fit — Code Review
@@ -24,9 +24,10 @@ number/URL or branch.
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
-| `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. |
+| `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). Outside-repo only when explicitly given. |
+| `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. To re-review after fix commits, pass the head_sha of the last report (local checkout only). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Never changes the diff range. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). Its decision lines go verbatim, with their ids, to every lens in `<known-context>` (Stage 2). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
 | `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
@@ -36,7 +37,9 @@ number/URL or branch.
 - **Apply locally; never push.** In default mode, apply the safe fixes you're
   confident in (Stage 5) and commit them as an isolated `fix(fit-review):` commit when
   the tree was clean; on a dirty tree apply but leave for the user. In `mode:agent`,
-  mutate nothing — the caller applies. Never push, open PRs, or file tickets.
+  change no product code and write no report file unless `out:` names one; run scratch
+  ignores itself, so `git status` stays unchanged. The caller applies. Never push, open
+  PRs, or file tickets.
 - **No blocking prompts.** Infer intent and scope from tokens, git state, and the
   diff. Note uncertainty in Coverage; don't stop to ask.
 - **Explicit mutations only.** Never `git checkout`/`switch` or `gh pr checkout`. A PR
@@ -49,25 +52,42 @@ number/URL or branch.
 
 ## Stage 1 — Scope
 
+First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over
+`${CLAUDE_PLUGIN_ROOT}/config/defaults/`). The resolved artifact folders feed the scope
+exclusions below.
+
 Compute the diff. Reuse the scope logic familiar from standard code-review skills:
 
 - **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`. The
   diff is the current checkout against `BASE`. A PR or branch target given with `base:`
-  supplies only the intent (Stage 2).
+  supplies only the intent (Stage 2). When `<ref>` is a SHA, first check
+  `git merge-base --is-ancestor <ref> HEAD`. If the check fails (for example after a
+  rebase), review the whole branch against its detected base and say so in Coverage.
 - **PR number/URL** — `gh pr view` for metadata; do not checkout. Classify
   `local-aligned` (HEAD == PR head, not cross-repo, head is ancestor of HEAD) vs
   `pr-remote`. In `pr-remote`, lenses inspect via `git show <ref>:<path>` / diff hunks
   only.
 - **Branch name** — resolve `origin/<branch>` without checkout; `branch-remote` scope.
+  When `<branch>` is the current branch and `origin/<branch>` is an ancestor of HEAD
+  (`git merge-base --is-ancestor origin/<branch> HEAD`), classify as `local-aligned`.
 - **No argument** — current branch vs its detected base.
 
-Produce: `BASE`, `HEAD_REF` (the head the lenses read: the working tree in
-`local-aligned`/standalone scope, the PR head ref in `pr-remote`, `origin/<branch>` in
-`branch-remote`), `FILES` (`git diff --name-only $BASE`, or `git diff --name-only $BASE
-$HEAD_REF` in remote scopes), `DIFF` (the same range with `-U10`), and `UNTRACKED`
-(`git ls-files --others --exclude-standard`). Untracked files are out of scope; list
-them in Coverage. If no base resolves, stop — don't fall back to `git diff HEAD` (it
-would miss committed work).
+**Pin the reviewed commit** before any lens runs: `REVIEWED_SHA` is HEAD in
+`local-aligned` and standalone scopes, the PR head SHA in `pr-remote`, and
+`origin/<branch>` in `branch-remote`. `BASE_SHA=$(git rev-parse --short $BASE)`. Print
+the report-template Provenance line (with `; base <base_sha>`) as the first output; the
+run id joins it once Stage 4 makes one.
+
+Build `EXCLUDES` per config-resolution (Scope exclusions), so earlier reports and run
+scratch stay out of scope. Produce: `BASE`, `HEAD_REF` (the head the lenses read: the
+working tree in `local-aligned`/standalone scope, `$REVIEWED_SHA` in `pr-remote` and
+`branch-remote`), `FILES` (`git diff --name-only $BASE -- "${EXCLUDES[@]}"`, or
+`git diff --name-only $BASE $REVIEWED_SHA -- "${EXCLUDES[@]}"` in remote scopes, so the
+working tree never leaks into scope), `DIFF` (the same range with `-U10`), and
+`UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
+scope; list them in Coverage. If no base resolves, stop — don't fall back to
+`git diff HEAD` (it would miss committed work).
 
 **Empty diff.** If `FILES` is empty, dispatch no lens. Still load config and resolve the
 report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:agent`)
@@ -109,10 +129,7 @@ selection does not change.
 
 ## Stage 3 — Select lenses
 
-First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-— discover nearest `.expectation-fit/` via **walk-up** (or `config:` / `EXPECTATION_FIT_CONFIG_DIR`),
-then deep-merge over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
-The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
+Use the config resolved in Stage 1. The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
 resolved `conventions` (including `sources` + **`auto`** discovery), `severity_align`,
 `confidence_gate`, `thresholds`, and pattern policy feed the lenses and synthesis.
 **Always** put an explicit Config line in Coverage, plus auto-source counts when
@@ -156,14 +173,14 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `review` |
-| `SCOPE_SLUG` | sanitized branch/PR slug, or empty |
+| `SCOPE` | raw branch or PR (the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Then run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc.
-Bind **`run_artifact_dir = $RUN`** (Layer A only). Bind `repo_root` to
-`git rev-parse --show-toplevel`, `base` to `BASE` from Stage 1, and `plan_path` to the
-`plan:` path when one is given.
+Bind **`run_artifact_dir = $RUN`** (Layer A only), `plugin_root = $PLUGIN_ROOT`, and
+`reviewed_sha = $REVIEWED_SHA`. Bind `repo_root` to `git rev-parse --show-toplevel`,
+`base` to `BASE` from Stage 1, and `plan_path` to the `plan:` path when one is given.
 
 Write the Stage 1 `DIFF` to `$RUN/diff.patch`. Pass each lens that path, its line count
 and `git diff --stat $BASE`, not the diff inline. A large diff then never gets cut off
@@ -184,13 +201,19 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 
 Run steps 1 to 6 of **Merge and gate** in
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` (validate and repair, dedup,
-agreement, config policy, confidence gate, tensions). Then:
+agreement, config policy, confidence gate, tensions). In step 1, **verify lines**
+before dedup: grep for the first line of each evidence quote (`grep -n -F`, or on
+`git show $REVIEWED_SHA:<path>` in remote scopes) and set `line` from the hit. With no
+hit, keep the finding and list its line as unverified in Coverage. Then:
 
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity P2 or P3, a
-   concrete `suggested_fix`, and carries no `tension`. Apply only when the working tree is what was reviewed
-   (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`.
+   concrete `suggested_fix`, carries no `tension`, and does not name a prior declined #N
+   or match a prior declined row by the dedup key (Merge and gate step 2). Apply only
+   when the working tree is what was reviewed (`local-aligned`/standalone), never in
+   `pr-remote`/`branch-remote`, and only while HEAD still equals `REVIEWED_SHA`. If HEAD
+   moved, skip apply and print `Reviewed <sha>; HEAD moved to <sha>`.
 
    **Verify first:** one read-only sub-agent re-reads the cited lines of every finding
    that passes this gate, with this prompt: "Adversarially verify this finding against
@@ -209,7 +232,10 @@ agreement, config policy, confidence gate, tensions). Then:
 
    After applying, run affected tests/lint; if they fail, revert that fix and report it
    instead. If **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
-   `fix(fit-review): <summary>` commit; if it was false, apply but leave uncommitted.
+   `fix(fit-review): <summary>` commit and record its real SHA
+   (`git rev-parse --short HEAD`) for Applied; if it was false, apply but leave
+   uncommitted. Set each finding's Status at run time: `fixed <sha>` for applied ones,
+   `declined: <reason>` for push-backs and skipped taste calls, else `open`.
    The `fix(fit-review)` commit holds only fixes that pass this gate. A caller that fixes
    other findings commits those fixes separately, after this skill reports.
 
@@ -219,26 +245,29 @@ agreement, config policy, confidence gate, tensions). Then:
 
 ## Stage 6 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — including the mode:agent section
-there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
-verdict, completed_at in the Header. Sections:
-Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
-lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (the status of
-every catalog lens per the report-template Lens status table, READ lines, Cost), Verdict
-(Ready / Ready with fixes / Not ready). **Do not** use Ready / all-clear when a lens
-status or a partial read blocks it. No time
-estimates. Every finding actionable.
+Write the report to `$REPORT_PATH` (markdown) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. In `mode:agent`, reply with the
+JSON per the mode:agent section there and write it to `$REPORT_PATH` only when `out:`
+was passed (never into `$RUN`). Sections: Header (per report-template, with the
+Provenance line, run_id, branch, head_sha, verdict and completed_at), Applied (if any),
+Findings (P0..P3 tables, terse `Issue` cell, keyed detail lines, `Principle` + `Lens`
+columns), Tensions, Observations, Coverage (the status of every catalog lens per the
+report-template Lens status table, READ lines, Cost), Verdict (Ready / Ready with fixes /
+Not ready, per the report-template verdict rule). **Do not** use Ready / all-clear when
+a lens status or a partial read blocks it. No time estimates. Every finding actionable.
+Stop re-running at Ready. Log P3 items without another round.
 
 **mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
 `scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
 `lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
-`observations`, `coverage.execution`, `coverage.lens_status`, `artifact_path`. The
-report-template example shows each one.
+`observations`, `coverage.execution`, `coverage.lens_status`, `artifact_path`,
+`plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`, `tree_clean`,
+`base_sha`, and `status` on each finding. The report-template example shows each one.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc
+(absolute path).
 
 ## Quality gates
 
@@ -259,7 +288,7 @@ backfill rule. Everything else unchanged.
 ## Reference files (read at runtime)
 
 This skill depends on `${CLAUDE_PLUGIN_ROOT}` resolving to the plugin dir (standard in
-Claude Code). Read these contract files before Stage 3 — they are the single source of
+Claude Code). Read these contract files before Stage 1 — they are the single source of
 truth, shared by every `fit-*` skill:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .expectation-fit config + artifact paths
@@ -271,3 +300,7 @@ truth, shared by every `fit-*` skill:
 
 Lens detection heuristics live in `${CLAUDE_PLUGIN_ROOT}/resources/`; the lens agents
 read those themselves.
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

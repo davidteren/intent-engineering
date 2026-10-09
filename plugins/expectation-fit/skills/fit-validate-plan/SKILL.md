@@ -1,7 +1,7 @@
 ---
 name: fit-validate-plan
 description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists. Run it on the final plan text, after any document review (for example ce-doc-review) and before implementation. It does not replace a document review."
-argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [path/to/plan-or-spec.md ...]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [prior:<report-path>] [path/to/plan-or-spec.md ...]"
 ---
 
 # Expectation Fit — Plan Validation
@@ -15,8 +15,9 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Emit JSON; no interactive routing. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
+| `mode:agent` | Emit JSON; no interactive routing. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Pass a folder. A file name skips the stamp and can overwrite an earlier report. Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
+| `prior:<report-path>` | Earlier report of the same target. Its `fixed` and `declined` rows go to every lens through the `<prior>` slot (subagent-template). Turns the run into a re-check: each prior gap is marked closed or still open. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 | remainder | Path to the document, or several paths. Several paths form one set: one run, one report, with one flow per document inside it. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
@@ -73,45 +74,61 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE_SLUG` | sanitized plan basename (the first one, plus `-set` for several), or empty |
+| `SCOPE` | raw plan path (the first one, with `-set` appended for several; the canonical block makes the slug), or empty |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
 Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
-`run_artifact_dir = $RUN` (Layer A only) and `repo_root` to `git rev-parse --show-toplevel`.
+`run_artifact_dir = $RUN` (Layer A only), `repo_root` to `git rev-parse --show-toplevel`,
+and `plugin_root = $PLUGIN_ROOT`.
 
 Spawn lenses in parallel with `Context: plan` and the `Document type:`. **Model
 policy:** pass `model: sonnet` to convention and experience; let predictability and
 simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
 Plan mode requires `scores` (dimensional rating per the scoring rubric) plus findings
-that cite the doc location (`file` = the document path; `line` = the relevant section's
-start line, or 0 when none applies) and describe the gap a planner/implementer would
-hit. For a set, each lens returns one flat `scores` object per document dispatch. Missing required
+that cite the doc location (`file` = the document path; `line` = the exact plan line of
+the evidence quote, or 0 when none applies) and describe the gap a planner/implementer
+would hit. For a set, each lens returns one flat `scores` object per document dispatch. Missing required
 `scores` → lens **failed**. Lenses write `$RUN/{lens}.json` (via the Write tool).
+
+With `prior:`, fill the `<prior>` slot with the prior gaps and its two plan rules: mark
+each prior gap closed or still open, with its plan line; drop a score only when the lens
+names the new gap. Lenses still read the whole plan and can raise new gaps.
 
 ## Stage 4 — Merge & rate
 
 1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
-   with Context: plan, once per document. No apply, because the input is a doc.
+   with Context: plan, once per document. No apply, because the input is a doc. In its
+   step 1, before dedup, grep the document for the first line of each evidence quote
+   (`grep -n -F`) and set `line` from the hit; with no hit, list the line as unverified
+   in Coverage.
 2. Build the dimensional rating table (scoring rubric) from lenses with status
-   `clean` or `ok`: `Lens |
-   Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
+   `clean` or `ok`: `Lens | Dimension | Score | Prior | Gap`, lowest first (`Prior` is
+   the score from the `prior:` report, or `-`). Findings ≤ 7/10 dimensions become
    actionable gaps.
 3. Collect tensions (e.g. simplicity vs convention in the proposed approach) and
    observations.
 
 ## Stage 5 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (each doc
-with its type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
-with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens status per the report-template Lens status table),
-Verdict = **Ready to implement / Revise first**, listing the blocking gaps to resolve
-before coding. For a set, give each document its own section with its Dimensional
-Ratings, Findings/Gaps and Tensions; the Header, Coverage and Verdict cover the whole set. The verdict is **Revise first** when any P0 or P1 survives the confidence
-gate in any document of the set, or when a lens status or a partial read blocks it (see
-the report-template Lens status table). Otherwise it is **Ready to implement**. P2 and
-P3 gaps do not block. No time estimates.
+Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Sections: Header (per
+report-template, with the Provenance line; each doc with its type), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
+with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens status per the report-template Lens status table;
+when `git rev-list --count HEAD..@{u}` is above zero, add `Checkout is N commits behind
+<upstream> as of last fetch. Code facts may be stale.` Never run `git fetch`),
+Verdict = **Ready to implement / Revise first** with lens coverage (report-template
+Verdict), listing the blocking gaps to resolve before coding. For a set, give each
+document its own section with its Dimensional Ratings, Findings/Gaps and Tensions; the
+Header, Coverage and Verdict cover the whole set. The Header carries `plan_sha256`
+(`shasum -a 256 <plan> | cut -c1-64`, one per document), and with `prior:` also
+`supersedes: <prior report>` and the round (the prior round plus one; round 1 without
+`prior:`).
+
+The verdict is **Revise first** when any P0 or P1 survives the confidence gate in any
+document of the set, or when a lens status or a partial read blocks it (see the
+report-template Lens status table). Otherwise it is **Ready to implement**. P2 and P3
+gaps do not block. No time estimates.
 
 Caller checks: if the request lists must-hold checks, keep them out of the lens prompts.
 After the merge, rate each check as pass, fail or not addressed, with the plan line. Show
@@ -121,7 +138,8 @@ with its own severity.
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
 `$RUN` equals `$RUN_DIR/$RUN_ID`). End a markdown reply with this line, where `Blocking`
-counts the P0 and P1 findings that survive the gate:
+counts the P0 and P1 findings that survive the gate, and the report path is the absolute
+path from the `Report:` line in that doc:
 
 ```text
 Verdict: <verdict>. Lowest score: <n>/10. Blocking: <n>. Failed lenses: <names or none>. Report: $REPORT_PATH
@@ -149,3 +167,7 @@ Stage 2 — shared contract for every `fit-*` skill:
 - `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — dimensional rating
 - `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`
 - `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

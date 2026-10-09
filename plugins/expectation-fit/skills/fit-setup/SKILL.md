@@ -217,8 +217,12 @@ ask short questions and write answers into the files. Defaults differ by profile
    - If no Rails (or user declines), leave preferred/blocked empty (or stack seed only).
 
 6. **Where do reports go?** Confirm `artifacts.*` defaults from
-   `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`. Write overrides only if the
-   user changes them. Always restate resolved paths in the final summary.
+   `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`. Say that reports stay local
+   by default (`.expectation-fit/reports/`, which ignores itself). Name
+   `artifacts.report_dir` as the setting that commits them (for example
+   `docs/expectation-fit`). Warn: reports name unfixed defects, and reports committed
+   under a published `docs/` site are public. Write overrides only if the user changes
+   them. Always restate resolved paths in the final summary.
 
 7. **Seed `conventions.sources`?** If AGENTS/CLAUDE (or triage docs) exist under roots,
    offer to add those **paths** to `sources` (not paste file bodies). Preview list;
@@ -365,7 +369,7 @@ Build and **show** a table (do not write yet):
 | `conventions.auto` block | present / missing / partial | mode curated; roots for multi-repo | add missing keys only |
 | `conventions.auto.roots` | empty / set | detected siblings | set if empty and multi-repo |
 | `severity_align` | present / missing | curated_gates | add if missing |
-| `artifacts.*` | present / legacy `report_dir` only | two-layer defaults | offer migrate; never force |
+| `artifacts.*` | present / legacy `report_dir` only | two-layer defaults | carry legacy `report_dir` over as `artifacts.report_dir` |
 | `patterns.preferred` | empty / set | optional interactor preference | ask if rails + empty |
 | `patterns.blocked` / approved | … | … | ask if preferred chosen |
 | Missing config **files** | ways / patterns / thresholds | stack-aware scaffold | create missing files only |
@@ -391,8 +395,9 @@ existing non-empty lists or notes.
   block; insert `conventions.auto:` if absent; fill `roots` only when empty and user
   accepted).
 - **Create** missing of the three files with stack-aware scaffolding (same as Step 3).
-- **Legacy** `report_dir` without `artifacts:`: offer to add `artifacts.*` and leave
-  legacy key commented or removed only on confirm (document behavior in summary).
+- **Legacy** top-level `report_dir`: carry its value over as `artifacts.report_dir`
+  (it is already an alias at runtime). Remove the legacy key only on confirm. Run
+  scratch then uses `artifacts.run_dir` (document this in the summary).
   Name the legacy folder in the summary. Say that its old run folders stay. The user can
   delete them by hand, after keeping any report.md or report.json. This skill deletes
   nothing outside `.expectation-fit/`.
@@ -413,20 +418,15 @@ Resolve the **active** run-scratch path first (same rules as
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`):
 
 - If project `.expectation-fit/ways-of-working.yaml` has `artifacts.run_dir` → use that.
-- Else if it has top-level `report_dir:` and **no** `artifacts:` block (**legacy
-  single-bucket**) → scratch is under `report_dir/<run-id>/`. Offer to ignore
-  `report_dir/` only when that path is clearly ephemeral (e.g. still
-  `wip/expectation-fit`); if `report_dir` looks like a docs/publish path, **skip**
-  the gitignore offer and explain that legacy mode keeps scratch next to published
-  reports without auto-cleanup.
 - Else → default `.expectation-fit/runs/`.
 
-After scaffolding or upgrading ways-of-working (or on any init that mentions artifacts),
+New run folders ignore themselves (config-resolution writes a `*` `.gitignore` into
+each one). This offer covers folders left by older runs. After scaffolding or upgrading ways-of-working (or on any init that mentions artifacts),
 if the project `.gitignore` does **not** already ignore the resolved scratch root,
 **offer** to append it (example for the default):
 
 ```
-# Expectation Fit — ephemeral lens run scratch (published reports live under docs/)
+# Expectation Fit: ephemeral lens run scratch (from older runs; new ones ignore themselves)
 .expectation-fit/runs/
 ```
 
@@ -450,8 +450,9 @@ List what was created, updated, skipped, or proposed. Then tell the user:
 - **Capabilities enabled:** auto mode, severity_align, preferred patterns, stacks.
 - The files are **meant to be committed** (project config, not artifacts) — do **not**
   add `.expectation-fit/` to `.gitignore` (only `.expectation-fit/runs/` if they accepted Step 4).
-- Published reports land under `docs/expectation-fit/` by default; run scratch is
-  cleaned up after each successful publish when `cleanup_runs: true`.
+- Reports land under `.expectation-fit/reports/` by default and stay out of git (the
+  folder ignores itself). Set `artifacts.report_dir` to commit them. Run scratch is
+  cleaned up after each report step when `cleanup_runs: true`.
 - Edit config to taste; every `fit-*` run merges project over plugin defaults (project
   wins). Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
 - **Natural next steps:**

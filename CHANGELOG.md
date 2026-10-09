@@ -71,6 +71,50 @@ for the design see **PLAN.md**.
   work for at least one release; Coverage names the legacy folder and `/fit-setup upgrade`
   offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
   reports from before the rename stay in `docs/intent-engineering/` as history.
+- **Run scratch and reports stay out of git by default (#42).** The default report folder
+  is now `.expectation-fit/reports/` (was `docs/expectation-fit/`). Each run folder and
+  the default report folder get a one-line `*` `.gitignore`, so a run adds nothing to
+  `git status`. To keep committing reports, set `artifacts.report_dir: docs/expectation-fit`.
+  This repo's dogfood runs can pass `out:docs/intent-engineering/`. Other contract
+  changes in `config-resolution.md`: relative `run_dir`, `report_dir` and `out:` resolve
+  from the project base, and the `Report:` line prints an absolute path. `fit-review`
+  and `fit-audit` load config before they build their file lists and exclude the run,
+  report and `out:` folders by pathspec. `mode:agent` writes a report file only with
+  `out:` (else `artifact_path` is `null`), and cleanup runs after the report step. The
+  legacy single-bucket mode is gone: a top-level `report_dir` is now an alias for
+  `artifacts.report_dir`, and `/fit-setup upgrade` carries it over. `/fit-setup`
+  question 6 warns that reports under a published `docs/` site are public.
+- **Reports name the plugin copy and the reviewed commit (#45).** Version is now 0.9.0 in
+  `plugin.json` and `marketplace.json`, so installs leave the stale 0.8.0 cache; the
+  plugin README has an Upgrade section. `report-template.md` defines one `Provenance:`
+  line (plugin version and root, repo, branch, commit, dirty flag, run id) that every
+  review, audit and plan report carries, plus matching `mode:agent` JSON keys. A
+  published report is a point-in-time record: later status goes in a dated addendum,
+  and Applied names the real fix SHA. `completed_at` carries a UTC offset. Lens prompts
+  get the absolute plugin root through a `{plugin_root}` slot instead of a literal
+  variable. Lenses take `line` from `grep -n` or a Read, and orchestrators check each
+  line against its evidence quote before dedup (unverified lines go to Coverage).
+  `fit-review` pins `REVIEWED_SHA` and `BASE_SHA` in Stage 1, diffs remote scopes
+  against the pinned commit, treats the current branch as `local-aligned` when
+  `origin/<branch>` is an ancestor of HEAD, and skips apply when HEAD moved.
+  `fit-audit` shows commits ahead of the default branch; `fit-validate-plan` warns when
+  the checkout is behind its upstream. The Grok workflow resolves one absolute plugin
+  root (or pauses), and its report carries the Provenance and `Runtime:` lines.
+- **Re-runs build on the last report (#52).** New shared token `prior:<report-path>`
+  (review, audit, validate-plan): the prior report's `fixed` and `declined` rows reach
+  every lens through one `<prior>` slot, and a Shared rule forbids re-raising them
+  without new evidence. Findings tables gain a `Status` column (`open`, `fixed <sha>`,
+  `declined: <reason or link>`), also as a JSON `status` field; interactive
+  `fit-review` sets it at run time and never auto-applies a prior declined item. The
+  review verdict now follows severity (Not ready with an open P0/P1, Ready with fixes
+  with an open P2, else Ready; a failed lens still blocks Ready), and `fit-review` stops
+  re-running at Ready. `base:<head_sha of the last report>` is documented as the delta
+  re-review; a SHA that is not an ancestor of HEAD falls back to a full-branch review.
+  The canonical path block takes the raw scope and applies one slug rule, and each
+  `out:` row says to pass a folder. `fit-validate-plan` stamps `plan_sha256`, shows lens
+  coverage in the verdict, and with `prior:` marks each prior gap closed or open, adds a
+  Prior column and a `supersedes` line with the round. A Shared rule keeps decisions the
+  document marks as settled closed.
 
 ### Fixed
 - **Config settings no longer fail silently or vary by run (#49).** The defaults drop the

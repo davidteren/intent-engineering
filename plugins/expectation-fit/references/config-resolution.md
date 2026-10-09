@@ -54,6 +54,10 @@ Relative globs in `conventions.sources` resolve from **one** project base:
 
 Absolute paths in `sources` are used as-is (no rebasing).
 
+The same project base (`PROJECT_BASE`) applies to relative `artifacts.run_dir`,
+`artifacts.report_dir` and `out:` paths. Orchestrators turn them into absolute paths
+before the first write.
+
 ### Convention auto-sources (Copilot, instructions, workflows)
 
 Explicit `conventions.sources` is never enough in a real monorepo: Copilot packs and
@@ -338,9 +342,9 @@ Nested maps merge recursively at every depth. Only lists replace, unless the blo
 | `conventions.auto` | `fit-convention-reviewer` + audit | discover Copilot / instructions / PR-gate workflows (`mode: off\|curated\|all`). See Convention auto-sources. |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |
 | `artifacts.run_dir` | skills | Layer A — per-run scratch for lens JSON (default `.expectation-fit/runs`) |
-| `artifacts.report_dir` | skills | Layer B — published human report dir (default `docs/expectation-fit`) |
-| `artifacts.cleanup_runs` | skills | delete the run dir after a successful publish (default `true`) |
-| `report_dir` *(legacy)* | skills | if set **without** `artifacts:`, run scratch under `report_dir/<run-id>/` and published report under `report_dir/<stamp>-…` (sibling of the run dir); `cleanup_runs: false` |
+| `artifacts.report_dir` | skills | Layer B: report dir (default `.expectation-fit/reports`, git-ignored). Set `docs/expectation-fit` to commit reports. |
+| `artifacts.cleanup_runs` | skills | delete the run dir after the report step (default `true`) |
+| `report_dir` *(legacy)* | skills | alias for `artifacts.report_dir` (see Artifact paths). Run scratch still uses `artifacts.run_dir`. |
 | `patterns.preferred/allowed/blocked/approved/unknown_pattern` | `fit-architecture-reviewer` | preferred-over (instead_of), classify, flag blocked-in-changed-code, suppress approved, raise unknown |
 | `thresholds.*` | `fit-architecture-reviewer` | metric limits for structural smells |
 
@@ -351,56 +355,89 @@ Every `fit-review` / `fit-audit` / `fit-validate-plan` run uses **two layers**:
 | Layer | What | Default |
 |-------|------|---------|
 | **A — run scratch** | `{lens}.json` while lenses run; ephemeral merge helpers | `.expectation-fit/runs/<run-id>/` |
-| **B — published report** | one human-facing file (`*.md`, or `*.json` in `mode:agent`) | `docs/expectation-fit/<stamp>-<skill>[-scope].md` |
+| **B: report** | one human-facing file (`*.md`, or `*.json` in `mode:agent` with `out:`) | `.expectation-fit/reports/<stamp>-<skill>[-scope].md` |
 
-**Resolution order for the published path (Layer B):**
+**Keep analysis out of git by default.** Both default folders ignore themselves: the
+canonical block writes a one-line `*` `.gitignore` into each run folder and into the
+default report folder. A run adds nothing to `git status`. A project that wants to
+commit reports sets `artifacts.report_dir: docs/expectation-fit` (no ignore file is
+written there). Warn: a `docs/` folder is often published as a public site.
+
+**Resolution order for the report path (Layer B):**
 
 1. `out:<path>` on the skill invocation — if it ends in `.md` / `.json`, use as the file path; otherwise treat as a directory and place the default filename inside it. Outside-repo only when explicitly given.
-2. Else resolved `artifacts.report_dir` (project `.expectation-fit/` over defaults).
-3. Else built-in `docs/expectation-fit`.
+2. Else the project `artifacts.report_dir`.
+3. Else a project top-level `report_dir` (legacy alias for `artifacts.report_dir`).
+4. Else the default `artifacts.report_dir` (`.expectation-fit/reports`).
+
+When the project file has a top-level `report_dir` and no `artifacts` block, end the
+Config line with: "legacy report_dir: used as artifacts.report_dir. Run /fit-setup
+upgrade." Do not warn when a project file only lacks some keys, because the defaults
+fill them.
+
+**`mode:agent`:** the JSON reply is the deliverable. Write a report file only when the
+caller passes `out:`. Without `out:`, `REPORT_PATH` stays empty and `artifact_path` is
+`null`.
 
 **Resolution order for the run dir (Layer A):**
 
 1. Resolved `artifacts.run_dir` (project over defaults).
 2. Else built-in `.expectation-fit/runs`.
-3. **Legacy single-bucket:** if the project has top-level `report_dir:` and **no**
-   `artifacts:` block, run scratch uses `report_dir/<run-id>/` and the published report
-   lands at `report_dir/<stamp>-<skill>[-scope].{md,json}` (a **sibling** of the run dir,
-   not nested inside it). `cleanup_runs` is forced `false` (preserves pre-0.6 configs).
-   When the project file has a top-level `report_dir` and no `artifacts` block, end the
-   Config line with: "legacy report_dir: run folders are kept (cleanup off). Run
-   /fit-setup upgrade." Do not warn when a project file only lacks some keys, because
-   the defaults fill them.
 
 **Run id + published filename** — this block is the **canonical** orchestrator procedure.
 `fit-review`, `fit-audit`, and `fit-validate-plan` **must not re-author it**; they only bind
-slots (`SKILL_SLUG`, `SCOPE_SLUG`, `OUT_ARG`, `EXT`) and follow this block.
+slots (`SKILL_SLUG`, `SCOPE`, `OUT_ARG`, `EXT`) and follow this block. `SCOPE` is the
+raw branch, PR, plan path or target; the block normalizes it into `SCOPE_SLUG`, so
+parallel runs name reports the same way.
 
 ```bash
 # CANONICAL_ORCHESTRATOR_PATHS — single source of truth (do not duplicate in skills)
 STAMP=$(date +%Y%m%d-%H%M%S)
 RUN_ID="${STAMP}-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')"
 # skill slug: audit | review | validate-plan
-# SCOPE_SLUG: optional, sanitized path/branch fragment, or empty
+# SCOPE: raw branch / PR / plan path / target, or empty
 # EXT=md normally; json when mode:agent
+# Slug rule: take the basename; drop the extension only for an existing file; lowercase;
+# replace each run of other characters with one hyphen; trim end hyphens.
+#   docs/plans/2026-09-28-007-feat-prd-15-Topic-plan.md -> 2026-09-28-007-feat-prd-15-topic-plan
+#   feat/ep-04-search -> ep-04-search    release/1.2.0 -> 1-2-0    (empty) -> (empty)
+slug_of() {
+  [ -n "$1" ] || return 0
+  s=$(basename -- "$1"); [ -f "$1" ] && s="${s%.*}"
+  printf '%s' "$s" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//'
+}
+SCOPE_SLUG=$(slug_of "$SCOPE")
 # RUN_DIR / REPORT_DIR / CLEANUP already resolved from artifacts.* (above)
+# PROJECT_BASE = project base (see "Base directory for conventions.sources globs")
+abs() { case "$1" in /*) echo "$1" ;; *) echo "${PROJECT_BASE}/$1" ;; esac; }
+RUN_DIR=$(abs "$RUN_DIR"); REPORT_DIR=$(abs "$REPORT_DIR")
 RUN="${RUN_DIR}/${RUN_ID}"
 mkdir -p "$RUN"
+printf '*\n' > "$RUN/.gitignore"   # run scratch never shows in git status
+REPORT_PATH=""
 if [ -n "$OUT_ARG" ]; then
+  OUT_ARG=$(abs "$OUT_ARG")
   case "$OUT_ARG" in
     *.md|*.json) REPORT_PATH="$OUT_ARG" ;;
     *) REPORT_PATH="${OUT_ARG}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}" ;;
   esac
-else
+elif [ "$EXT" != json ]; then   # mode:agent without out: writes no file
   REPORT_PATH="${REPORT_DIR}/${STAMP}-${SKILL_SLUG}${SCOPE_SLUG:+-}${SCOPE_SLUG}.${EXT}"
 fi
-mkdir -p "$(dirname "$REPORT_PATH")"
+if [ -n "$REPORT_PATH" ]; then
+  mkdir -p "$(dirname "$REPORT_PATH")"
+  # The default report folder ignores itself; a folder the project chose does not.
+  case "$(dirname "$REPORT_PATH")" in
+    */.expectation-fit/reports) [ -f "$(dirname "$REPORT_PATH")/.gitignore" ] || printf '*\n' > "$(dirname "$REPORT_PATH")/.gitignore" ;;
+  esac
+fi
 ```
 
 Bind **`run_artifact_dir = $RUN`** (not the published path) when filling `subagent-template.md`. Lenses write only under `$RUN`.
 
-**After a successful write of `$REPORT_PATH`:** if `artifacts.cleanup_runs` is true
-(default), delete the run scratch **only after a safety check**:
+**After the report step** (the file write, or the JSON reply in `mode:agent` without
+`out:`): if `artifacts.cleanup_runs` is true (default), delete the run scratch **only
+after a safety check**:
 
 ```bash
 # Only remove a path that is clearly a per-run scratch dir under the configured root.
@@ -412,10 +449,25 @@ case "$RUN" in
 esac
 ```
 
-Never `rm -rf` an unbound or mis-bound path. Always print the published path to the user:
-`Report: <path>`. Do not leave orphan lens JSON when cleanup succeeds.
+Never `rm -rf` an unbound or mis-bound path. Always print the absolute report path to
+the user: `Report: <absolute path>` (`Report: none (JSON reply only)` in `mode:agent`
+without `out:`). Do not leave orphan lens JSON when cleanup succeeds.
 
-**Scope exclusions:** never audit/review files under the resolved `artifacts.run_dir`, `artifacts.report_dir`, or legacy `report_dir` / `wip/` paths.
+**Scope exclusions:** never audit or review files under the resolved run dir, report
+dir, or `out:` folder. `fit-review` and `fit-audit` load resolved config **before** they
+build their file lists, and pass one exclude pathspec for each of those folders that is
+inside the repo. A folder outside the repo gets no pathspec, so `git diff` never fails:
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+OUT_DIR="$OUT_ARG"; case "$OUT_ARG" in *.md|*.json) OUT_DIR=$(dirname "$OUT_ARG") ;; esac
+EXCLUDES=()
+for d in "$RUN_DIR" "$REPORT_DIR" ${OUT_DIR:+"$OUT_DIR"}; do
+  case "$d" in /*) ;; *) d="${PROJECT_BASE}/$d" ;; esac   # same base as the canonical block
+  case "$d" in "$REPO_ROOT"/?*) EXCLUDES+=(":(top,exclude)${d#"$REPO_ROOT"/}") ;; esac
+done
+# e.g. git diff --name-only "$BASE" -- "${EXCLUDES[@]}"
+```
 
 ## Authority order for conventions
 

@@ -1,6 +1,6 @@
 {
   "name": "expectation-fit",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Enforce expectation fit: software that behaves the way a reasonable developer or user expects. Principle- and architecture-grounded lenses for planning, plan validation, code review, and codebase audit, with project-level .expectation-fit config.",
   "author": {
     "name": "David Teren"

@@ -9,11 +9,39 @@ across terminals.
 | Layer | Default path | Contents |
 |-------|--------------|----------|
 | A — run scratch | `.expectation-fit/runs/<run-id>/` | per-lens `{lens}.json` while the run is open |
-| B — published | `docs/expectation-fit/<stamp>-<skill>[-scope].md` | this report (or `.json` in `mode:agent`) |
+| B: report | `.expectation-fit/reports/<stamp>-<skill>[-scope].md` (git-ignored) | this report (or `.json` in `mode:agent` with `out:`) |
 
 Override Layer B with `out:<path>`. After a successful publish, Layer A is deleted when
 `artifacts.cleanup_runs` is true (default). Include `run_id` in the Header so the run
 is still identifiable after cleanup.
+
+**A published report is a point-in-time record.** Add later status as a dated addendum.
+Do not edit the original lines.
+
+## Provenance line
+
+Every `fit-review`, `fit-audit` and `fit-validate-plan` report carries this one line in
+its Header. It names the plugin copy that ran and the commit that the lenses read:
+
+```
+Provenance: Expectation Fit <version> from <plugin root>; <repo root>@<branch> <sha>[ +uncommitted]; run <run_id>
+```
+
+- `<version>` comes from `<plugin root>/.claude-plugin/plugin.json`. `<plugin root>` is
+  the absolute plugin root (see `subagent-template.md`, Slot bindings).
+- `<sha>` is the commit that the lenses read (short form). `+uncommitted` marks a dirty
+  tree. Show `$HOME` as `~` in both paths.
+- `fit-review` appends `; base <base_sha>`. `fit-audit` appends
+  `; <N> commits ahead of <default>`.
+
+```bash
+PLUGIN_VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)
+REPO_ROOT=$(git rev-parse --show-toplevel)
+BRANCH=$(git rev-parse --abbrev-ref HEAD)        # fit-review remote scopes: the reviewed branch
+REVIEWED_SHA=${REVIEWED_SHA:-$(git rev-parse --short HEAD)}
+[ -z "$(git status --porcelain)" ] && TREE_CLEAN=true || TREE_CLEAN=false
+COMPLETED_AT=$(date +%Y-%m-%dT%H:%M:%S%z)       # local time with UTC offset; STAMP stays local
+```
 
 ## Findings table (review & audit)
 
@@ -22,9 +50,9 @@ goes in the keyed detail line, not the cell.
 
 ```
 ### P0 -- Critical surprise
-| # | File | Issue | Principle | Lens | Conf |
-|---|------|-------|-----------|------|------|
-| 1 | `app/models/order.rb:42` | `fetch_total` also writes a cache row | least-astonishment | predictability | 100 |
+| # | File | Issue | Principle | Lens | Conf | Status |
+|---|------|-------|-----------|------|------|--------|
+| 1 | `app/models/order.rb:42` | `fetch_total` also writes a cache row | least-astonishment | predictability | 100 | open |
 
 - **#1** -- `fetch_total` is named as a pure read but persists a cache row as a side
   effect; a caller reading the name will not expect a write (and will be surprised in
@@ -32,20 +60,27 @@ goes in the keyed detail line, not the cell.
   the write to an explicit `refresh_total_cache!`.
 ```
 
-Five columns. Keyed `- **#N** --` detail line for findings whose one-liner isn't
+Seven columns. `Status` is `open`, `fixed <sha>` or `declined: <reason or link>`; it is
+the per-finding decision record that a later run reads through `prior:<report-path>`.
+Keyed `- **#N** --` detail line for findings whose one-liner isn't
 self-sufficient (usually P0/P1). Same table shape for every severity — never render
 one severity as field-blocks and another as a table. Numbering is stable and
 monotonic across the whole report.
 
 ## Report sections (in order)
 
-1. **Header** — scope, intent, context (review/audit/plan), `Execution: subagents |
-   single-agent`, and the lens team: every catalog lens with its selection and a
-   one-line reason, for example `experience: not_selected, no user-facing paths in scope`.
+1. **Header** — scope or target, intent, context (review/audit/plan), the
+   **Provenance line** (above), `completed_at`, `Execution: subagents | single-agent`,
+   and the lens team: every catalog lens with its selection and a one-line reason, for
+   example `experience: not_selected, no user-facing paths in scope`. Audit adds the
+   stack and the sampling note. Plan adds the document path and type, `plan_sha256`
+   (hash of the plan file at run time), and on a re-check `supersedes: <prior report>`
+   and the round number. Skills point here; they do not list Header fields of their own.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
-   Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
-   not in the severity tables. Only fixes that passed the fit-review Stage 5 step 7
-   gate appear here.
+   Fix | Lens`, then validation outcome + commit status. Name the fix commit by its real
+   SHA from `git rev-parse --short HEAD` after the commit, never a placeholder. Applied
+   findings appear here, not in the severity tables. Only fixes that passed the
+   fit-review Stage 5 step 7 gate appear here.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
    Omit empty severities. **The all-clear line is allowed only when every selected lens
    is `clean` and read all of its scope** (see Lens status below). If severities are
@@ -66,7 +101,8 @@ monotonic across the whole report.
    Findings at their severity.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), `Plan: <path>` or `Plan: none` (review), and:
+   remote-mode limits), `Plan: <path>` or `Plan: none` (review), finding lines that
+   could not be verified (see `subagent-template.md`, output contract), and:
    - **Rejected.** Every finding that the merge did not report: title, file:line,
      lens, severity, confidence and `why`. The `why` values are
      `below_confidence_gate`, `not_real` (a re-read refuted it), `verifier_failed` (the
@@ -101,9 +137,15 @@ monotonic across the whole report.
 
    Ready here means Ready (review), Healthy (audit) and Ready to implement (plan).
 8. **Verdict** — review: Ready / Ready with fixes / Not ready. audit: top 3 posture
-   gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps.
+   gaps to fix first. plan: Ready to implement / Revise first, with the blocking gaps,
+   and the lens coverage (for example `Ready to implement (3 of 4 lenses; experience
+   off by config)`; a lens that did not run counts as not run, even with `prior:`).
    **Never** Ready / all-clear / Ready to implement when a lens status or a partial
    read blocks it (see Lens status).
+   **Review verdict rule:** Not ready while a P0 or P1 finding is open. Ready with fixes
+   while a P2 finding is open. Otherwise Ready. Open means a Findings row with Status
+   `open`; `fixed` and `declined` rows count as closed. A lens status or a partial read
+   that blocks Ready (see Lens status) still blocks it.
 
 No time estimates. Measured times in the Cost line are measurements, not estimates. No
 praise. Every finding actionable.
@@ -167,16 +209,21 @@ step 7). Audit and plan never apply.
 ## mode:agent (JSON)
 
 When a skill runs `mode:agent`, emit one raw JSON object (no code fence) as the reply
-instead of markdown, AND write that same object to the **published** path `$REPORT_PATH`
-(Layer B, typically `docs/expectation-fit/<stamp>-<skill>[-scope].json`). Do **not**
-write the mode:agent report into the run-scratch dir (`$RUN`); that dir is deleted when
-`cleanup_runs` is true. Set `artifact_path` in the JSON to the same published path.
+instead of markdown. The reply is the deliverable. Write that same object to a file
+only when the caller passes `out:` (then `$REPORT_PATH` is that path, and
+`artifact_path` is its absolute path). Without `out:`, write no report file and set
+`artifact_path` to `null`. Never write the mode:agent report into the run-scratch dir
+(`$RUN`); that dir is deleted when `cleanup_runs` is true. A `mode:agent` run leaves
+`git status --porcelain` unchanged (run scratch ignores itself). Each item in
+`findings` carries `status` (`open`, `fixed <sha>` or `declined: <reason or link>`);
+`mode:agent` callers write their triage into that field. Plan reports add
+`plan_sha256`.
 
 The reply stays one raw JSON object, even when a caller asks only for the verdict, the
 counts and the path. Those are fields of the object (`verdict`, `finding_counts`,
 `artifact_path`). Do not add prose before or after it.
 
-Complete example (a review run):
+Complete example (a review run without `out:`):
 
 ```json
 {
@@ -184,7 +231,7 @@ Complete example (a review run):
   "reason": null,
   "context": "review",
   "verdict": "Ready with fixes",
-  "completed_at": "2026-10-09T14:32:05Z",
+  "completed_at": "2026-10-09T14:32:05+0200",
   "run_id": "20261009-143005-a1b2c3d4",
   "scope": {
     "mode": "local-aligned",
@@ -205,7 +252,8 @@ Complete example (a review run):
       "line": 42,
       "fix_class": "manual",
       "suggested_fix": "Rename to fetch_and_cache_total, or move the write to refresh_total_cache!.",
-      "lenses": ["predictability"]
+      "lenses": ["predictability"],
+      "status": "open"
     },
     {
       "title": "Bare rescue hides cache write errors",
@@ -216,7 +264,8 @@ Complete example (a review run):
       "line": 51,
       "fix_class": "gated_auto",
       "suggested_fix": "Rescue only Redis::BaseError and re-raise everything else.",
-      "lenses": ["predictability"]
+      "lenses": ["predictability"],
+      "status": "open"
     }
   ],
   "finding_counts": { "P0": 0, "P1": 1, "P2": 1, "P3": 0 },
@@ -256,7 +305,14 @@ Complete example (a review run):
     "untracked": [],
     "repairs": []
   },
-  "artifact_path": "docs/expectation-fit/20261009-143005-review-feat-order-totals.json"
+  "artifact_path": null,
+  "plugin_version": "0.9.0",
+  "plugin_root": "~/.claude/plugins/expectation-fit",
+  "repo_root": "~/code/shop",
+  "branch": "feat/order-totals",
+  "reviewed_sha": "9e8d7c6",
+  "tree_clean": true,
+  "base_sha": "3f2c1a9"
 }
 ```
 
@@ -264,7 +320,14 @@ Field rules:
 
 - `status` is `complete` or `failed`. When it is `failed`, `reason` says why in one
   sentence. Otherwise `reason` is `null`.
-- `completed_at` is an ISO 8601 UTC time.
+- `completed_at` is an ISO 8601 local time with its UTC offset
+  (`date +%Y-%m-%dT%H:%M:%S%z`). Report file names keep the local `STAMP`.
+- Provenance keys (see Provenance line): `plugin_version`, `plugin_root`, `repo_root`,
+  `branch`, `reviewed_sha` and `tree_clean` in every context; `base_sha` in review
+  only. Plan adds `plan_sha256`. Show `$HOME` as `~` in both paths.
+- `artifact_path` is the absolute path of the `out:` file, or `null` without `out:`.
+- Each item in `findings` carries `status`: `open`, `fixed <sha>` or
+  `declined: <reason or link>`.
 - `scope` by context. Review: `mode`, `base`, `branch`, `head_sha`, and `pr` (number or
   `null`). Plan: `document` (the path, or a list of paths for a
   set). Audit: `target` (the path, glob or subsystem).

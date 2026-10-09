@@ -100,8 +100,8 @@ migrations, i18n, CSS tokens, tests serial, naming.
    - Merge `severity_overrides` keys (show conflict if key already set differently).
 4. On replace notes (user must restate overwrite intent): replace `conventions.notes`
    only; still merge sources/severities unless also confirmed.
-5. Optionally write `docs/expectation-fit/<stamp>-from-pr-learnings.md` under the
-   project (or `out:`) summarizing G-ids and source PRs for humans.
+5. Optionally write `<stamp>-from-pr-learnings.md` under the resolved
+   `artifacts.report_dir` (or `out:`) summarizing G-ids and source PRs for humans.
 6. Never commit or push.
 
 ### 5. Optional calibrate handoff

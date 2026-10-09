@@ -21,7 +21,7 @@ You are the {lens} lens. Read your agent definition for identity and calibration
 Context: {review | audit | plan | plan-assist}
 
 <knowledge>
-Read these docs under ${CLAUDE_PLUGIN_ROOT}/resources/ before reviewing — they hold
+Read these docs under {plugin_root}/resources/ before reviewing — they hold
 your detection heuristics (the "Violation smells" sections especially):
 {list from lens-catalog for this lens}
 ALSO read repo standards and project notes FIRST. They override generic docs:
@@ -58,15 +58,22 @@ included. Name any part you did not read.
  not see run, say so. Word that fix as a test the implementer runs first, not as a rule
  to adopt.}
 {remote modes: inspect via `git show <ref>:<path>` or diff hunks only — do not Read
- workspace paths for in-scope files}
+ workspace paths for in-scope files. <ref> = {reviewed_sha}}
 </scope>
+
+<prior>
+{only with prior:<report-path>: the fixed and declined rows of the prior report
+ (#N, file:line, title, status). Empty otherwise.
+ plan context also gets: "Mark each prior gap closed or still open, with its plan line."
+ and "Drop a score only when you name the new gap."}
+</prior>
 
 <output-contract>
 {run_artifact_dir} = the orchestrator's resolved **run scratch** dir (Layer A — its $RUN,
 e.g. .expectation-fit/runs/<run-id>/). The skill MUST bind run_artifact_dir = $RUN when it fills
 this template. This is NOT the published report path (Layer B).
 
-Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
+Return compact JSON per {plugin_root}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
 Compact means merge-tier fields only. Leave why_it_matters and evidence out of the reply.
 They go only in the file.
@@ -82,6 +89,9 @@ If the prompt says not to write files, skip the Write step. Put why_it_matters a
 evidence in the reply. This overrides the Write step in your agent's Output section.
 A program reads this reply. Style and handoff rules for chat replies to a person do not
 apply.
+
+`line` is the 1-based line in the new file. Take it from `grep -n` or a Read
+(`git show <ref>:<path>` in remote scopes), never from a diff hunk header.
 
 EXCEPTION — Context: plan-assist is an advisory inline pass: do NOT write an artifact,
 and prose IS allowed (the deliverable is a checklist, not JSON). The artifact-write
@@ -102,6 +112,12 @@ and JSON-only clauses above do not apply when Context is plan-assist.
   other contexts.
 - `{plan_path}`: review only. Bind to the `plan:` path. Drop the line when no plan is
   given.
+- `{plugin_root}`: the absolute plugin root. Before dispatch, replace each plugin-root
+  variable with the absolute plugin root. The harness does not substitute reference
+  files, so a lens prompt must never carry a literal plugin-root variable.
+- `<prior>`: the orchestrator reads the `prior:` report and passes its `fixed` and
+  `declined` rows. `prior:` never changes the diff range; `base:` keeps that job.
+- `{reviewed_sha}`: `fit-review` binds its pinned `REVIEWED_SHA` (remote scopes).
 
 ## Shared confidence rubric (all lenses)
 
@@ -174,6 +190,10 @@ remote scopes. Observations are never applied. They stay in the Observations sec
   with `Config: <source>`, right after the READ line. If a project `.expectation-fit/` (or legacy `.intense/`)
   exists but the prompt did not pass its resolved values, that line names it as not
   applied.
+- **Respect prior decisions.** Do not raise a prior fixed or declined item again
+  without new evidence. If you do, cite the evidence and name the prior #N.
+- **Respect settled decisions.** When the document marks a decision as settled, treat it
+  as settled. Reopen it only with new evidence.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
 - **No-change items go to observations.** When the honest fix is no change, a later
   decision, or something that does not exist yet, put the item in observations, not
