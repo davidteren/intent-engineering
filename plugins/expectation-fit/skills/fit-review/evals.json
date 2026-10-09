@@ -25,6 +25,11 @@
       "id": 5,
       "prompt": "fit-review (project .expectation-fit/ways-of-working.yaml sets severity_overrides: { silent-failure: P1 })",
       "expected_output": "silent-failure is not a principle id or a canonical smell id, so no finding changes severity. Coverage lists: ignored severity_overrides key: silent-failure."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-review plan:docs/plans/my-plan.md (the diff follows KTD-2 of the plan; one lens thinks KTD-2 itself causes a P2 defect)",
+      "expected_output": "Every lens gets KTD-2 verbatim in known-context. No finding asks to undo KTD-2. The P2 finding quotes KTD-2 in evidence and names it in tension. It stays in Findings, appears in Tensions and is not auto-applied. Coverage names the plan."
     }
   ]
 }

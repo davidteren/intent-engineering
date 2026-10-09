@@ -298,7 +298,8 @@ done
 Read whichever file exists for each of the three configs under `PROJECT_CONFIG`; if the
 project file exists, deep-merge it over the default per the rules below. Pass the
 resolved values to the lenses in their spawn prompt (e.g. resolved thresholds to
-`fit-architecture-reviewer`, resolved `conventions.notes` / `conventions.sources` to
+`fit-architecture-reviewer`, resolved `conventions.notes` and repo standards paths to
+every selected lens, `conventions.sources` / `conventions.auto` to
 `fit-convention-reviewer`, lens toggles to selection).
 
 When no project `.expectation-fit/` is found, use defaults — the plugin works out of the box.
@@ -330,7 +331,7 @@ Under it, list the three per-file source lines that the block above prints, for 
 | `tools.architecture` | `fit-architecture-reviewer` | `enrich`/`prefer`/`report`/`off` — how the lens treats an installed external static-analysis tool (see below) |
 | `severity_overrides` | synthesis | remap severity by principle/smell id (string or `{ severity, because }`). Applied **after** severity_align. A valid key is a principle id in `findings-schema.json` or a canonical smell id. List any other key in Coverage as `ignored severity_overrides key: <key>`. |
 | `severity_align` | synthesis | promote severity when a curated CI gate matches a finding theme (`mode: off\|curated_gates`). See Severity align with CI gates. |
-| `conventions.notes` | `fit-convention-reviewer` | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md) |
+| `conventions.notes` | every selected lens | hand-authored repo rules (alongside CLAUDE.md/AGENTS.md). Every lens treats them as limits; only `fit-convention-reviewer` reports a broken note. |
 | `conventions.sources` | `fit-convention-reviewer` | explicit path globs for high-authority files. Resolve from project base. |
 | `conventions.auto` | `fit-convention-reviewer` + audit | discover Copilot / instructions / PR-gate workflows (`mode: off\|curated\|all`). See Convention auto-sources. |
 | `confidence_gate` | synthesis | suppression anchor (default 75; P0 survives 50+) |

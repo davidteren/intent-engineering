@@ -157,12 +157,14 @@ keep them in sync if you change one.
   75 = traceable end-to-end and a normal user/dev hits it; 50 = depends on unseen context
   (advisory); ≤25 = speculative, suppress. Reuse this exact language.
 - Every finding names the **broken expectation** — a surprise you can't tie to a specific
-  expectation is not a finding. When two principles conflict, set the `tension` field and
-  present the trade-off; don't dogmatize.
+  expectation is not a finding. When two principles conflict, or a principle conflicts
+  with a settled decision (name it, for example plan KTD-6), set the `tension` field and
+  present the trade-off; don't dogmatize. A tension finding is never auto-applied.
 - `smell` and `pattern` fields are **architecture-lens-only**. `scores` are returned only
   in audit/plan contexts, keyed by the canonical snake_case ids in `scoring-rubric.md`.
-- Local conventions win: convention + architecture lenses read repo `CLAUDE.md`/`AGENTS.md`
-  and `.expectation-fit/` first. Authority order is fixed in `config-resolution.md`:
+- Local conventions win: every lens reads repo `CLAUDE.md`/`AGENTS.md` paths and the
+  resolved `conventions.notes` first. `conventions.sources` and `conventions.auto` go to the
+  convention lens only. Authority order is fixed in `config-resolution.md`:
   `.expectation-fit/*.yaml` > repo `CLAUDE.md`/`AGENTS.md` > sibling code > plugin defaults/framework docs.
 
 ---

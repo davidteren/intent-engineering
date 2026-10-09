@@ -16,13 +16,21 @@ Context: {review | audit | plan | plan-assist}
 Read these docs under ${CLAUDE_PLUGIN_ROOT}/resources/ before reviewing — they hold
 your detection heuristics (the "Violation smells" sections especially):
 {list from lens-catalog for this lens}
-{convention lens only: ALSO read repo standards at these paths FIRST — they override:
- {standards_paths}}
+ALSO read repo standards and project notes FIRST. They override generic docs:
+ {standards_paths}
+ {conventions_notes}
 </knowledge>
 
 <intent>
 {2-3 line summary of what the change/plan is trying to do}
 </intent>
+
+<known-context>
+{omit the block when it is empty}
+Plan: {path}. Settled decisions, quoted verbatim with their ids:
+{decision lines}
+Already reported: {prior: paths}
+</known-context>
 
 <scope>
 Mode: {scope_mode: local-aligned | pr-remote | branch-remote | path | doc}
@@ -53,7 +61,8 @@ and JSON-only clauses above do not apply when Context is plan-assist.
 - `{run_artifact_dir}` — bind to the skill's resolved `$RUN` (Layer A scratch only).
   Never leave it unbound — a literal executor cannot invent the path. Do **not** bind
   this to the published report path.
-- `{lens}`, `{standards_paths}`, intent, scope — as shown in the template.
+- `{lens}`, `{standards_paths}`, `{conventions_notes}`, intent, known-context, scope — as
+  shown in the template. Every lens gets `{standards_paths}` and `{conventions_notes}`.
 
 ## Shared confidence rubric (all lenses)
 
@@ -82,7 +91,8 @@ Every finding must set `fix_class`. Interactive `/fit-review` may apply only
 | **`advisory`** | Report-only: tension notes, residual risks, "watch this", trade-off framing with no single correct edit. | Actionable bugs you can fix concretely (use manual or gated_auto). |
 
 Orchestrator apply rules (review interactive only): apply only when
-`fix_class == gated_auto` **and** `confidence >= 75` **and** severity ≤ P2; reclassify
+`fix_class == gated_auto` **and** `confidence >= 75` **and** severity ≤ P2 **and** the
+finding carries no `tension`; reclassify
 over-broad `gated_auto` to `manual` before applying. Never apply in `mode:agent` or
 remote scopes.
 
@@ -96,6 +106,9 @@ remote scopes.
   win over generic ideals. A consistent repo-local choice is not a violation.
   Treat each project note (`conventions.notes`) as a limit. Do not suggest a change
   that breaks a note. Only the convention lens reports a broken note.
+- **Respect known context.** Do not ask to undo a known-context decision. If the
+  decision itself causes a defect, report it. Quote the decision in evidence, and name
+  it in `tension`.
 - **Flag tensions, don't dogmatize.** When two principles conflict (DWIM vs
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were

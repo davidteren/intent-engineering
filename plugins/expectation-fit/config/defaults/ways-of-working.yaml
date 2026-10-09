@@ -60,8 +60,8 @@ severity_align:
   themes: []
 
 # --- Local conventions ------------------------------------------------------------
-# Highest-authority conventions for THIS repo, honored by the convention lens
-# alongside CLAUDE.md / AGENTS.md. Lists REPLACE the global list unless extends: true.
+# Highest-authority conventions for THIS repo. notes go to every lens, alongside
+# CLAUDE.md / AGENTS.md; sources and auto go to the convention lens only. Lists REPLACE the global list unless extends: true.
 # sources: explicit path globs the convention lens must read. notes win over sources.
 # auto: discover Copilot rules, path-scoped instructions, and PR-gate workflows.
 # Full discovery procedure: references/config-resolution.md → "Convention auto-sources".

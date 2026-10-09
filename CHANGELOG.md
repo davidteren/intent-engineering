@@ -34,6 +34,14 @@ for the design see **PLAN.md**.
   with the git state of `.expectation-fit/`. Project notes are limits for every lens;
   only the convention lens reports a broken note. Both READMEs recommend `/fit-setup`
   once a repo is reviewed more than once.
+- **Settled decisions and repo rules reach every lens (#55).** `tension` can name a
+  principle against a settled decision (for example plan KTD-6). A tension finding stays in
+  Findings, is listed in Tensions, and is never auto-applied. Every lens now gets repo
+  `CLAUDE.md`/`AGENTS.md` paths and `conventions.notes`; `sources` and `auto` stay with the
+  convention lens. This changes the #26 view that only the convention lens holds local
+  authority. The lens template has an optional `<known-context>` block and a "Respect
+  known context" rule; `fit-review plan:` quotes plan decision lines verbatim to every lens,
+  and Coverage says `Plan: <path>` or `Plan: none`. New `fit-review` eval case 6.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

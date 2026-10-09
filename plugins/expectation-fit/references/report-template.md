@@ -56,10 +56,13 @@ monotonic across the whole report.
 4. **Posture** *(audit & plan only)* — the scoring table from `scoring-rubric.md`,
    lowest scores first (from clean lenses only).
 5. **Tensions** — any findings carrying a `tension`: name the two principles in
-   conflict and the trade-off, so the user decides rather than the tool dictating.
+   conflict, or the principle and the quoted decision line. Then give the trade-off, so
+   the owner decides rather than the tool dictating. These findings also stay in
+   Findings at their severity.
 6. **Observations** — soft notes / residual risks unioned across lenses.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
-   remote-mode limits), confidence suppressions by anchor, and **per-lens status**:
+   remote-mode limits), confidence suppressions by anchor, `Plan: <path>` or
+   `Plan: none` (review), and **per-lens status**:
    - **failed** — non-JSON return, missing `$RUN/{lens}.json`, missing required
      `scores` in audit/plan, or harness error after optional one re-dispatch.
    - **skipped** — not selected, or architecture pack absent (catalog ⬜ / no pack);
