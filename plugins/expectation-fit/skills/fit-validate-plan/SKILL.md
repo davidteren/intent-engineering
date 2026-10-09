@@ -52,7 +52,9 @@ validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
   UX completeness (interaction states, user flows, IA, accessibility commitments,
   AI-slop risk).
 
-Announce the team.
+Pass repo `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
+`conventions.notes` to every selected lens. Keep `conventions.sources` and
+`conventions.auto` with the convention lens only. Announce the team.
 
 ## Stage 3 — Dispatch
 

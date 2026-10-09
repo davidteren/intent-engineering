@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "fit-setup all (no .expectation-fit/ yet, single-repo monolith)",
-      "expected_output": "Fresh mode. Scaffolds selected files under .expectation-fit/ from defaults (stack-aware thresholds). May ask capability questions interactively (auto, severity_align, pattern preference). Reports CREATED paths. Does not commit or push."
+      "expected_output": "Fresh mode. Scaffolds selected files under .expectation-fit/ from defaults (stack-aware thresholds). Each written file starts with the project header (\"Expectation Fit: project config for <repo>.\", no absolute path) and none says (GLOBAL DEFAULTS). May ask capability questions interactively (auto, severity_align, pattern preference). Reports CREATED paths. Does not commit or push."
     },
     {
       "id": 2,

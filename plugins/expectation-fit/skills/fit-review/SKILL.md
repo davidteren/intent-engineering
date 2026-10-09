@@ -27,7 +27,7 @@ number/URL or branch.
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
-| `plan:<path>` | Plan/spec for context (intent + scope alignment). |
+| `plan:<path>` | Plan/spec for context (intent + scope alignment). Its decision lines go verbatim, with their ids, to every lens in `<known-context>` (Stage 2). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
 
 ## Operating principles
@@ -69,6 +69,12 @@ Summarize what the change is trying to do (2-3 lines) from the PR body / commit 
 (`git log --oneline $BASE..HEAD`) / `plan:` / conversation. Pass it to every lens;
 intent shapes how hard each lens looks, not which lenses run.
 
+With `plan:`, also quote the plan's decision lines verbatim, with their ids, into the
+`<known-context>` block for every lens. R, A and KTD items and "Locked decisions"
+sections are examples, not a required format. Without `plan:`, do not look for a plan
+in the PR body or commit log: a stale plan would hide real findings. Coverage says
+`Plan: <path>` or `Plan: none`.
+
 ## Stage 3 — Select lenses
 
 First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
@@ -101,9 +107,11 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
 Honor the config `lenses:` toggles over these defaults (`off` forces a lens off even if
 relevant; `on` forces it on; `auto` = the judgment above).
 
-For the convention and architecture lenses, find standards paths first: Glob
-`**/CLAUDE.md` and `**/AGENTS.md` whose directory is an ancestor of a changed file; pass
-them in `<standards-paths>`. Also pass the resolved `.expectation-fit` conventions/notes.
+Find standards paths first: Glob `**/CLAUDE.md` and `**/AGENTS.md` whose directory is an
+ancestor of a changed file. Pass them in `<standards-paths>`, with the resolved
+`conventions.notes`, to every selected lens. Keep `conventions.sources` and
+`conventions.auto` with the convention lens only, because auto discovery can expand to
+many files.
 
 Announce the lens team with a one-line reason for each conditional lens before
 dispatching. This is progress reporting, not a confirmation prompt.
@@ -152,7 +160,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
       `min_severity`, default P1). Never demote. Record each promotion in Coverage.
       Mark those findings `severity_aligned: true` for the gate exception below.
    2. **`severity_overrides`** (wins over align on conflict): string or
-      `{ severity:, because: }` — copy `because` into Coverage.
+      `{ severity:, because: }` — copy `because` into Coverage. A key that is not a
+      principle id or a canonical smell id goes in Coverage as
+      `ignored severity_overrides key: <key>`.
    3. Pattern policy: suppress architecture findings only when the path is `approved`
       **and** the change is not a **net-new** introduction of a blocked / preferred-
       `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
@@ -163,11 +173,12 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
    - findings that received a **`severity_align` promotion** at confidence 50+
      (CI-backed floors must not be dropped solely for mid confidence).
    Record suppressions by anchor.
-6. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
+6. **Collect tensions** — a finding carrying a `tension` stays in Findings at its
+   severity and also appears in the Tensions section.
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
-   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
-   concrete `suggested_fix`. Apply only when the working tree is what was reviewed
+   see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, a
+   concrete `suggested_fix`, and carries no `tension`. Apply only when the working tree is what was reviewed
    (`local-aligned`/standalone) — never in `pr-remote`/`branch-remote`. After applying,
    run affected tests/lint; if they fail, revert that fix and report it instead. If
    **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one

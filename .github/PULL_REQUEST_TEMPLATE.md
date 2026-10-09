@@ -23,6 +23,6 @@
 - [ ] If I added a **resource doc** (principle/framework/agnostic): it has a detection ("smells") section + a `## Sources` section (≥2 links), and is cited in `principle-index.md`/`lens-catalog.md`.
 - [ ] If I added a **pattern** or **threshold**: ids match across the catalog, `thresholds.yaml`, and `rails-architecture.md`.
 - [ ] `CHANGELOG.md` updated if the change is user-facing.
-- [ ] No secrets; run reports / scratch stay under `wip/` (gitignored).
+- [ ] No secrets. Lens run scratch stays under `.expectation-fit/runs/` (gitignored).
 
 <!-- See AGENTS.md for the full contributor guide and the load-bearing rules. -->

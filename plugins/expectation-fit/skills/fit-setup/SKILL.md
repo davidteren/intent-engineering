@@ -224,7 +224,7 @@ ask short questions and write answers into the files. Defaults differ by profile
    offer to add those **paths** to `sources` (not paste file bodies). Preview list;
    user accepts / edits. Explicit sources always win over exclude.
 
-Non-interactive: scaffold defaults verbatim (auto mode `curated`, severity_align on,
+Non-interactive: scaffold defaults with the Step 3 header (auto mode `curated`, severity_align on,
 preferred empty). Set `conventions.auto.roots` when `$ARGUMENTS` includes
 `multi-repo` and/or `roots:a,b,c` (comma-separated sibling dirs). If multi-repo
 **signals** are strong but neither token is present, **do not write** `.expectation-fit/` only
@@ -274,6 +274,17 @@ Source templates are `${CLAUDE_PLUGIN_ROOT}/config/defaults/<file>`. Write to
 without explicit confirmation — a surprising clobber of committed team config is the
 failure mode to avoid (least astonishment / no data loss). If a target exists, report
 it and ask whether to overwrite, diff, or skip; default to **skip**.
+
+**Project header.** Every file this skill writes starts with the header below. It
+replaces the template title line `(GLOBAL DEFAULTS)` and, in `ways-of-working.yaml`, the
+template's copy instructions. Put no absolute path in the header: a path shows a home
+folder and goes stale. No written file says `(GLOBAL DEFAULTS)`.
+
+```yaml
+# Expectation Fit: project config for <repo>.
+# Values here override the plugin defaults. Omitted keys keep the default value.
+# Written by /fit-setup <version> on <date>.
+```
 
 Before write on interactive fresh: show a **short preview** of the values that differ
 from raw defaults (roots, auto mode, severity_align, preferred patterns, lens offs).
@@ -382,6 +393,11 @@ existing non-empty lists or notes.
 - **Create** missing of the three files with stack-aware scaffolding (same as Step 3).
 - **Legacy** `report_dir` without `artifacts:`: offer to add `artifacts.*` and leave
   legacy key commented or removed only on confirm (document behavior in summary).
+  Name the legacy folder in the summary. Say that its old run folders stay. The user can
+  delete them by hand, after keeping any report.md or report.json. This skill deletes
+  nothing outside `.expectation-fit/`.
+- **Copied title:** when a file still starts with the template title `(GLOBAL DEFAULTS)`,
+  offer to replace that title with the Step 3 project header.
 - Show a **diff-style** summary before write; confirm once.
 
 #### U5. Optional handoffs
@@ -445,6 +461,10 @@ List what was created, updated, skipped, or proposed. Then tell the user:
     at first install)
   - For multi-repo: run agents from a child cwd and confirm Coverage shows
     `Config: project:…` via walk-up
+- **Git state:** after a write, end with the output of
+  `git -C "<resolved .expectation-fit dir>" status -sb .` and this line: "Commit these
+  config files in their own commit, not inside feature work." Outside a git repo, skip the
+  status line.
 
 This skill only writes under `.expectation-fit/` (and optionally one `.gitignore` append the
 user accepted). It never commits or pushes.

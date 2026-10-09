@@ -57,8 +57,10 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
   `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`). Never gate
   architecture on a closed two-stack list.
 
-Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENTS.md`
-+ `.expectation-fit` conventions for the convention and architecture lenses. Announce the team.
+Honor config `lenses:` toggles over these defaults. Pass repo `CLAUDE.md`/`AGENTS.md`
+paths (`<standards-paths>`) and the resolved `conventions.notes` to every selected lens.
+Keep `conventions.sources` and `conventions.auto` with the convention lens only.
+Announce the team.
 
 ## Stage 3 — Dispatch
 

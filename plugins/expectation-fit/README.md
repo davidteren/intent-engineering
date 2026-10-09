@@ -14,7 +14,7 @@ deduplicated findings with concrete fixes.
 Defaults work with no project config. Run `/fit-setup` when you want project policy
 (multi-repo placement, CI/Copilot auto sources, severity align, preferred patterns, or
 thresholds). Then use the lenses across planning, plan validation, code review, and
-codebase audit. After reviews, fold learnings back with `/fit-from-pr-learnings`:
+codebase audit. After a reviewed PR merges, fold learnings back with `/fit-from-pr-learnings`:
 
 | Skill | Use it on | What you get |
 |-------|-----------|--------------|
@@ -23,7 +23,7 @@ codebase audit. After reviews, fold learnings back with `/fit-from-pr-learnings`
 | `/fit-validate-plan` | a finished plan / spec / requirements doc | Dimensional 0–10 ratings + the design gaps to resolve before coding. |
 | `/fit-review` | a PR, branch, or local changes | Findings grouped by severity; in interactive mode it applies safe, verified fixes (never pushes). |
 | `/fit-audit` | a whole codebase, subsystem, or feature | A posture report — per-dimension scores and the top gaps to fix first. |
-| `/fit-from-pr-learnings` | a triage doc or `pr:` URL(s) | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
+| `/fit-from-pr-learnings` | `pr:` numbers of merged, reviewed PRs, or a triage doc | Notes, sources, and severity overrides mined from review learnings (no silent clobber). |
 
 ### The five lenses
 
@@ -74,7 +74,7 @@ The "Violation smells" section of each doc is the lens's detection checklist.
 
 ## Configuration (`.expectation-fit/`)
 
-Optional: run `/fit-setup` once to set up (or later `/fit-setup upgrade`) project config,
+Recommended once you review a repo more than once: run `/fit-setup` once to set up (or later `/fit-setup upgrade`) project config,
 then commit `.expectation-fit/`. Project config **supersedes** the plugin defaults
 (`config/defaults/`):
 

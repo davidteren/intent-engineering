@@ -75,7 +75,7 @@
         <p class="lede"><b>expectation-fit</b> is a Claude Code plugin. Five review lenses name the surprise, score it, and propose a fix. Use it on a plan, a change, or a whole codebase.</p>
         <div class="cta">
           <a class="btn primary" href="#install">Install in Claude Code</a>
-          <a class="btn ghost" href="https://github.com/davidteren/intent-engineering/releases/tag/v0.8.0">Release v0.8.0</a>
+          <a class="btn ghost" href="https://github.com/davidteren/intent-engineering/releases/latest">Latest release</a>
         </div>
 
         <div class="install" id="install">
@@ -88,7 +88,7 @@
 /plugin marketplace add <span class="c">https://github.com/davidteren/intent-engineering</span>
 /plugin install <span class="c">expectation-fit</span></pre>
         </div>
-        <p class="note">Then run <code>/fit-setup</code> if you want project policy. Defaults work with no config. Version 0.8.0. MIT.</p>
+        <p class="note">Then run <code>/fit-setup</code> if you want project policy. Defaults work with no config. MIT.</p>
       </div>
 
       <figure class="artifact" aria-label="Illustrative finding">
@@ -258,7 +258,7 @@
         <ul>
           <li><code>.expectation-fit/</code> config walks up from the working directory. Project values override plugin defaults.</li>
           <li>Read-only by default. Only <code>/fit-review</code> applies gated_auto fixes locally, and it never pushes.</li>
-          <li>A 141-check contract suite runs in CI on every PR, so the plugin keeps its own promises.</li>
+          <li>A contract suite runs in CI on every PR, so the plugin keeps its own promises.</li>
         </ul>
       </div>
     </div>
@@ -284,7 +284,7 @@
           <h3>How to run it</h3>
           <ul>
             <li>Clone the repo. Open a Grok session in that directory.</li>
-            <li>Run <code>/workflow fit-review {"target":"origin/main...HEAD"}</code></li>
+            <li>Run <code>/workflow fit-review {"target":"HEAD","base":"&lt;merge-base commit SHA&gt;"}</code>. Get the SHA with <code>git merge-base origin/main HEAD</code>.</li>
             <li>The script does not apply smell-first severity align or pattern policy, and it does not write <code>docs/</code>.</li>
             <li>Details: <a href="https://github.com/davidteren/intent-engineering/blob/main/.grok/workflows/README.md">.grok/workflows/README.md</a></li>
           </ul>
@@ -293,10 +293,10 @@
       <div class="install" style="margin-top:1.5rem;max-width:40rem">
         <div class="install-bar">
           <span>Grok session, this repo</span>
-          <button type="button" class="copy" data-copy="/workflow fit-review {&quot;target&quot;:&quot;origin/main...HEAD&quot;}">Copy</button>
+          <button type="button" class="copy" data-copy="/workflow fit-review {&quot;target&quot;:&quot;HEAD&quot;,&quot;base&quot;:&quot;&lt;merge-base commit SHA&gt;&quot;}">Copy</button>
         </div>
 <pre><span class="p"># Grok session, this repo</span>
-/workflow fit-review {<span class="c">"target"</span>:<span class="c">"origin/main...HEAD"</span>}</pre>
+/workflow fit-review {<span class="c">"target"</span>:<span class="c">"HEAD"</span>,<span class="c">"base"</span>:<span class="c">"&lt;merge-base commit SHA&gt;"</span>}</pre>
       </div>
     </div>
   </section>
@@ -358,7 +358,7 @@
       </a>
       <span class="sp"></span>
       <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
-      <a href="https://github.com/davidteren/intent-engineering/releases/tag/v0.8.0">v0.8.0</a>
+      <a href="https://github.com/davidteren/intent-engineering/releases">Releases</a>
       <a href="https://github.com/davidteren/intent-engineering/blob/main/README.md">Docs</a>
       <a href="reports.html">Reports</a>
       <a href="https://github.com/davidteren/intent-engineering/blob/main/LICENSE">MIT</a>

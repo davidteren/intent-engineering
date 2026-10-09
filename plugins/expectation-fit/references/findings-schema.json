@@ -84,7 +84,7 @@
           },
           "tension": {
             "type": "string",
-            "description": "Optional. If this finding pits one principle against another (e.g. DWIM vs least-astonishment, YAGNI vs convention), name the tension instead of dogmatically picking a side."
+            "description": "Optional. Name a conflict instead of picking a side: one principle against another (for example DWIM vs least-astonishment), or a principle against a settled decision. For a decision, name it, for example plan KTD-6 or docs/plans/x.md:42."
           },
           "smell": {
             "type": "string",

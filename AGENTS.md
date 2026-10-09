@@ -41,7 +41,10 @@ schemas, and cross-references stay mutually consistent.
    `resources/`. A Claude Code plugin only ships what's inside its plugin dir. Never
    move `resources/` or `references/` to the repo root. Edit them in place; they are the
    single source of truth. Optional Grok runtimes live in repo-root `.grok/workflows/`
-   and must not be moved into the plugin dir.
+   and must not be moved into the plugin dir. Shipped files must not cite repo-only
+   paths, such as `docs/`, `wip/`, `scripts/`, `.grok/`, `PLAN.md` or `STATUS.md`. An
+   installed plugin does not have them. Skills and references may still name
+   `docs/expectation-fit/` as the report folder in the user's repo.
 3. **Runtime paths use `${CLAUDE_PLUGIN_ROOT}`.** Every cross-file reference inside a
    skill or agent must address shipped files as `${CLAUDE_PLUGIN_ROOT}/<dir>/<file>` —
    never a bare filename or repo-relative path. A lens runs in isolation and can only
@@ -157,12 +160,14 @@ keep them in sync if you change one.
   75 = traceable end-to-end and a normal user/dev hits it; 50 = depends on unseen context
   (advisory); ≤25 = speculative, suppress. Reuse this exact language.
 - Every finding names the **broken expectation** — a surprise you can't tie to a specific
-  expectation is not a finding. When two principles conflict, set the `tension` field and
-  present the trade-off; don't dogmatize.
+  expectation is not a finding. When two principles conflict, or a principle conflicts
+  with a settled decision (name it, for example plan KTD-6), set the `tension` field and
+  present the trade-off; don't dogmatize. A tension finding is never auto-applied.
 - `smell` and `pattern` fields are **architecture-lens-only**. `scores` are returned only
   in audit/plan contexts, keyed by the canonical snake_case ids in `scoring-rubric.md`.
-- Local conventions win: convention + architecture lenses read repo `CLAUDE.md`/`AGENTS.md`
-  and `.expectation-fit/` first. Authority order is fixed in `config-resolution.md`:
+- Local conventions win: every lens reads repo `CLAUDE.md`/`AGENTS.md` paths and the
+  resolved `conventions.notes` first. `conventions.sources` and `conventions.auto` go to the
+  convention lens only. Authority order is fixed in `config-resolution.md`:
   `.expectation-fit/*.yaml` > repo `CLAUDE.md`/`AGENTS.md` > sibling code > plugin defaults/framework docs.
 
 ---
@@ -243,6 +248,9 @@ pattern catalog:
 lens's detection checklist. Every doc a lens reads must have one. Every doc ends with a
 **Sources** section of real links — never ship a doc without citations.
 
+A guard in a smell card may qualify a finding or cap its confidence. It must not
+suppress a whole class of findings.
+
 ---
 
 ## How to extend (wiring requirements)
@@ -262,7 +270,8 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   `stack-catalog.md` row to **Arch pack ✅** and add a `principle-index.md` row. The
   architecture lens + `fit-setup` read the registry, so **no skill edits are needed** — the
   registry is the only detection wiring. The contract check (section 10) enforces that a ✅
-  row, its files, and its threshold namespace all agree.
+  row, its files, and its threshold namespace all agree. Also add the stack to the lists in
+  both READMEs, STATUS.md, the marketplace.json description and docs/index.html.
 - **New design pattern** → add to `resources/patterns/<stack>.yaml` with all required
   fields (`id`, `name`, `intent`, `recognition`, `good_use`, `misuse`). Ids are snake_case,
   stable, and may be referenced by `.expectation-fit/patterns.yaml`.
@@ -300,16 +309,24 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   (false positive / intentional / already fixed), then resolve the thread. Never resolve
   silently — reviewers (and their self-learning) need the reply. Prefer a PR + required
   checks over direct pushes to `main` when branch protection expects CI.
-- **Dogfood as you go.** Run the lenses' logic against your change (or `/fit-audit` once
-  installed), fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
+- **Dogfood as you go.** Run the plugin from this checkout against your change with the
+  dev loop below, fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
+  Contributor step: file each confirmed plugin gap as an issue in this repo before the
+  session ends. This repo is public, so remove private repo names, paths and findings
+  first.
 - Clean git history is preferred; the owner may ask to squash to a single commit.
 
-## Install (local dogfooding)
+## Dev loop (run this checkout)
 
 ```
-/plugin marketplace add /Users/david.teren/Projects/Personal/expectation-fit
-/plugin install expectation-fit
+cd <fixture or target repo>
+claude -p "/fit-review mode:agent <target>" \
+  --plugin-dir <absolute path to this checkout>/plugins/expectation-fit \
+  --allowedTools <the Bash and Write grants that the run needs>
 ```
 
-Then `/fit-setup`, `/fit-review`, `/fit-audit`, `/fit-validate-plan`, `/fit-plan-assist`,
-`/fit-from-pr-learnings`.
+This copy replaces the installed plugin of the same name, for this session only. The
+run returns the `/fit-review mode:agent` JSON. Keep the tool grants: a `-p` run cannot
+answer permission prompts. Use the same command when the owner asks for the latest
+plugin. The other skills (`/fit-setup`, `/fit-audit`, `/fit-validate-plan`,
+`/fit-plan-assist`, `/fit-from-pr-learnings`) run the same way.

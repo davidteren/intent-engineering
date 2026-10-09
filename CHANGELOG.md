@@ -17,6 +17,62 @@ for the design see **PLAN.md**.
   offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
   reports from before the rename stay in `docs/intent-engineering/` as history.
 
+### Fixed
+- **Config settings no longer fail silently or vary by run (#49).** The defaults drop the
+  dead `silent-failure` override example, and Coverage lists any unknown
+  `severity_overrides` key as ignored (new `fit-review` eval case 5). Lens toggles are
+  quoted, so YAML 1.1 loaders read strings, and `check-contracts.rb` fails on a bare
+  `on`. The curated workflow gate rule is mechanical (whole-file body tokens, no
+  `pull_request:` token, no "when unsure" rule). Auto discovery lists candidates with
+  `git ls-files`, so agent worktrees are not read.
+- **Every run shows config health and a next step (#54).** A defaults run ends its Config
+  line with "Next: run /fit-setup to save repo rules once." (the Grok workflow adds the
+  same observation). A legacy top-level `report_dir` names `/fit-setup upgrade`. Coverage
+  lists the three per-file source lines. Only `config:` and the config env var change
+  discovery. `/fit-setup` writes a project header instead of `(GLOBAL DEFAULTS)`, names
+  the legacy folder on upgrade, and both `/fit-setup` and `/fit-from-pr-learnings` end
+  with the git state of `.expectation-fit/`. Project notes are limits for every lens;
+  only the convention lens reports a broken note. Both READMEs recommend `/fit-setup`
+  once a repo is reviewed more than once.
+- **Settled decisions and repo rules reach every lens (#55).** `tension` can name a
+  principle against a settled decision (for example plan KTD-6). A tension finding stays in
+  Findings, is listed in Tensions, and is never auto-applied. Every lens now gets repo
+  `CLAUDE.md`/`AGENTS.md` paths and `conventions.notes`; `sources` and `auto` stay with the
+  convention lens. This changes the #26 view that only the convention lens holds local
+  authority. The lens template has an optional `<known-context>` block and a "Respect
+  known context" rule; `fit-review plan:` quotes plan decision lines verbatim to every lens,
+  and Coverage says `Plan: <path>` or `Plan: none`. New `fit-review` eval case 6.
+- **Grok `fit-review` workflow reads the right code and cannot claim a false Ready
+  (#44).** Prompts say agents have no shell and limit what they read. The script, not an
+  agent, builds the diff: `base` must be a commit SHA, and a ref name, a missing base, or
+  a non-path target with spaces pauses the run. `scope_mode` is set by the script. The
+  target is a JSON-encoded label, and the config agent sees the changed files for the
+  experience rule. The confidence gate runs before verify. Skeptics return `confirmed`,
+  `not_real` or `unverifiable`; any unverifiable or failed verify sets Not ready. Confirmed
+  findings keep the skeptic's reason and evidence, and `end_line` defaults to `line`. A
+  lens that reports `failed:` gets status failed. The convention lens docs now match the
+  lens catalog. Copy the file to `~/.grok/workflows/` after each pull.
+- **Lens catalog lists full doc paths, and the contract check catches drift (#51).** The
+  "Resource docs it reads" column names every doc as a full path under `resources/`
+  (8 bare names fixed), and `check-contracts.rb` section 4 now fails on a doc that does
+  not exist there. `AGENTS.md` forbids repo-only paths in shipped files, says a smell-card
+  guard may qualify a finding but not suppress a whole class, and replaces the old local
+  install path with a `claude -p ... --plugin-dir` dev loop. `README.md` installs from
+  GitHub.
+- **Repo upkeep: dogfood gaps become issues, and the site drops release facts (#61).**
+  "Dogfood as you go" in `AGENTS.md` adds a contributor step to file each confirmed plugin
+  gap as a public-safe issue. The PR template and `scripts/README.md` no longer send
+  follow-ups to `wip/`. `docs/index.html` links to `/releases/latest` and `/releases`
+  and names no current version or check count. The "New architecture stack" bullet names
+  every place that lists the stacks.
+- **`/fit-from-pr-learnings` reads `fit-review` declines and says when to run (#62).**
+  Run it after the PR merges (a commit on an open PR branch restarts CI and review bots);
+  one run can take several `pr:` tokens. In `pr:` mode it reads the newest `fit-review`
+  report for the PR head branch in `artifacts.report_dir`. Only a decline whose reason
+  holds beyond the PR becomes a `conventions.notes` line, citing the report path and
+  finding number, and the Step 4 confirm still gates every note. The report Header names
+  the report read. New eval case 4.
+
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens
   read-only on a real Hotwire/Rails app (ongela) and folded the false positives
