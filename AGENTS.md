@@ -63,7 +63,8 @@ schemas, and cross-references stay mutually consistent.
    path by default; a project opts in with `artifacts.report_dir`. Configure via
    `artifacts.*` in `ways-of-working.yaml`. Do not reintroduce plugin defaults under
    `wip/`, `.wip/` or `docs/`.
-6. **`ie-` prefix** for every skill and agent. Project config dir is **`.expectation-fit/`**.
+6. **`fit-` prefix** for every skill and agent. Project config dir is **`.expectation-fit/`**
+   (the legacy `.intense/` is still read as a fallback).
 
 ---
 

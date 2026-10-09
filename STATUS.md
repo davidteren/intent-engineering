@@ -55,7 +55,7 @@ Install:
 
 - Contract suite green (141 checks).
 - 5 agents + 6 skills under `plugins/expectation-fit/`.
-- Dogfood report: [`docs/expectation-fit/2026-07-30-v0.8.0-dogfood.md`](docs/expectation-fit/2026-07-30-v0.8.0-dogfood.md).
+- Dogfood report: [`docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md`](docs/intent-engineering/2026-07-30-v0.8.0-dogfood.md).
 
 ## Open question — potential name/positioning change (PARKED)
 
