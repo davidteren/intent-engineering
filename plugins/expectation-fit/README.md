@@ -88,6 +88,10 @@ then commit `.expectation-fit/`. Project config **supersedes** the plugin defaul
 - `thresholds.yaml` — architecture metric limits (fat model/controller, God object,
   service object, …).
 
+Calling a lens agent directly (not through a `fit-*` skill)? Run the config-resolution
+block in `references/config-resolution.md` first and pass the result to the lens. Never
+hardcode `Config: defaults`.
+
 ### First-run shapes
 
 **Monolith** (single app repo):

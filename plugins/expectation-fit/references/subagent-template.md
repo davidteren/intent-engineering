@@ -1,7 +1,15 @@
 # Lens Sub-agent Template
 
 How a skill spawns a lens. The orchestrator fills the `{slots}` and dispatches via the
-Agent tool (subagent_type = the lens agent name). **Model per lens:** pass
+Agent tool:
+
+One agent per lens. Use the registered agent `expectation-fit:fit-<lens>-reviewer` when the
+host has it. Otherwise use a general agent. Its first step is to read
+`${CLAUDE_PLUGIN_ROOT}/agents/fit-<lens>-reviewer.md` in full. Never give one agent two
+lenses or another tool's persona. Put extra context in `<intent>` or `<scope>`. Spawn
+each lens as a plain one-shot subagent, never as an agent-team member.
+
+**Model per lens:** pass
 `model: "sonnet"` (mid-tier) for convention, experience, and architecture; let
 predictability and simplicity use their `model: inherit` frontmatter (the session model) —
 they are the always-on lenses and benefit from session-model depth on high-stakes diffs.
@@ -39,10 +47,17 @@ this template. This is NOT the published report path (Layer B).
 
 Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
+Compact means merge-tier fields only. Leave why_it_matters and evidence out of the reply.
+They go only in the file.
 Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
 using the Write tool. Write and fix that file only with the Write tool, never with a
 shell command. Return ONLY the JSON — no prose.
+
+If the prompt says not to write files, skip the Write step. Put why_it_matters and
+evidence in the reply. This overrides the Write step in your agent's Output section.
+A program reads this reply. Style and handoff rules for chat replies to a person do not
+apply.
 
 EXCEPTION — Context: plan-assist is an advisory inline pass: do NOT write an artifact,
 and prose IS allowed (the deliverable is a checklist, not JSON). The artifact-write
@@ -100,6 +115,21 @@ remote scopes.
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were
   settled.
+- **Show the config.** The convention and architecture lenses start their observations
+  with `Config: <source>`. If a project `.expectation-fit/` (or legacy `.intense/`)
+  exists but the prompt did not pass its resolved values, that line names it as not
+  applied.
 - **Read-only.** Lenses never edit project files. The one write is the artifact JSON.
 - **No duplicating the linter.** Skip what a formatter/linter catches; focus on
   semantic surprises.
+
+## When you cannot spawn agents
+
+This mode is a fallback. Prefer a host that can spawn agents. For `fit-review` in Grok,
+use the repo's `.grok/workflows/fit-review.rhai`.
+
+- Run each selected lens as its own pass.
+- Before each pass, read that lens's agent file in full, and its resource docs.
+- Record that lens's JSON before you start the next pass.
+- Never copy findings from another review tool, such as ce-code-review or cubic.
+- Set `Execution: single-agent` in the report Header.

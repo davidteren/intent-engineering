@@ -8,6 +8,16 @@ for the design see **PLAN.md**.
 ## [Unreleased]
 
 ### Fixed
+- **Lens runs without subagents or file writes have rules, and reports show how lenses ran (#43).**
+  `references/subagent-template.md` now names the agent to dispatch per lens
+  (`expectation-fit:fit-<lens>-reviewer`, or a general agent that reads the agent file),
+  forbids one agent for two lenses, defines a compact reply, covers hosts that forbid
+  file writes, and adds a single-agent fallback section that all three orchestrators use.
+  Convention and architecture lenses open observations with `Config: <source>`. The
+  report Header carries `Execution: subagents | single-agent`, and a lens whose returned
+  `lens` differs from the dispatched one fails. New `lenses:<list>` token on `fit-review`,
+  `fit-validate-plan` and `fit-audit`. `check-contracts.rb` ties the template's agent
+  prefix to the plugin name in `plugin.json`.
 - **Off-schema findings are repaired, not dropped, and mode:agent has a full example (#53).**
   The shared merge steps moved from `fit-review` Stage 5 into a new "Merge and gate"
   section of `references/report-template.md`, and all three orchestrators point there.

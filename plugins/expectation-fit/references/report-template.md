@@ -40,7 +40,7 @@ monotonic across the whole report.
 ## Report sections (in order)
 
 1. **Header** — scope, intent, context (review/audit/plan), lens team with the
-   one-line reason for each conditional lens.
+   one-line reason for each conditional lens, and `Execution: subagents | single-agent`.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
    Fix | Lens`, then validation outcome + commit status. Applied findings appear here,
    not in the severity tables.
@@ -49,6 +49,7 @@ monotonic across the whole report.
    `clean` (not failed, not skipped-as-selected).** If severities are empty and all
    selected lenses are clean, do NOT drop the section — render:
    `No findings — all selected lenses returned clean (N lenses, M files reviewed).`
+   In a single-agent run, the line ends with `(N lenses in one agent, M files reviewed).`
    and set Verdict to Ready / Healthy. If any selected lens **failed**, do **not** use
    that all-clear line; state which lenses failed and set Verdict accordingly (review:
    Not ready or Ready with fixes; plan: Revise first). (In `mode:agent`, empty
@@ -61,7 +62,8 @@ monotonic across the whole report.
 7. **Coverage** — what was reviewed, what was skipped (untracked, sampling bounds,
    remote-mode limits), confidence suppressions by anchor, and **per-lens status**:
    - **failed** — non-JSON return, missing `$RUN/{lens}.json`, missing required
-     `scores` in audit/plan, or harness error after optional one re-dispatch.
+     `scores` in audit/plan, a returned `lens` that differs from the dispatched lens, or
+     harness error after optional one re-dispatch.
    - **skipped** — not selected, or architecture pack absent (catalog ⬜ / no pack);
      promote `SKIPPED:` observations from the architecture agent here. Not the same
      as clean empty findings.
@@ -80,8 +82,8 @@ this order. Each step runs in every context unless its mark says otherwise. Read
 `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for the field rules.
 
 1. **Validate and repair.** Assign each lens a status (see Coverage). Mark the lens
-   **failed** on a non-JSON return, a missing `$RUN/{lens}.json`, or a selected lens
-   that never returned. One re-dispatch is allowed on a non-JSON return; a lens that is
+   **failed** on a non-JSON return, a missing `$RUN/{lens}.json`, a returned `lens`
+   that differs from the dispatched lens, or a selected lens that never returned. One re-dispatch is allowed on a non-JSON return; a lens that is
    still non-JSON after that is failed. Repair off-schema findings; do not drop them:
    - Severity `low`, `medium`, `high` or `critical` becomes `P3`, `P2`, `P1` or `P0`.
      An `info` finding moves to observations.

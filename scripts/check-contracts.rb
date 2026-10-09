@@ -17,7 +17,8 @@
 # Checks:
 #   1. All shipped JSON parses; all shipped YAML parses.
 #   2. Lens identity agrees 4 ways: findings-schema `lens` enum == agents/ basenames
-#      == lens-catalog rows == scoring-rubric rows.
+#      == lens-catalog rows == scoring-rubric rows; the template's agent prefix == the
+#      plugin.json name.
 #   3. Agent frontmatter: name == filename stem, name in the lens enum, tools + model present.
 #   4. Every ${CLAUDE_PLUGIN_ROOT}/... path (and backticked references/resources/config
 #      paths in the index/catalog) resolves on disk; placeholders skipped.
@@ -153,6 +154,18 @@ else
   bad "scoring-rubric lenses #{rubric_lenses.sort.inspect} != lens enum #{schema_lenses.sort.inspect}"
 end
 
+# The dispatch text names the registered agent as <plugin>:fit-<lens>-reviewer (issue #43);
+# the prefix must follow the plugin name, or dispatch targets an agent that does not exist.
+plugin_name = JSON.parse(read(".claude-plugin/plugin.json"))["name"]
+tpl_prefixes = read("references/subagent-template.md").scan(/`([a-z0-9-]+):fit-<lens>-reviewer`/).flatten.uniq
+if tpl_prefixes.empty?
+  bad "subagent-template.md: must name the registered agent as `<plugin>:fit-<lens>-reviewer`"
+elsif tpl_prefixes == [plugin_name]
+  ok "subagent-template.md agent prefix == plugin.json name (#{plugin_name})"
+else
+  bad "subagent-template.md agent prefix #{tpl_prefixes.inspect} != plugin.json name #{plugin_name.inspect}"
+end
+
 # ---------------------------------------------------------------------------
 section "3. Agent frontmatter"
 
@@ -189,7 +202,7 @@ cited = {} # path => first source file
  Dir[File.join(PLUGIN, "skills/*/SKILL.md")] +
  Dir[File.join(PLUGIN, "references/*.md")]).each do |abs|
   rel = abs.sub(PLUGIN + "/", "")
-  File.read(abs).scan(%r{\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_/.\-]+)}) do |m|
+  File.read(abs).scan(%r{\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_/.\-<>{}*]+)}) do |m|
     path = strip_trailing(m[0])
     next if path.empty? || path =~ PLACEHOLDER
 

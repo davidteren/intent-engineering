@@ -1,7 +1,7 @@
 ---
 name: fit-review
 description: "Review code changes through the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) — surfacing surprise, non-idiomatic patterns, needless complexity, UX gaps, and structural anti-patterns. Default (interactive) mode applies safe, verified fixes and commits on a clean tree (never pushes); mode:agent reports JSON only. Use on a PR, branch, or local changes before merging."
-argument-hint: "[mode:agent] [out:<path>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [base:<ref>] [plan:<path>] [blank = current branch, or a PR link/number/branch]"
 ---
 
 # Expectation Fit — Code Review
@@ -29,6 +29,7 @@ number/URL or branch.
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 
 ## Operating principles
 
@@ -101,7 +102,8 @@ status. **Do not hardcode stack lists here** — the catalog is the only source 
   `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`).
 
 Honor the config `lenses:` toggles over these defaults (`off` forces a lens off even if
-relevant; `on` forces it on; `auto` = the judgment above).
+relevant; `on` forces it on; `auto` = the judgment above). A `lenses:<list>` token wins
+over both: run exactly the listed lenses.
 
 For the convention and architecture lenses, find standards paths first: Glob
 `**/CLAUDE.md` and `**/AGENTS.md` whose directory is an ancestor of a changed file; pass
@@ -185,7 +187,8 @@ catches.
 
 ## Fallback
 
-No parallel sub-agents: run lenses sequentially. Concurrency cap: use the queue/
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
 backfill rule. Everything else unchanged.
 
 ---

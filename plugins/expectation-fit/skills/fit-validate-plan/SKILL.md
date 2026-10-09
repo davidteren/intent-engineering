@@ -1,7 +1,7 @@
 ---
 name: fit-validate-plan
 description: "Validate a plan, spec, or requirements document against the four expectation-fit lenses before implementation — surfacing surprising designs, non-idiomatic or reinvented approaches, needless complexity/scope, and missing UX decisions (states, flows, IA, accessibility). Returns dimensional 0-10 ratings and the gaps to resolve first. Use when a plan or spec doc exists."
-argument-hint: "[mode:agent] [out:<path>] [path/to/plan-or-spec.md]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [path/to/plan-or-spec.md]"
 ---
 
 # Expectation Fit — Plan Validation
@@ -18,6 +18,7 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 | `mode:agent` | Emit JSON; no interactive routing. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 | remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
 ## Stage 1 — Read & classify
@@ -52,7 +53,7 @@ validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
   UX completeness (interaction states, user flows, IA, accessibility commitments,
   AI-slop risk).
 
-Announce the team.
+A `lenses:<list>` token wins over the toggles and these rules. Announce the team.
 
 ## Stage 3 — Dispatch
 
@@ -104,6 +105,12 @@ Then: if `CLEANUP` is true, run the **guarded** cleanup from
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)
+
+## Fallback
+
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+backfill rule. Everything else unchanged.
 
 ---
 

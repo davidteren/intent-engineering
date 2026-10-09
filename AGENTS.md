@@ -122,7 +122,9 @@ script-owned verdict, report in run scratch. It must not move into
 `plugins/expectation-fit/`. See `.grok/workflows/README.md`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
-the apply stage), `out:<path>` (override published report path). Path resolution:
+the apply stage), `out:<path>` (override published report path), `lenses:<list>` (run
+only the listed lenses; overrides auto-selection and config toggles; Coverage marks the
+others `not_selected`). Path resolution:
 `references/config-resolution.md` → Artifact paths. Defaults: run
 `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-<skill>[-scope].md`.
 Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —

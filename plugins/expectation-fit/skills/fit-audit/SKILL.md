@@ -1,7 +1,7 @@
 ---
 name: fit-audit
 description: "Audit a whole codebase, subsystem, or feature against the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) and produce a posture report — per-dimension 0-10 scores plus the top surprise/convention/complexity/UX/structural gaps. Use to assess an existing codebase or area, not a specific diff. Sampling-aware for large targets."
-argument-hint: "[mode:agent] [out:<path>] [<path/glob/subsystem to audit, default: whole repo>]"
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [<path/glob/subsystem to audit, default: whole repo>]"
 ---
 
 # Expectation Fit — Codebase Audit
@@ -18,6 +18,7 @@ surfaced first. This is a read-only assessment — it never edits code.
 | `mode:agent` | Emit JSON instead of markdown. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-audit[-scope].md`. |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
+| `lenses:<list>` | Run only these lenses, comma-separated (e.g. `lenses:predictability,simplicity`). Overrides auto-selection and the config `lenses:` toggles for this run. Config, merge, gate and report still run. Coverage marks each other lens `not_selected` (not requested). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
@@ -57,7 +58,7 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
   `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`). Never gate
   architecture on a closed two-stack list.
 
-Honor config `lenses:` toggles over these defaults. Find repo `CLAUDE.md`/`AGENTS.md`
+Honor config `lenses:` toggles over these defaults; a `lenses:<list>` token wins over both. Find repo `CLAUDE.md`/`AGENTS.md`
 + `.expectation-fit` conventions for the convention and architecture lenses. Announce the team.
 
 ## Stage 3 — Dispatch
@@ -114,6 +115,12 @@ no push, no time estimates.
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
 `$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+
+## Fallback
+
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use the queue/
+backfill rule. Everything else unchanged.
 
 ---
 
