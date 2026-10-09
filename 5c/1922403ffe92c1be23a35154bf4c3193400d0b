@@ -1,0 +1,43 @@
+plugins/expectation-fit/references/report-template.md
+  s_139c48e2134bb7::t_0de7d9cd7a0ea0 136
+plugins/expectation-fit/skills/fit-validate-plan/SKILL.md
+  s_139c48e2134bb7::t_0de7d9cd7a0ea0 33-43
+plugins/expectation-fit/references/subagent-template.md
+  s_139c48e2134bb7::t_0de7d9cd7a0ea0 106-108
+docs/reports/2026-08-16-experience-dogfood-fizzy.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+plugins/expectation-fit/skills/fit-review/SKILL.md
+  s_139c48e2134bb7::t_b73d915113ff35 84-88,286-287
+docs/reports/2026-08-12-workflow-ie-review.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+docs/reports/2026-08-14-experience-dogfood-ongela.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_799a49087868b5 616-620,629-631,634-636
+plugins/expectation-fit/references/config-resolution.md
+  s_139c48e2134bb7::t_b73d915113ff35 472-475
+docs/index.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+docs/reports/2026-07-30-v0.8.0-dogfood.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+plugins/expectation-fit/skills/fit-audit/SKILL.md
+  s_139c48e2134bb7::t_b73d915113ff35 130-131
+docs/reports.html
+  s_139c48e2134bb7::t_2724c26c1afc22 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5c1922403ffe92c1be23a35154bf4c3193400d0b",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
