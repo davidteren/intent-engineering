@@ -20,7 +20,8 @@
 #      == lens-catalog rows == scoring-rubric rows.
 #   3. Agent frontmatter: name == filename stem, name in the lens enum, tools + model present.
 #   4. Every ${CLAUDE_PLUGIN_ROOT}/... path (and backticked references/resources/config
-#      paths in the index/catalog) resolves on disk; placeholders skipped.
+#      paths in the index/catalog) resolves on disk; placeholders skipped. Every doc in the
+#      lens-catalog "Resource docs it reads" column exists at resources/<name>.
 #   5. Pattern catalog: each entry has id/name/intent/recognition/good_use/misuse; ids
 #      unique snake_case.
 #   6. principle: values the lenses declare they emit are all in the schema principle enum.
@@ -221,6 +222,26 @@ if missing.empty?
   ok "all #{cited.size} cited plugin paths resolve"
 else
   missing.each { |path, src| bad "cited path missing: #{path} (in #{src})" }
+end
+
+# lens-catalog "Resource docs it reads" column: every backticked doc name is a full path
+# under resources/. Lens prompts are built from this column, so a bare name is a miss.
+catalog_rows = catalog.lines.select { |l| l.start_with?("| `fit-") }
+doc_names = catalog_rows.flat_map do |row|
+  cell = row.split("|")[3].to_s
+  cell.scan(/`([^`]+)`/).flatten.select { |n| n.end_with?(".md", ".yaml") }
+end
+placeholder_docs, real_docs = doc_names.partition { |n| n =~ PLACEHOLDER }
+if catalog_rows.empty? || real_docs.empty?
+  bad "lens-catalog: no resource-doc rows or names parsed"
+else
+  bare = real_docs.reject { |n| File.exist?(File.join(PLUGIN, "resources", n)) }
+  if bare.empty?
+    ok "lens-catalog: all #{real_docs.size} resource docs in #{catalog_rows.size} rows resolve under resources/ " \
+       "(#{placeholder_docs.size} placeholders skipped)"
+  else
+    bare.each { |n| bad "lens-catalog: resource doc `#{n}` does not exist at resources/#{n}" }
+  end
 end
 
 # ---------------------------------------------------------------------------

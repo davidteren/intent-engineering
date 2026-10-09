@@ -52,6 +52,13 @@ for the design see **PLAN.md**.
   findings keep the skeptic's reason and evidence, and `end_line` defaults to `line`. A
   lens that reports `failed:` gets status failed. The convention lens docs now match the
   lens catalog. Copy the file to `~/.grok/workflows/` after each pull.
+- **Lens catalog lists full doc paths, and the contract check catches drift (#51).** The
+  "Resource docs it reads" column names every doc as a full path under `resources/`
+  (8 bare names fixed), and `check-contracts.rb` section 4 now fails on a doc that does
+  not exist there. `AGENTS.md` forbids repo-only paths in shipped files, says a smell-card
+  guard may qualify a finding but not suppress a whole class, and replaces the old local
+  install path with a `claude -p ... --plugin-dir` dev loop. `README.md` installs from
+  GitHub.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

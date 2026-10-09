@@ -14,8 +14,8 @@ ruby scripts/check-contracts.rb
 ```
 
 Exit `0` = all good; exit `1` = at least one failure. Output is one line per check
-(`ok` / `FAIL` / `warn`) under nine sections, then a summary
-(`PASS — 67 checks, 0 failures`). Run it before committing; CI runs it on every PR.
+(`ok` / `FAIL` / `warn`) under twelve sections, then a summary
+(`PASS — 143 checks, 0 failures` today). Run it before committing; CI runs it on every PR.
 
 ### What it checks
 
@@ -24,7 +24,7 @@ Exit `0` = all good; exit `1` = at least one failure. Output is one line per che
 | 1 | Parse | every shipped `*.json` and `*.yaml` parses; the default lens toggles load as the strings `on`, `off` or `auto` |
 | 2 | Lens identity (4-way) | the 5 lens ids agree across `findings-schema.json` enum, `agents/fit-*-reviewer.md` basenames, `lens-catalog.md` rows, and `scoring-rubric.md` rows |
 | 3 | Agent frontmatter | each agent's `name` == filename stem, is in the lens enum, and has `tools` + `model` |
-| 4 | Path resolution | every `${CLAUDE_PLUGIN_ROOT}/…` path (and backticked index/catalog paths) resolves on disk; placeholders skipped |
+| 4 | Path resolution | every `${CLAUDE_PLUGIN_ROOT}/…` path (and backticked index/catalog paths) resolves on disk; placeholders skipped. Every backticked `.md`/`.yaml` name in the `lens-catalog.md` "Resource docs it reads" column must exist at `resources/<name>` (today: 18 docs in 5 rows, 3 placeholders skipped); the check fails when no rows or names parse |
 | 5 | Pattern catalog schema | each catalog entry has `id/name/intent/recognition/good_use/misuse`; ids unique + snake_case |
 | 6 | Principle ids | every `principle:` value the lenses declare they emit is in the schema enum |
 | 7 | Gitignore trap | exactly **5** lens agents are git-tracked (`git ls-files plugins/expectation-fit/agents/`) |

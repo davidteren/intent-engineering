@@ -187,12 +187,14 @@ UX, and architecture packs. If you already run reek/eslint/phpstan/…, set
 `tools.architecture: prefer` in `.expectation-fit/ways-of-working.yaml` so the architecture
 lens does not duplicate those tools.
 
-## Install (local dogfooding)
+## Install
 
 ```
-/plugin marketplace add /Users/david.teren/Projects/Personal/expectation-fit   # repo root (has .claude-plugin/marketplace.json)
+/plugin marketplace add https://github.com/davidteren/intent-engineering
 /plugin install expectation-fit
 ```
+
+To run an unreleased checkout, see the dev loop in [`AGENTS.md`](AGENTS.md).
 
 Then the `/fit-*` skills and `fit-*-reviewer` agents are available in any repo.
 

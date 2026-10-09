@@ -41,7 +41,10 @@ schemas, and cross-references stay mutually consistent.
    `resources/`. A Claude Code plugin only ships what's inside its plugin dir. Never
    move `resources/` or `references/` to the repo root. Edit them in place; they are the
    single source of truth. Optional Grok runtimes live in repo-root `.grok/workflows/`
-   and must not be moved into the plugin dir.
+   and must not be moved into the plugin dir. Shipped files must not cite repo-only
+   paths, such as `docs/`, `wip/`, `scripts/`, `.grok/`, `PLAN.md` or `STATUS.md`. An
+   installed plugin does not have them. Skills and references may still name
+   `docs/expectation-fit/` as the report folder in the user's repo.
 3. **Runtime paths use `${CLAUDE_PLUGIN_ROOT}`.** Every cross-file reference inside a
    skill or agent must address shipped files as `${CLAUDE_PLUGIN_ROOT}/<dir>/<file>` —
    never a bare filename or repo-relative path. A lens runs in isolation and can only
@@ -245,6 +248,9 @@ pattern catalog:
 lens's detection checklist. Every doc a lens reads must have one. Every doc ends with a
 **Sources** section of real links — never ship a doc without citations.
 
+A guard in a smell card may qualify a finding or cap its confidence. It must not
+suppress a whole class of findings.
+
 ---
 
 ## How to extend (wiring requirements)
@@ -302,16 +308,21 @@ Adding anything means updating its references in lockstep, or it's orphaned:
   (false positive / intentional / already fixed), then resolve the thread. Never resolve
   silently — reviewers (and their self-learning) need the reply. Prefer a PR + required
   checks over direct pushes to `main` when branch protection expects CI.
-- **Dogfood as you go.** Run the lenses' logic against your change (or `/fit-audit` once
-  installed), fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
+- **Dogfood as you go.** Run the plugin from this checkout against your change with the
+  dev loop below, fix surfaced P1/P2, then commit. The audit→fix→re-audit loop is expected.
 - Clean git history is preferred; the owner may ask to squash to a single commit.
 
-## Install (local dogfooding)
+## Dev loop (run this checkout)
 
 ```
-/plugin marketplace add /Users/david.teren/Projects/Personal/expectation-fit
-/plugin install expectation-fit
+cd <fixture or target repo>
+claude -p "/fit-review mode:agent <target>" \
+  --plugin-dir <absolute path to this checkout>/plugins/expectation-fit \
+  --allowedTools <the Bash and Write grants that the run needs>
 ```
 
-Then `/fit-setup`, `/fit-review`, `/fit-audit`, `/fit-validate-plan`, `/fit-plan-assist`,
-`/fit-from-pr-learnings`.
+This copy replaces the installed plugin of the same name, for this session only. The
+run returns the `/fit-review mode:agent` JSON. Keep the tool grants: a `-p` run cannot
+answer permission prompts. Use the same command when the owner asks for the latest
+plugin. The other skills (`/fit-setup`, `/fit-audit`, `/fit-validate-plan`,
+`/fit-plan-assist`, `/fit-from-pr-learnings`) run the same way.
