@@ -1,0 +1,33 @@
+plugins/expectation-fit/agents/fit-predictability-reviewer.md
+  s_139c48e2134bb7::t_1474a32fef4e9a 26
+CHANGELOG.md
+  s_139c48e2134bb7::t_99a183ef70b9d9 29-34
+plugins/expectation-fit/resources/principles/least-astonishment.md
+  s_139c48e2134bb7::t_0d3a832ec7dc1c 66-71
+plugins/expectation-fit/resources/agnostic/defaults-and-configuration.md
+  s_139c48e2134bb7::t_3a7bd26ede01a1 29
+.grok/workflows/fit-review.rhai
+  s_139c48e2134bb7::t_1b01c1e7057355 394
+plugins/expectation-fit/resources/agnostic/error-handling.md
+  s_139c48e2134bb7::t_582f1ff3ae97cb 67-73
+plugins/expectation-fit/references/lens-catalog.md
+  s_139c48e2134bb7::t_44f977bd86556e 12
+plugins/expectation-fit/references/principle-index.md
+  s_139c48e2134bb7::t_6f8bcc9d3b675a 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3956a1060a533769fe1e03c18845eaa1d5bd98d2",
+  "prompts": {},
+  "sessions": {
+    "s_139c48e2134bb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "089293b8-bf7f-4fca-9b58-2370b9ff2a96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "davidteren <drteren@gmail.com>"
+    }
+  }
+}
