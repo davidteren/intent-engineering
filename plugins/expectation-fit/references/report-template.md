@@ -9,7 +9,7 @@ across terminals.
 | Layer | Default path | Contents |
 |-------|--------------|----------|
 | A — run scratch | `.expectation-fit/runs/<run-id>/` | per-lens `{lens}.json` while the run is open |
-| B — published | `docs/expectation-fit/<stamp>-<skill>[-scope].md` | this report (or `.json` in `mode:agent`) |
+| B: report | `.expectation-fit/reports/<stamp>-<skill>[-scope].md` (git-ignored) | this report (or `.json` in `mode:agent` with `out:`) |
 
 Override Layer B with `out:<path>`. After a successful publish, Layer A is deleted when
 `artifacts.cleanup_runs` is true (default). Include `run_id` in the Header so the run
@@ -76,10 +76,12 @@ No time estimates. No praise. Every finding actionable.
 ## mode:agent (JSON)
 
 When a skill runs `mode:agent`, emit one raw JSON object (no code fence) as the reply
-instead of markdown, AND write that same object to the **published** path `$REPORT_PATH`
-(Layer B — typically `docs/expectation-fit/<stamp>-<skill>[-scope].json`). Do **not**
-write the mode:agent report into the run-scratch dir (`$RUN`); that dir is deleted when
-`cleanup_runs` is true. Set `artifact_path` in the JSON to the same published path:
+instead of markdown. The reply is the deliverable. Write that same object to a file
+only when the caller passes `out:` (then `$REPORT_PATH` is that path, and
+`artifact_path` is its absolute path). Without `out:`, write no report file and set
+`artifact_path` to `null`. Never write the mode:agent report into the run-scratch dir
+(`$RUN`); that dir is deleted when `cleanup_runs` is true. A `mode:agent` run leaves
+`git status --porcelain` unchanged (run scratch ignores itself).
 
 ```json
 {
@@ -95,7 +97,7 @@ write the mode:agent report into the run-scratch dir (`$RUN`); that dir is delet
   "posture": null,
   "observations": [],
   "coverage": {},
-  "artifact_path": "docs/expectation-fit/<stamp>-<skill>[-scope].json",
+  "artifact_path": null,
   "run_id": "<run-id>"
 }
 ```

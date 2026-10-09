@@ -15,6 +15,11 @@
       "id": 3,
       "prompt": "fit-audit (with no .expectation-fit/ in cwd but parent workspace has .expectation-fit/)",
       "expected_output": "Discovers parent .expectation-fit via walk-up; Coverage Config line names that path. Does not silently use only plugin defaults when a parent project config exists."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-audit mode:agent app/models",
+      "expected_output": "JSON reply only. Without out:, writes no report file and sets artifact_path to null. git status --porcelain is the same before and after the run. Never edits source."
     }
   ]
 }

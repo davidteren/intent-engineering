@@ -15,8 +15,8 @@ out the four lenses in plan mode, each rating its dimensions 0-10 and naming the
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Emit JSON; no interactive routing. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-validate-plan[-scope].md`. |
+| `mode:agent` | Emit JSON; no interactive routing. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | remainder | Path to the document. If omitted, find the most recent under `docs/plans/`, `docs/brainstorms/`; if none, ask once which file. |
 
@@ -89,7 +89,7 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 
 ## Stage 5 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
+Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (doc,
 type, lens team, run_id), Dimensional Ratings (worst first), Findings/Gaps grouped by severity
 with `Principle` + `Lens`, Tensions, Observations, Coverage (each lens failed/skipped/clean),
@@ -100,7 +100,7 @@ selected lens **failed**. No time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc (absolute path).
 
 This skill never edits the document — it reports. (To apply edits, hand the report to
 the planning workflow.)

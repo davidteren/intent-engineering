@@ -24,8 +24,8 @@ number/URL or branch.
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
+| `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). Outside-repo only when explicitly given. |
 | `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
@@ -35,7 +35,9 @@ number/URL or branch.
 - **Apply locally; never push.** In default mode, apply the safe fixes you're
   confident in (Stage 5) and commit them as an isolated `fix(fit-review):` commit when
   the tree was clean; on a dirty tree apply but leave for the user. In `mode:agent`,
-  mutate nothing — the caller applies. Never push, open PRs, or file tickets.
+  change no product code and write no report file unless `out:` names one; run scratch
+  ignores itself, so `git status` stays unchanged. The caller applies. Never push, open
+  PRs, or file tickets.
 - **No blocking prompts.** Infer intent and scope from tokens, git state, and the
   diff. Note uncertainty in Coverage; don't stop to ask.
 - **Explicit mutations only.** Never `git checkout`/`switch` or `gh pr checkout`. A PR
@@ -44,6 +46,11 @@ number/URL or branch.
   `AGENTS.md` and existing patterns — those override generic ideals.
 
 ## Stage 1 — Scope
+
+First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over
+`${CLAUDE_PLUGIN_ROOT}/config/defaults/`). The resolved artifact folders feed the scope
+exclusions below.
 
 Compute the diff. Reuse the scope logic familiar from standard code-review skills:
 
@@ -55,7 +62,10 @@ Compute the diff. Reuse the scope logic familiar from standard code-review skill
 - **Branch name** — resolve `origin/<branch>` without checkout; `branch-remote` scope.
 - **No argument** — current branch vs its detected base.
 
-Produce: `BASE`, `FILES` (`git diff --name-only $BASE`), `DIFF` (`git diff -U10 $BASE`),
+Build `EXCLUDES` per config-resolution (Scope exclusions), so earlier reports and run
+scratch stay out of scope. Produce: `BASE`, `FILES`
+(`git diff --name-only $BASE -- "${EXCLUDES[@]}"`), `DIFF`
+(`git diff -U10 $BASE -- "${EXCLUDES[@]}"`),
 `UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
 scope; list them in Coverage. If no base resolves, stop — don't fall back to
 `git diff HEAD` (it would miss committed work).
@@ -71,10 +81,7 @@ intent shapes how hard each lens looks, not which lenses run.
 
 ## Stage 3 — Select lenses
 
-First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-— discover nearest `.expectation-fit/` via **walk-up** (or `config:` / `EXPECTATION_FIT_CONFIG_DIR`),
-then deep-merge over `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
-The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
+Use the config resolved in Stage 1. The resolved `lenses:` block is authoritative for selection (`on`/`off`/`auto`); the
 resolved `conventions` (including `sources` + **`auto`** discovery), `severity_align`,
 `confidence_gate`, `thresholds`, and pattern policy feed the lenses and synthesis.
 **Always** put an explicit Config line in Coverage, plus auto-source counts when
@@ -177,9 +184,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 
 ## Stage 6 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
-`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — including the mode:agent section
-there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
+Write the report to `$REPORT_PATH` (markdown) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. In `mode:agent`, reply with the
+JSON and write it to `$REPORT_PATH` only when `out:` was passed (never into `$RUN`). Include run_id, branch, head_sha,
 verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
@@ -189,7 +196,8 @@ estimates. Every finding actionable.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc
+(absolute path).
 
 ## Quality gates
 
@@ -209,7 +217,7 @@ backfill rule. Everything else unchanged.
 ## Reference files (read at runtime)
 
 This skill depends on `${CLAUDE_PLUGIN_ROOT}` resolving to the plugin dir (standard in
-Claude Code). Read these contract files before Stage 3 — they are the single source of
+Claude Code). Read these contract files before Stage 1 — they are the single source of
 truth, shared by every `fit-*` skill:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .expectation-fit config + artifact paths

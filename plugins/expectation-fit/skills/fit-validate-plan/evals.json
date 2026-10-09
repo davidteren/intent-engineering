@@ -14,7 +14,7 @@
     {
       "id": 3,
       "prompt": "fit-validate-plan mode:agent out:/tmp/fit-validate.json docs/plans/my-plan.md",
-      "expected_output": "Emits JSON report at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source."
+      "expected_output": "Emits the JSON reply and writes it at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source. git status --porcelain is the same before and after the run."
     }
   ]
 }

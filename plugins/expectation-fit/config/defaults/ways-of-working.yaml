@@ -107,12 +107,14 @@ confidence_gate: 75
 
 # --- Artifacts (two layers) -------------------------------------------------------
 # Layer A — run scratch: per-lens JSON while the run is in progress.
-# Layer B — published report: the human-facing markdown (or JSON in mode:agent).
-# After a successful publish, run scratch is deleted when cleanup_runs is true.
-# Override the published path per run with `out:<path>`.
-# Legacy: a top-level `report_dir:` (no `artifacts:`) still means single-bucket mode
-# (both layers under that dir, no cleanup) — see config-resolution.md.
+# Layer B, report: the human-facing markdown (mode:agent writes JSON only with out:).
+# Both default folders ignore themselves, so runs add nothing to git status.
+# After the report step, run scratch is deleted when cleanup_runs is true.
+# Override the report path per run with `out:<path>`.
+# To commit reports, set report_dir: docs/expectation-fit. Warning: a docs/ folder is
+# often published as a public site, and reports name unfixed defects.
+# Legacy: a top-level `report_dir:` is an alias for artifacts.report_dir.
 artifacts:
   run_dir: .expectation-fit/runs
-  report_dir: docs/expectation-fit
+  report_dir: .expectation-fit/reports
   cleanup_runs: true

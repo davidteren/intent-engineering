@@ -47,15 +47,19 @@ schemas, and cross-references stay mutually consistent.
    never a bare filename or repo-relative path. A lens runs in isolation and can only
    resolve `${CLAUDE_PLUGIN_ROOT}` paths.
 4. **Read-only by default; never push.** Lenses are read-only except for the Layer A
-   run-scratch JSON write. Orchestrators write the published report under
-   `docs/expectation-fit/` (and clean up run scratch). Only `/fit-review` (interactive)
+   run-scratch JSON write. Orchestrators write the report under the resolved
+   `artifacts.report_dir` (and clean up run scratch). In `mode:agent` they write no
+   report file unless the caller passes `out:`; the JSON reply is the deliverable. Only `/fit-review` (interactive)
    mutates product code — applies safe fixes, commits on a clean tree — and `/fit-setup`
    writes under `.expectation-fit/` (optional `.gitignore` append for runs). Nothing ever pushes,
    opens PRs, or files tickets.
-5. **Two-layer artifacts — not `wip/`.** Run scratch → `.expectation-fit/runs/<run-id>/`
-   (lens JSON; deleted after publish when `cleanup_runs: true`). Published report →
-   `docs/expectation-fit/<stamp>-<skill>[-scope].md`. Configure via `artifacts.*` in
-   `ways-of-working.yaml`. Do not reintroduce plugin defaults under `wip/` or `.wip/`.
+5. **Two-layer artifacts, out of git by default.** Run scratch →
+   `.expectation-fit/runs/<run-id>/` (lens JSON; deleted after the report step when
+   `cleanup_runs: true`). Report → `.expectation-fit/reports/<stamp>-<skill>[-scope].md`.
+   Both default folders ignore themselves. Analysis and run files never go to a tracked
+   path by default; a project opts in with `artifacts.report_dir`. Configure via
+   `artifacts.*` in `ways-of-working.yaml`. Do not reintroduce plugin defaults under
+   `wip/`, `.wip/` or `docs/`.
 6. **`ie-` prefix** for every skill and agent. Project config dir is **`.expectation-fit/`**.
 
 ---
@@ -70,9 +74,9 @@ expectation-fit/                       dev repo + marketplace
   CHANGELOG.md                            dated change history + decisions
   .claude-plugin/marketplace.json         marketplace entry (install from repo root)
   scripts/check-contracts.rb              contract-integrity check (the one automated check)
-  docs/expectation-fit/                published fit-* reports (date-stamped markdown)
+  docs/intent-engineering/             this repo's committed dogfood reports (runs pass out:)
   docs/index.html                         GitHub Pages site
-  .expectation-fit/runs/                          gitignored ephemeral lens scratch (cleaned up)
+  .expectation-fit/runs/ + reports/    self-ignoring run scratch and local reports
   .grok/workflows/                        optional Grok runtime (not shipped in the plugin)
   plugins/expectation-fit/             THE INSTALLABLE PLUGIN (self-contained)
     .claude-plugin/plugin.json            name, version, keywords, license
@@ -108,8 +112,9 @@ expectation-fit/                       dev repo + marketplace
    promote findings agreed by 2+ lenses, suppress below the confidence gate (default
    anchor 75; P0 survives 50+), apply `severity_align` then explicit severity overrides
    and pattern policy (incl. `preferred`).
-5. **Report** to the published path `$REPORT_PATH` under `docs/expectation-fit/`
-   (or JSON in `mode:agent`), then delete `$RUN` when `cleanup_runs` is true.
+5. **Report** to `$REPORT_PATH` under the resolved `artifacts.report_dir` (or a JSON
+   reply in `mode:agent`, written to a file only with `out:`), then delete `$RUN` when
+   `cleanup_runs` is true.
 
 `fit-plan-assist` is the lightweight exception: inline advisory checklist, no sub-agents,
 no artifacts, prose (not findings JSON). `fit-setup` is the setup/upgrade wizard for
@@ -122,9 +127,9 @@ script-owned verdict, report in run scratch. It must not move into
 `plugins/expectation-fit/`. See `.grok/workflows/README.md`.
 
 **Shared tokens** (review/audit/validate-plan): `mode:agent` (JSON, and for review skips
-the apply stage), `out:<path>` (override published report path). Path resolution:
+the apply stage), `out:<path>` (override the report path). Path resolution:
 `references/config-resolution.md` → Artifact paths. Defaults: run
-`.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-<skill>[-scope].md`.
+`.expectation-fit/runs/<run-id>/`, report `.expectation-fit/reports/<stamp>-<skill>[-scope].md`.
 Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —
 keep them in sync if you change one.
 

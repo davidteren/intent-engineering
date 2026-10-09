@@ -32,7 +32,7 @@ Phoenix, React) + per-stack pattern catalogs.
 - **Knowledge base:** 9 principle docs, **15** framework docs (9 convention + 6
   architecture packs), 6 agnostic docs (+ UX smell cards), 6 pattern catalogs.
 - **Automated check:** `scripts/check-contracts.rb` — **141** checks across 12 sections.
-- **Two-layer artifacts** — `.expectation-fit/runs/` scratch; `docs/expectation-fit/` published.
+- **Two-layer artifacts:** `.expectation-fit/runs/` scratch and `.expectation-fit/reports/` reports; both ignore themselves.
 - **Optional Grok runtime** — `.grok/workflows/fit-review.rhai`. Report-only. Not shipped
   inside the Claude plugin dir. See `.grok/workflows/README.md`.
 

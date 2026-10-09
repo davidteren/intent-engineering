@@ -15,19 +15,23 @@ surfaced first. This is a read-only assessment — it never edits code.
 
 | Token | Effect |
 |-------|--------|
-| `mode:agent` | Emit JSON instead of markdown. |
-| `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-audit[-scope].md`. |
+| `mode:agent` | Emit JSON instead of markdown. Writes a report file only with `out:`. |
+| `out:<path>` | Override the report path (file or dir). Default paths: `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths). |
 | `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
 | remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
 
 ## Stage 1 — Scope the target
 
+First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over `config/defaults/`).
+The resolved artifact folders feed the exclusions below.
+
 Resolve the audit set. Be explicit and bounded:
 
 1. Determine the file set: the given path/glob, or the repo's source dirs. Exclude
-   `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and
-   artifact dirs (resolved `artifacts.run_dir`, `artifacts.report_dir`, legacy
-   `wip/`, `.expectation-fit/runs/`, `docs/expectation-fit/`).
+   `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and the
+   artifact folders: build `EXCLUDES` per config-resolution (Scope exclusions) and
+   pass them to every `git ls-files` / `git diff` call that lists the set.
 2. Detect the stack(s) via `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`
    (Detection signals); load matching `frameworks/<stack>.md` docs. Do not hardcode a
    closed stack list.
@@ -39,8 +43,7 @@ Resolve the audit set. Be explicit and bounded:
 
 ## Stage 2 — Select lenses
 
-First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
-(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over `config/defaults/`); the
+Use the config resolved in Stage 1; the
 `lenses:` toggles are authoritative, and `thresholds` + pattern policy feed the
 architecture lens. **Always** state the Config source in Coverage (never silent
 defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
@@ -106,7 +109,7 @@ just needs the merged per-lens return.
 
 ## Stage 5 — Report
 
-Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
+Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Put `run_id` in the Header. Sections: Header (target,
 stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
@@ -116,14 +119,14 @@ no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
-`$RUN` equals `$RUN_DIR/$RUN_ID`). Always tell the user `Report: $REPORT_PATH`.
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Always print the `Report:` line from that doc (absolute path).
 
 ---
 
 ## Reference files (read at runtime)
 
 Depends on `${CLAUDE_PLUGIN_ROOT}` resolving (standard in Claude Code). Read before
-Stage 2 — shared contract for every `fit-*` skill:
+Stage 1 — shared contract for every `fit-*` skill:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .expectation-fit config + artifact paths
 - `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`

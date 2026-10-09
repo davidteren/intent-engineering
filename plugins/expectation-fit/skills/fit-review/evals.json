@@ -9,7 +9,7 @@
     {
       "id": 2,
       "prompt": "fit-review mode:agent",
-      "expected_output": "Report-only JSON; no apply, no commit, no push. Findings may include suggested_fix but the skill does not mutate the tree."
+      "expected_output": "Report-only JSON reply; no apply, no commit, no push. Without out:, writes no report file and sets artifact_path to null. git status --porcelain is the same before and after the run (run scratch ignores itself and is deleted when cleanup_runs is true)."
     },
     {
       "id": 3,
@@ -20,6 +20,11 @@
       "id": 4,
       "prompt": "fit-review (dirty tree with uncommitted user work)",
       "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-review (the branch also adds an earlier report under docs/expectation-fit/, and the project sets artifacts.report_dir: docs/expectation-fit)",
+      "expected_output": "Loads config before it builds FILES and DIFF. The earlier report is excluded by pathspec, so it is not in the review scope or in any finding. The Coverage file count leaves it out."
     }
   ]
 }

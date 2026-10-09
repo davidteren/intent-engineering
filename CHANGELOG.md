@@ -16,6 +16,19 @@ for the design see **PLAN.md**.
   work for at least one release; Coverage names the legacy folder and `/fit-setup upgrade`
   offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
   reports from before the rename stay in `docs/intent-engineering/` as history.
+- **Run scratch and reports stay out of git by default (#42).** The default report folder
+  is now `.expectation-fit/reports/` (was `docs/expectation-fit/`). Each run folder and
+  the default report folder get a one-line `*` `.gitignore`, so a run adds nothing to
+  `git status`. To keep committing reports, set `artifacts.report_dir: docs/expectation-fit`.
+  This repo's dogfood runs can pass `out:docs/intent-engineering/`. Other contract
+  changes in `config-resolution.md`: relative `run_dir`, `report_dir` and `out:` resolve
+  from the project base, and the `Report:` line prints an absolute path. `fit-review`
+  and `fit-audit` load config before they build their file lists and exclude the run,
+  report and `out:` folders by pathspec. `mode:agent` writes a report file only with
+  `out:` (else `artifact_path` is `null`), and cleanup runs after the report step. The
+  legacy single-bucket mode is gone: a top-level `report_dir` is now an alias for
+  `artifacts.report_dir`, and `/fit-setup upgrade` carries it over. `/fit-setup`
+  question 6 warns that reports under a published `docs/` site are public.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

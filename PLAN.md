@@ -19,7 +19,7 @@ parallel agents that produce structured findings and reports.
 >
 > **How:** A small set of "lenses" (each grounded in a researched principle) run as
 > parallel agents. They return scored, deduplicated findings with concrete fixes,
-> written to a report under `docs/expectation-fit/`. The same lenses work in four contexts: planning,
+> written to a local report under `.expectation-fit/reports/` (git-ignored). The same lenses work in four contexts: planning,
 > plan validation, code review, and codebase audit. Claude Code is the installable
 > plugin. An optional Grok runtime lives at `.grok/workflows/` (subset of `/fit-review`).
 
@@ -93,8 +93,9 @@ matching the findings schema.
 
 All skills:
 - **Two-layer artifacts:** run scratch `.expectation-fit/runs/<run-id>/` (per-lens JSON;
-  cleaned up after publish) and published report
-  `docs/expectation-fit/<stamp>-<skill>[-scope].md`. Override publish path via
+  cleaned up after the report step) and report
+  `.expectation-fit/reports/<stamp>-<skill>[-scope].md`; both ignore themselves.
+  Override the report path via
   `out:<path>`; permanent defaults via `artifacts.*` in ways-of-working. Outside-repo
   only when explicitly requested.
 - Never push / open PRs / file tickets. Read-only lenses; `fit-review` (interactive only)
@@ -122,8 +123,8 @@ expectation-fit/                      (repo / dev + marketplace)
                  scoring-rubric, principle-index, config-resolution
     config/defaults/  ways-of-working.yaml, patterns.yaml, thresholds.yaml
     resources/   principles/  frameworks/  agnostic/  patterns/
-  docs/expectation-fit/   published fit-* reports
-  .expectation-fit/runs/             ephemeral lens scratch (gitignored; cleaned up after publish)
+  docs/intent-engineering/   this repo's committed dogfood reports (runs pass out:)
+  .expectation-fit/runs/ + reports/  self-ignoring lens scratch and local reports
 ```
 
 (Resources live inside the plugin for install self-containment — see the root README.)
@@ -214,5 +215,5 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 
 The plugin repo isn't Rails, so the architecture lens is dogfooded against a small
 synthetic Rails fixture under optional personal `wip/fixtures/` (gitignored dev scratch —
-not the plugin report home; reports use `docs/expectation-fit/`) with deliberate smells +
+not the plugin report home; reports use `.expectation-fit/reports/`) with deliberate smells +
 recognizable + unknown patterns. Real-repo runs are left for the user to trigger.

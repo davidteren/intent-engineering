@@ -118,12 +118,15 @@ Two layers (see `references/config-resolution.md`):
 | Layer | Default | Purpose |
 |-------|---------|---------|
 | Run scratch | `.expectation-fit/runs/<run-id>/` | per-lens JSON while the run is open |
-| Published report | `docs/expectation-fit/<stamp>-<skill>[-scope].md` | human-facing result |
+| Report | `.expectation-fit/reports/<stamp>-<skill>[-scope].md` | human-facing result |
 
-After a successful publish, run scratch is deleted (`artifacts.cleanup_runs: true`).
-Override the published path with `out:<path>`. Configure permanently via
-`artifacts.*` in `.expectation-fit/ways-of-working.yaml`. Pass `mode:agent` for a single JSON
-object (also written under the publish dir as `.json`) for programmatic callers.
+Both folders ignore themselves, so a run adds nothing to `git status` and reports never
+reach a remote by accident. After the report step, run scratch is deleted
+(`artifacts.cleanup_runs: true`). Override the report path with `out:<path>`. To commit
+reports, set `artifacts.report_dir` in `.expectation-fit/ways-of-working.yaml` (for
+example `docs/expectation-fit`). Warning: a `docs/` folder is often a public site, and
+reports name unfixed defects. Pass `mode:agent` for a single JSON reply for programmatic
+callers; it writes a file only when you pass `out:`.
 
 ## Install
 
@@ -146,11 +149,11 @@ session. Report is run scratch. No product-code apply. See
 
 - `${CLAUDE_PLUGIN_ROOT}` resolves at runtime (standard in Claude Code) — lenses read
   their knowledge docs from there.
-- Published reports go under `docs/expectation-fit/`; ephemeral scratch under
-  `.expectation-fit/runs/` (cleaned up after publish; gitignore via `/fit-setup`).
+- Reports go under `.expectation-fit/reports/` and scratch under
+  `.expectation-fit/runs/`. Both ignore themselves (scratch is cleaned up after each run).
 - Read-only by default; only `/fit-review` in interactive mode mutates code (applies safe
-  fixes, commits on a clean tree, never pushes). Orchestrators write the published
-  report; `/fit-setup` writes under `.expectation-fit/` (and may append a `.gitignore` line).
+  fixes, commits on a clean tree, never pushes). Orchestrators write the report (in
+  `mode:agent`, only with `out:`); `/fit-setup` writes under `.expectation-fit/` (and may append a `.gitignore` line).
 - The five lens agents ship in `agents/`. If your global git ignore excludes `agents/`
   (a common pattern), the repo `.gitignore` here re-includes them — keep that negation
   so the plugin stays installable.
