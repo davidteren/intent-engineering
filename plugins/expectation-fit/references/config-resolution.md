@@ -453,16 +453,18 @@ Never `rm -rf` an unbound or mis-bound path. Always print the absolute report pa
 the user: `Report: <absolute path>` (`Report: none (JSON reply only)` in `mode:agent`
 without `out:`). Do not leave orphan lens JSON when cleanup succeeds.
 
-**Scope exclusions:** never audit or review files under the resolved run dir, report
-dir, or `out:` folder. `fit-review` and `fit-audit` load resolved config **before** they
-build their file lists, and pass one exclude pathspec for each of those folders that is
-inside the repo. A folder outside the repo gets no pathspec, so `git diff` never fails:
+**Scope exclusions:** never audit or review files under the resolved run dir or report
+dir, or the `out:` target. When `out:` names a file (`*.md`, `*.json`), exclude only that
+file; when it names a folder, exclude the whole folder. `fit-review` and `fit-audit` load
+resolved config **before** they build their file lists, and pass one exclude pathspec for
+each of those paths that is inside the repo. A path outside the repo gets no pathspec, so
+`git diff` never fails:
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel)
-OUT_DIR="$OUT_ARG"; case "$OUT_ARG" in *.md|*.json) OUT_DIR=$(dirname "$OUT_ARG") ;; esac
+# OUT_ARG as-is: a file pathspec excludes only that file, a folder pathspec its whole tree.
 EXCLUDES=()
-for d in "$RUN_DIR" "$REPORT_DIR" ${OUT_DIR:+"$OUT_DIR"}; do
+for d in "$RUN_DIR" "$REPORT_DIR" ${OUT_ARG:+"$OUT_ARG"}; do
   case "$d" in /*) ;; *) d="${PROJECT_BASE}/$d" ;; esac   # same base as the canonical block
   case "$d" in "$REPO_ROOT"/?*) EXCLUDES+=(":(top,exclude)${d#"$REPO_ROOT"/}") ;; esac
 done

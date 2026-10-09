@@ -45,8 +45,10 @@ number/URL or branch.
 - **Explicit mutations only.** Never `git checkout`/`switch` or `gh pr checkout`. A PR
   or branch argument selects *scope*, not permission to switch trees.
 - **Caller constraints limit what the run fixes, never what it reports.** A finding that
-  a caller constraint covers ("do not change X") goes to Rejected with why
-  `accepted_by_caller`.
+  a caller constraint covers ("do not change X") stays in Findings at its severity and
+  counts toward the verdict. Do not apply it: its Status stays `open` and its Issue ends
+  with "(not applied: blocked by caller constraint)". Use Rejected with why
+  `accepted_by_caller` only when the caller explicitly accepts the defect.
 - **Read the repo's standards.** Convention findings hinge on local `CLAUDE.md`/
   `AGENTS.md` and existing patterns — those override generic ideals.
 
@@ -101,11 +103,16 @@ to `on` does not run.
 spec or requirements doc. Such a doc has implementation units (U1, U2), R/A/F ids, or
 actors and flows (see fit-validate-plan Stage 1). Files that steer agents count as code
 here: SKILL.md, agent, command and rule files, AGENTS.md and CLAUDE.md. When unsure,
-take the normal path. To hand off, say: "No code in this diff; running fit-validate-plan
-instead." Run `fit-validate-plan` once on all changed docs, with the same `mode:agent`
-and `out:` tokens. Its report and verdict are the result of this run. Write no review
-report. In `mode:agent`, the reply keeps the plan verdict words (Ready to implement /
-Revise first).
+take the normal path. Hand off only in `local-aligned` and standalone scopes, where the
+working tree is the reviewed tree. To hand off, say: "No code in this diff; running
+fit-validate-plan instead." Run `fit-validate-plan` once on all changed docs, with the
+same `mode:agent`, `out:`, `config:` and `lenses:` tokens. Its report and verdict are the
+result of this run. Write no review report. In `mode:agent`, the reply keeps the plan
+verdict words (Ready to implement / Revise first). In `pr-remote` and `branch-remote`
+scopes, do not hand off, because fit-validate-plan reads the working tree, not
+`$REVIEWED_SHA`. Instead stop and say: "No code in this diff. Check out <branch> and run
+fit-validate-plan on: <docs>." Write no review report; in `mode:agent`, reply with
+`status` `failed` and that message as `reason`.
 
 Also capture **`TREE_CLEAN`**: `git status --porcelain` empty at this moment (before any
 write). Stage 5 uses this flag for the optional commit (do not re-check after apply).

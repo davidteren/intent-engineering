@@ -231,7 +231,7 @@ Complete example (a review run without `out:`):
   "status": "complete",
   "reason": null,
   "context": "review",
-  "verdict": "Ready with fixes",
+  "verdict": "Not ready",
   "completed_at": "2026-10-09T14:32:05+0200",
   "run_id": "20261009-143005-a1b2c3d4",
   "scope": {

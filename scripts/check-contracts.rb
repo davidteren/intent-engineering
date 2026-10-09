@@ -633,11 +633,19 @@ end
 report_tpl = read("references/report-template.md")
 agent_section = report_tpl[/## mode:agent \(JSON\)(.*)/m, 1].to_s
 example_src = agent_section[/```json\n(.*?)```/m, 1]
-example = begin
-  example_src && JSON.parse(example_src)
-rescue JSON::ParserError => e
-  bad "report-template.md: mode:agent example is not valid JSON (#{e.message})"
-  nil
+example = nil
+if example_src.nil?
+  bad "report-template.md: mode:agent section has no ```json example"
+else
+  begin
+    example = JSON.parse(example_src)
+  rescue JSON::ParserError => e
+    bad "report-template.md: mode:agent example is not valid JSON (#{e.message})"
+  end
+  unless example.nil? || example.is_a?(Hash)
+    bad "report-template.md: mode:agent example must be a JSON object, got #{example.class}"
+    example = nil
+  end
 end
 stage6_fields = agent_section[/\*\*mode:agent fields:\*\*(.*?)\n\n/m, 1].to_s.scan(/`([a-z_.]+)`/).flatten
 if stage6_fields.empty?
@@ -652,6 +660,21 @@ elsif example
     ok "report-template.md: mode:agent example has all #{stage6_fields.size} listed fields"
   else
     bad "report-template.md: mode:agent example missing listed field(s): #{missing.join(', ')}"
+  end
+end
+
+# The example verdict follows the Review verdict rule: open P0/P1 => Not ready,
+# open P2 => Ready with fixes, else Ready.
+if example
+  open_sev = Array(example["findings"]).select { |f| f["status"] == "open" }.map { |f| f["severity"] }
+  want = if (open_sev & %w[P0 P1]).any? then "Not ready"
+         elsif open_sev.include?("P2") then "Ready with fixes"
+         else "Ready"
+         end
+  if example["verdict"] == want
+    ok "report-template.md: mode:agent example verdict \"#{want}\" matches its open findings"
+  else
+    bad "report-template.md: mode:agent example verdict #{example['verdict'].inspect} must be \"#{want}\" per the Review verdict rule"
   end
 end
 
