@@ -7,6 +7,18 @@ for the design see **PLAN.md**.
 
 ## [Unreleased]
 
+### Fixed
+- **Off-schema findings are repaired, not dropped, and mode:agent has a full example (#53).**
+  The shared merge steps moved from `fit-review` Stage 5 into a new "Merge and gate"
+  section of `references/report-template.md`, and all three orchestrators point there.
+  Step 1 now repairs word severities, off-anchor confidences, unknown `fix_class` values
+  and `file:line` values, and Coverage lists each repair and drop. The template and every
+  lens agent list the allowed values. The `mode:agent` section has a complete example,
+  field rules, and verdict words per context, and the reply stays raw JSON. `base:` now
+  works with a PR target. The config docs state that nested maps merge at every depth.
+  `check-contracts.rb` checks the allowed values, the example fields that `fit-review`
+  Stage 6 names, and that no skill cites a `fit-review` Stage for a shared rule.
+
 ### Changed
 - **Renamed to Expectation Fit (#41).** The plugin is now `expectation-fit` (marketplace
   `expectation-fit-marketplace`). Skills and agents use the `fit-` prefix: `fit-review`,

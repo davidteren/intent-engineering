@@ -88,11 +88,8 @@ just needs the merged per-lens return.
 
 ## Stage 4 — Merge & score
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, then apply config
-   policy **before** the confidence gate as in `fit-review` Stage 5: **`severity_align`
-   then `severity_overrides`**, then gate (default 75; P0 or severity_aligned at 50+
-   survive), suppress `approved` paths, keep `blocked` / preferred-instead_of findings
-   (no apply — audit is read-only).
+1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+   with Context: audit. No apply, because audit is read-only.
 2. Assemble the **posture table** from each **clean** lens's `scores` (read
    `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
    Gap`, lowest scores first. Do not average into one number — the gaps are the
@@ -111,7 +108,7 @@ Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`)
 stack, sampling note, run_id, **Config source**), Posture table (worst first), Findings (P0..P3, grouped, with
 `Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
 each lens failed/skipped/clean, Config line), Verdict = the **top 3 posture gaps to fix first** with
-why. Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
+why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear if any selected lens **failed**. No apply,
 no push, no time estimates.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from

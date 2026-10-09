@@ -81,5 +81,7 @@ in `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md` (prefer `manual` when
 `name_behavior_fidelity`, `return_contract_consistency`, `failure_transparency`,
 `representation_fidelity`. Omit `scores` in review mode.
 
-Write full detail to `{run_artifact_dir}/predictability.json` using the Write tool. No
+Write full detail to `{run_artifact_dir}/predictability.json` using the Write tool. Write and fix that file only with the Write tool, never with a shell command. No
 prose outside the JSON.
+
+Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.

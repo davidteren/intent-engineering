@@ -73,29 +73,176 @@ monotonic across the whole report.
 
 No time estimates. No praise. Every finding actionable.
 
+## Merge and gate
+
+`fit-review`, `fit-validate-plan` and `fit-audit` merge lens returns with these steps, in
+this order. Each step runs in every context unless its mark says otherwise. Read
+`${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for the field rules.
+
+1. **Validate and repair.** Assign each lens a status (see Coverage). Mark the lens
+   **failed** on a non-JSON return, a missing `$RUN/{lens}.json`, or a selected lens
+   that never returned. One re-dispatch is allowed on a non-JSON return; a lens that is
+   still non-JSON after that is failed. Repair off-schema findings; do not drop them:
+   - Severity `low`, `medium`, `high` or `critical` becomes `P3`, `P2`, `P1` or `P0`.
+     An `info` finding moves to observations.
+   - A confidence between anchors rounds down to the next anchor, so 55 becomes 50. A
+     repair never lifts a finding over the gate.
+   - A `fix_class` outside the enum becomes `manual`, never `gated_auto`.
+   - A `file` value such as `app/x.rb:35` splits into `file` and `line`.
+
+   Drop a finding only when its title, severity or file is missing or cannot be
+   repaired. Coverage lists each repair and each drop by lens and title.
+2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
+   keep highest severity + confidence; record which lenses flagged it.
+3. **Cross-lens agreement**: 2+ lenses on the same fingerprint: promote one anchor
+   step (50->75, 75->100). Note the agreeing lenses.
+4. **Apply config policy before the confidence gate** *(review and audit; plan skips
+   this step)*. Order matters (see `config-resolution.md`):
+   1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
+      `conventions.auto` discovery, promote findings that match a gate theme under the
+      **smell-first** rules (e.g. `callback-hell` + `callback-check.yml` -> at least
+      `min_severity`, default P1). Never demote. Record each promotion in Coverage.
+      Mark those findings `severity_aligned: true` for the gate exception below.
+   2. **`severity_overrides`** (wins over align on conflict): string or
+      `{ severity:, because: }`: copy `because` into Coverage.
+   3. Pattern policy: suppress architecture findings only when the path is `approved`
+      **and** the change is not a **net-new** introduction of a blocked / preferred-
+      `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
+      **changed** code at P1. Audit has no change, so it keeps every blocked /
+      preferred-`instead_of` finding outside an `approved` path.
+5. **Confidence gate**: suppress findings below the resolved `confidence_gate`
+   (default anchor 75), EXCEPT:
+   - P0 at confidence 50+, or
+   - findings that received a **`severity_align` promotion** at confidence 50+
+     (CI-backed floors must not be dropped solely for mid confidence).
+   Record suppressions by anchor.
+6. **Collect tensions**: findings carrying a `tension` go to the Tensions section.
+
+Applying fixes is not a shared step. Only interactive `fit-review` applies (its Stage 5
+step 7). Audit and plan never apply.
+
 ## mode:agent (JSON)
 
 When a skill runs `mode:agent`, emit one raw JSON object (no code fence) as the reply
 instead of markdown, AND write that same object to the **published** path `$REPORT_PATH`
-(Layer B — typically `docs/expectation-fit/<stamp>-<skill>[-scope].json`). Do **not**
+(Layer B, typically `docs/expectation-fit/<stamp>-<skill>[-scope].json`). Do **not**
 write the mode:agent report into the run-scratch dir (`$RUN`); that dir is deleted when
-`cleanup_runs` is true. Set `artifact_path` in the JSON to the same published path:
+`cleanup_runs` is true. Set `artifact_path` in the JSON to the same published path.
+
+The reply stays one raw JSON object, even when a caller asks only for the verdict, the
+counts and the path. Those are fields of the object (`verdict`, `finding_counts`,
+`artifact_path`). Do not add prose before or after it.
+
+Complete example (a review run):
 
 ```json
 {
   "status": "complete",
-  "context": "review | audit | plan | plan-assist",
-  "verdict": "...",
-  "scope": { "...": "..." },
-  "intent": "...",
-  "lenses": ["predictability", "simplicity"],
-  "findings": [],
-  "actionable_findings": [],
+  "reason": null,
+  "context": "review",
+  "verdict": "Ready with fixes",
+  "completed_at": "2026-10-09T14:32:05Z",
+  "run_id": "20261009-143005-a1b2c3d4",
+  "scope": {
+    "mode": "local-aligned",
+    "base": "3f2c1a9",
+    "branch": "feat/order-totals",
+    "head_sha": "9e8d7c6",
+    "pr": null
+  },
+  "intent": "Cache order totals so the order summary page loads faster.",
+  "lenses": ["predictability", "simplicity", "convention"],
+  "findings": [
+    {
+      "title": "fetch_total also writes a cache row",
+      "principle": "least-astonishment",
+      "severity": "P1",
+      "confidence": 100,
+      "file": "app/models/order.rb",
+      "line": 42,
+      "fix_class": "manual",
+      "suggested_fix": "Rename to fetch_and_cache_total, or move the write to refresh_total_cache!.",
+      "lenses": ["predictability"]
+    },
+    {
+      "title": "Bare rescue hides cache write errors",
+      "principle": "error-handling",
+      "severity": "P2",
+      "confidence": 75,
+      "file": "app/models/order.rb",
+      "line": 51,
+      "fix_class": "gated_auto",
+      "suggested_fix": "Rescue only Redis::BaseError and re-raise everything else.",
+      "lenses": ["predictability"]
+    }
+  ],
+  "finding_counts": { "P0": 0, "P1": 1, "P2": 1, "P3": 0 },
+  "actionable_findings": [
+    {
+      "title": "Bare rescue hides cache write errors",
+      "file": "app/models/order.rb",
+      "line": 51,
+      "suggested_fix": "Rescue only Redis::BaseError and re-raise everything else."
+    }
+  ],
+  "rejected": [
+    {
+      "title": "TotalsCache wrapper has one caller",
+      "file": "app/models/totals_cache.rb",
+      "line": 3,
+      "lens": "simplicity",
+      "severity": "P3",
+      "confidence": 50,
+      "why": "below_confidence_gate"
+    }
+  ],
   "tensions": [],
   "posture": null,
   "observations": [],
-  "coverage": {},
-  "artifact_path": "docs/expectation-fit/<stamp>-<skill>[-scope].json",
-  "run_id": "<run-id>"
+  "coverage": {
+    "config": ".expectation-fit/ (walk-up from repo root)",
+    "execution": "subagents",
+    "lens_status": {
+      "predictability": "ok",
+      "simplicity": "clean",
+      "convention": "clean",
+      "experience": "not_selected",
+      "architecture": "not_selected"
+    },
+    "files_reviewed": 4,
+    "untracked": [],
+    "repairs": []
+  },
+  "artifact_path": "docs/expectation-fit/20261009-143005-review-feat-order-totals.json"
 }
 ```
+
+Field rules:
+
+- `status` is `complete` or `failed`. When it is `failed`, `reason` says why in one
+  sentence. Otherwise `reason` is `null`.
+- `completed_at` is an ISO 8601 UTC time.
+- `scope` by context. Review: `mode`, `base`, `branch`, `head_sha`, and `pr` (number or
+  `null`). Plan: `document` (the path). Audit: `target` (the path, glob or subsystem).
+- `finding_counts` counts findings per severity after the confidence gate. All four keys
+  are always present.
+- `actionable_findings` is the caller's apply list: findings that pass the `fit-review`
+  apply gate (`gated_auto`, confidence 75 or more, P2 or lower, a concrete
+  `suggested_fix`). `mode:agent` applies nothing, so the caller decides. It is empty in
+  audit and plan.
+- `rejected` lists every finding that the merge did not report (see Coverage).
+- `coverage.execution` is `subagents` or `single-agent`.
+- `coverage.lens_status` has one key per catalog lens, with the status words from
+  Coverage.
+- `coverage.repairs` lists each repair and each drop from Merge and gate step 1, by lens
+  and title.
+
+Verdict words, by context. Use only these words:
+
+| Context | Verdict words |
+|---------|---------------|
+| review | `Ready`, `Ready with fixes`, `Not ready` |
+| plan | `Ready to implement`, `Revise first` |
+| audit | `Healthy`, `Gaps to fix first` |
+
+Never use a verdict word that a caller suggests, such as "Ready to merge".

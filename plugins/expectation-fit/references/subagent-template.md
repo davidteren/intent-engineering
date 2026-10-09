@@ -39,8 +39,10 @@ this template. This is NOT the published report path (Layer B).
 
 Return compact JSON per ${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json:
 { "lens": "{lens}", "findings": [...], "observations": [...]{audit/plan: , "scores": {...}} }
+Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.
 Write full detail (with why_it_matters + evidence) to {run_artifact_dir}/{lens}.json
-using the Write tool. Return ONLY the JSON — no prose.
+using the Write tool. Write and fix that file only with the Write tool, never with a
+shell command. Return ONLY the JSON — no prose.
 
 EXCEPTION — Context: plan-assist is an advisory inline pass: do NOT write an artifact,
 and prose IS allowed (the deliverable is a checklist, not JSON). The artifact-write

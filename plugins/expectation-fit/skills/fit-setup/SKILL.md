@@ -437,7 +437,7 @@ List what was created, updated, skipped, or proposed. Then tell the user:
 - Published reports land under `docs/expectation-fit/` by default; run scratch is
   cleaned up after each successful publish when `cleanup_runs: true`.
 - Edit config to taste; every `fit-*` run merges project over plugin defaults (project
-  wins; lists replace unless `extends: true`).
+  wins). Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
 - **Natural next steps:**
   - `/fit-audit` for posture under the new config
   - `/fit-setup calibrate p90` if Arch pack ✅ and thresholds still generic

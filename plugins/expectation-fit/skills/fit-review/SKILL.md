@@ -26,7 +26,7 @@ number/URL or branch.
 |-------|--------|
 | `mode:agent` | Report-only; emit JSON (report-template "mode:agent"); skip the apply stage. |
 | `out:<path>` | Override **published** report path (file or dir). Defaults: scratch `.expectation-fit/runs/<run-id>/`, publish `docs/expectation-fit/<stamp>-review[-scope].md`. Outside-repo only when explicitly given. |
-| `base:<ref>` | Diff base on the current checkout (skip auto base detection). Do not combine with a PR/branch target. |
+| `base:<ref>` | Diff base on the current checkout (skip auto base detection). With a PR or branch target, `base:` sets the diff base and the target supplies only the intent. Coverage records the base, the PR and the HEAD SHA. |
 | `plan:<path>` | Plan/spec for context (intent + scope alignment). |
 | `config:<path>` | Override project config directory (see config-resolution). Else walk-up / `EXPECTATION_FIT_CONFIG_DIR`. |
 
@@ -47,7 +47,9 @@ number/URL or branch.
 
 Compute the diff. Reuse the scope logic familiar from standard code-review skills:
 
-- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`.
+- **`base:<ref>`** — `BASE=$(git merge-base HEAD <ref> 2>/dev/null) || BASE=<ref>`. The
+  diff is the current checkout against `BASE`. A PR or branch target given with `base:`
+  supplies only the intent (Stage 2).
 - **PR number/URL** — `gh pr view` for metadata; do not checkout. Classify
   `local-aligned` (HEAD == PR head, not cross-repo, head is ancestor of HEAD) vs
   `pr-remote`. In `pr-remote`, lenses inspect via `git show <ref>:<path>` / diff hunks
@@ -136,34 +138,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` for output shape (including
 **Lens status**: failed / skipped / clean).
 
-1. **Validate** each return; assign per-lens status (failed / skipped / clean). Drop
-   malformed *findings* (record the count) but mark the **lens failed** on non-JSON,
-   missing `$RUN/{lens}.json`, or a selected lens that never returned. One re-dispatch
-   is allowed on non-JSON; still failed after that.
-2. **Dedup** by `normalize(file) + line(+/-3) + normalize(title)`. Merge duplicates;
-   keep highest severity + confidence; record which lenses flagged it.
-3. **Cross-lens agreement** — 2+ lenses on the same fingerprint: promote one anchor
-   step (50->75, 75->100). Note the agreeing lenses.
-4. **Apply config policy before the confidence gate** (order matters — see
-   config-resolution):
-   1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
-      `conventions.auto` discovery, promote findings that match a gate theme under the
-      **smell-first** rules (e.g. `callback-hell` + `callback-check.yml` → at least
-      `min_severity`, default P1). Never demote. Record each promotion in Coverage.
-      Mark those findings `severity_aligned: true` for the gate exception below.
-   2. **`severity_overrides`** (wins over align on conflict): string or
-      `{ severity:, because: }` — copy `because` into Coverage.
-   3. Pattern policy: suppress architecture findings only when the path is `approved`
-      **and** the change is not a **net-new** introduction of a blocked / preferred-
-      `instead_of` pattern. Keep blocked / preferred-`instead_of` introductions in
-      **changed** code at P1.
-5. **Confidence gate** — suppress findings below the resolved `confidence_gate`
-   (default anchor 75), EXCEPT:
-   - P0 at confidence 50+, or
-   - findings that received a **`severity_align` promotion** at confidence 50+
-     (CI-backed floors must not be dropped solely for mid confidence).
-   Record suppressions by anchor.
-6. **Collect tensions** — findings carrying a `tension` go to the Tensions section.
+Run steps 1 to 6 of **Merge and gate** in
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md` (validate and repair, dedup,
+agreement, config policy, confidence gate, tensions). Then:
+
 7. **Act (default mode only; skip in `mode:agent`).** Apply only findings that pass
    **all** of: `fix_class: gated_auto` (reclassify over-broad ones to `manual` first;
    see subagent-template `fix_class` rubric), `confidence` ≥ 75, severity ≤ P2, and a
@@ -180,12 +158,18 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json` for field rules and
 Write the published report to `$REPORT_PATH` (markdown, or JSON in `mode:agent`) per
 `${CLAUDE_PLUGIN_ROOT}/references/report-template.md` — including the mode:agent section
 there (JSON goes to `$REPORT_PATH`, never into `$RUN`). Include run_id, branch, head_sha,
-verdict, completed_at in the Header (and in the JSON object when `mode:agent`). Sections:
+verdict, completed_at in the Header. Sections:
 Header, Applied (if any), Findings (P0..P3 tables, terse `Issue` cell, keyed detail
 lines, `Principle` + `Lens` columns), Tensions, Observations, Coverage (including each
 selected lens's failed/skipped/clean status), Verdict (Ready / Ready with fixes / Not
 ready). **Do not** use Ready / all-clear when any selected lens **failed**. No time
 estimates. Every finding actionable.
+
+**mode:agent fields:** `status`, `reason`, `context`, `verdict`, `completed_at`, `run_id`,
+`scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
+`lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
+`observations`, `coverage.execution`, `coverage.lens_status`, `artifact_path`. The
+report-template example shows each one.
 
 Then: if `CLEANUP` is true, run the **guarded** cleanup from
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only when

@@ -60,7 +60,8 @@ severity_align:
 
 # --- Local conventions ------------------------------------------------------------
 # Highest-authority conventions for THIS repo, honored by the convention lens
-# alongside CLAUDE.md / AGENTS.md. Lists REPLACE the global list unless extends: true.
+# alongside CLAUDE.md / AGENTS.md. Nested maps merge recursively at every depth.
+# Only lists replace, unless the block sets `extends: true`.
 # sources: explicit path globs the convention lens must read. notes win over sources.
 # auto: discover Copilot rules, path-scoped instructions, and PR-gate workflows.
 # Full discovery procedure: references/config-resolution.md → "Convention auto-sources".

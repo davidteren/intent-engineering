@@ -169,4 +169,6 @@ For a finding that spans a whole class (`fat-model`, `callback-hell`, `god-objec
 mode (architecture does not run in plan).
 
 Write full detail (with computed metrics in `evidence`) to
-`{run_artifact_dir}/architecture.json` using the Write tool. No prose outside the JSON.
+`{run_artifact_dir}/architecture.json` using the Write tool. Write and fix that file only with the Write tool, never with a shell command. No prose outside the JSON.
+
+Allowed values: severity: P0, P1, P2 or P3 only (never low, medium, high, critical or info). confidence: 0, 25, 50, 75 or 100 only. fix_class: gated_auto, manual or advisory only. file: a repo-relative path; the line number goes in line, not in file.

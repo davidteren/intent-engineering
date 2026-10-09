@@ -207,9 +207,8 @@ The plugin works out of the box with defaults; a repo tunes it via committable
   **snake_case pattern ids** from `resources/patterns/<stack>.yaml`.
 - `thresholds.yaml` — architecture metric limits, namespaced `rails.<unit>.<metric>`.
 
-**Merge rule:** project overrides global. Scalars/maps replace key-by-key. **Lists
-replace** the whole global list — *unless* the owning block sets `extends: true` (then
-append). The `conventions` block carries an `extends` flag; the `patterns.*` lists are
+**Merge rule:** project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
+An `extends: true` list appends to the global list. The `conventions` block carries an `extends` flag; the `patterns.*` lists are
 **replace-only** (no `extends` knob today). A threshold is a *signal*, not a verdict — the
 lens judges responsibilities, not just the number.
 

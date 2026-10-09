@@ -79,8 +79,8 @@ applies) and describe the gap a planner/implementer would hit. Missing required
 
 ## Stage 4 — Merge & rate
 
-1. Validate, assign per-lens status (failed / skipped / clean), dedup, confidence-gate
-   (as `fit-review` Stage 5; no apply — it's a doc).
+1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+   with Context: plan. No apply, because the input is a doc.
 2. Build the dimensional rating table (scoring rubric) from **clean** lenses: `Lens |
    Dimension | Score | Gap`, lowest first. Findings ≤ 7/10 dimensions become
    actionable gaps.

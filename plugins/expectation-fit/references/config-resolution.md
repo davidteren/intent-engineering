@@ -297,9 +297,11 @@ When no project `.expectation-fit/` is found, use defaults — the plugin works 
 
 ## Merge rules (project over global)
 
+Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
+
 - **Scalars and maps** (e.g. `confidence_gate`, `lenses.*`, `thresholds.rails.model.max_loc`):
-  the project value **replaces** the global value key-by-key. Keys the project omits
-  keep the global value.
+  the project value **replaces** the global value key-by-key, at every depth. Keys the
+  project omits keep the global value.
 - **Lists** (e.g. `conventions.notes`, `patterns.preferred/allowed/blocked/approved`): the
   project list **replaces** the global list — **unless** the owning block sets
   `extends: true`, in which case the project list is **appended** to the global list.

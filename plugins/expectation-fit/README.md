@@ -108,8 +108,7 @@ inside them. Non-interactive: `multi-repo` and/or `roots:backend,frontend`.
 defaults and merges **missing** keys only (never wipes your notes). Optional later:
 `/fit-from-pr-learnings` to mine PR triage into notes/severities.
 
-Merge rule: project overrides global key-by-key; lists replace unless the block sets
-`extends: true`. See `references/config-resolution.md`.
+Merge rule: project overrides global. Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`. See `references/config-resolution.md`.
 
 ## Reports
 

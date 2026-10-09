@@ -31,7 +31,9 @@
 #   9. Resource docs: each principle/framework/agnostic doc has a detection (smells) section
 #      and a Sources section with >=2 links; every resource doc is cited (no orphans) in
 #      principle-index.md or lens-catalog.md.
-#  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift).
+#  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift); allowed finding
+#      values in the template + agents; the mode:agent example has every Stage 6 field;
+#      no skill cites fit-review Stage for a shared merge rule.
 #  12. Skill evals.json (optional; present files must parse; refusal cases preferred).
 
 require "json"
@@ -544,6 +546,64 @@ score_keys.each do |lens, keys|
     bad "agents/fit-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
   end
   bad "agents/fit-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+end
+
+# Allowed finding values (issue #53): the template and every agent Output list the closed
+# sets, built from findings-schema.json so a schema change forces the prose to follow.
+def join_or(items)
+  items = items.map(&:to_s)
+  items.size < 2 ? items.join : "#{items[0..-2].join(', ')} or #{items[-1]}"
+end
+finding_props = schema.dig("properties", "findings", "items", "properties")
+allowed_clauses = %w[severity confidence fix_class].map do |field|
+  "#{field}: #{join_or(finding_props.dig(field, 'enum'))} only"
+end
+(["references/subagent-template.md"] + LENSES.map { |l| "agents/fit-#{l}-reviewer.md" }).each do |rel|
+  flat = read(rel).gsub(/\s+/, " ")
+  missing = allowed_clauses.reject { |c| flat.include?(c) }
+  if missing.empty?
+    ok "#{rel}: lists the allowed severity / confidence / fix_class values"
+  else
+    bad "#{rel}: missing allowed-values clause(s): #{missing.join(' | ')}"
+  end
+end
+
+# mode:agent example (issue #53): parse it, and require every field fit-review Stage 6 names.
+report_tpl = read("references/report-template.md")
+agent_section = report_tpl[/## mode:agent \(JSON\)(.*)/m, 1].to_s
+example_src = agent_section[/```json\n(.*?)```/m, 1]
+example = begin
+  example_src && JSON.parse(example_src)
+rescue JSON::ParserError => e
+  bad "report-template.md: mode:agent example is not valid JSON (#{e.message})"
+  nil
+end
+review_skill = read("skills/fit-review/SKILL.md")
+stage6_fields = review_skill[/\*\*mode:agent fields:\*\*(.*?)\n\n/m, 1].to_s.scan(/`([a-z_.]+)`/).flatten
+if stage6_fields.empty?
+  bad "skills/fit-review/SKILL.md: Stage 6 must name the mode:agent fields (**mode:agent fields:** line)"
+elsif example
+  missing = stage6_fields.reject do |path|
+    keys = path.split(".")
+    parent = keys.size > 1 ? example.dig(*keys[0..-2]) : example
+    parent.is_a?(Hash) && parent.key?(keys[-1])
+  end
+  if missing.empty?
+    ok "report-template.md: mode:agent example has all #{stage6_fields.size} Stage 6 fields"
+  else
+    bad "report-template.md: mode:agent example missing Stage 6 field(s): #{missing.join(', ')}"
+  end
+end
+
+# Shared merge rules live in report-template "Merge and gate", not in fit-review (issue #53).
+bad "report-template.md: missing \"## Merge and gate\" section" unless report_tpl.include?("## Merge and gate")
+Dir[File.join(PLUGIN, "skills", "fit-*", "SKILL.md")].sort.each do |abs|
+  rel = abs.sub(PLUGIN + "/", "")
+  if File.read(abs) =~ /`?fit-review`?\s+Stage\s+\d/
+    bad "#{rel}: cites a fit-review Stage for a shared rule; point at report-template Merge and gate"
+  else
+    ok "#{rel}: no fit-review Stage citation"
+  end
 end
 
 # ---------------------------------------------------------------------------
