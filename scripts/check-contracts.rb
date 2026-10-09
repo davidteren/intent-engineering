@@ -15,7 +15,9 @@
 #
 # Run from anywhere:  ruby scripts/check-contracts.rb
 # Checks:
-#   1. All shipped JSON parses; all shipped YAML parses; default lens toggles load as strings.
+#   1. All shipped JSON parses; all shipped YAML parses; default lens toggles load as strings;
+#      the release version agrees in plugin.json, marketplace.json, CHANGELOG.md and the
+#      report-template example.
 #   2. Lens identity agrees 4 ways: findings-schema `lens` enum == agents/ basenames
 #      == lens-catalog rows == scoring-rubric rows; the template's agent prefix == the
 #      plugin.json name.
@@ -108,6 +110,26 @@ begin
   ok ".claude-plugin/marketplace.json parses"
 rescue StandardError => e
   bad "marketplace.json does not parse: #{e.message}"
+end
+
+# One release version everywhere: plugin.json, marketplace metadata, the top versioned
+# CHANGELOG heading, and the report-template plugin_version example.
+begin
+  versions = {
+    "plugin.json version" => JSON.parse(read(".claude-plugin/plugin.json"))["version"],
+    "marketplace.json metadata.version" =>
+      JSON.parse(File.read(File.expand_path("../.claude-plugin/marketplace.json", __dir__))).dig("metadata", "version"),
+    "CHANGELOG.md top version" =>
+      File.read(File.expand_path("../CHANGELOG.md", __dir__))[/^## \[(\d+\.\d+\.\d+)\]/, 1],
+    "report-template plugin_version" => read("references/report-template.md")[/"plugin_version":\s*"([^"]+)"/, 1]
+  }
+  if versions.values.uniq.size == 1 && versions.values.first
+    ok "release version #{versions.values.first} agrees across #{versions.keys.join(', ')}"
+  else
+    bad "release version mismatch: #{versions.map { |k, v| "#{k}=#{v.inspect}" }.join(', ')}"
+  end
+rescue StandardError => e
+  bad "release version check failed: #{e.message}"
 end
 
 yaml_files = Dir[File.join(PLUGIN, "config/defaults/*.yaml")] +

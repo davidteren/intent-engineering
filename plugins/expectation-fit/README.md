@@ -161,7 +161,8 @@ see when a stale copy produced it.
 
 ## Upgrading from intent-engineering
 
-Version 0.9.0 renames the plugin. Old names map to new names as follows:
+Version 0.9.0 renames the plugin. There is no `/ie-*` shim: after updating, the `/ie-*` commands are gone. Use the `/fit-*` names from
+this table:
 
 | Before (intent-engineering 0.8.x) | Now (expectation-fit 0.9.0) |
 |---|---|
@@ -189,7 +190,8 @@ To switch an existing install:
 
 On success, `/fit-review` is listed and `/ie-review` is gone.
 
-Then run `/fit-setup upgrade` to move `.intense/` to `.expectation-fit/`.
+Then run `/fit-setup upgrade` to move the yaml config files from `.intense/` into
+`.expectation-fit/`. Old run and report folders stay in `.intense/` for you to delete.
 
 ## Grok (optional, source repo only)
 

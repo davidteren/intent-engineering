@@ -18,7 +18,7 @@ Renamed to expectation-fit, plus a round of report and merge fixes.
   `expectation-fit-marketplace`). Skills and agents use the `fit-` prefix, and `/ie-init`
   is now `/fit-setup`. Config lives in `.expectation-fit/` and the env var is
   `EXPECTATION_FIT_CONFIG_DIR`. The legacy `.intense/` folder and `INTENSE_CONFIG_DIR`
-  are still read. See "Upgrading from intent-engineering" in the README.
+  are still read. There is no `/ie-*` shim: after updating, the `/ie-*` commands are gone. Use the `/fit-*` names. See "Upgrading from intent-engineering" in the README.
 - **Reports leave git by default.** Reports go to `.expectation-fit/reports/` and run
   scratch to `.expectation-fit/runs/`. Both folders ignore themselves. Set
   `artifacts.report_dir` to commit reports.

@@ -31,13 +31,9 @@ Inside that run, run one flow per document: one lens dispatch per document and o
 report section per document. Never put two documents in one lens dispatch. Each
 dispatch in a set writes its own file, `$RUN/{lens}-<doc-slug>.json`, so dispatches do
 not overwrite each other. `<doc-slug>` comes from the repo-relative path, not the
-basename, so `docs/plans/search.md` and `docs/brainstorms/search.md` do not collide:
-drop the extension, lowercase it, and turn each run of other characters into one `-`:
-
-```bash
-DOC_SLUG=$(printf '%s' "${DOC_REL%.*}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')
-# docs/plans/search.md -> docs-plans-search    docs/brainstorms/search.md -> docs-brainstorms-search
-```
+basename, so `docs/plans/search.md` and `docs/brainstorms/search.md` do not collide.
+Compute it with `DOC_SLUG=$(path_slug_of "$DOC_REL")`, the helper defined next to
+`slug_of` in `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Artifact paths).
 
 If two documents in the set still get the same slug, append `-2`, `-3` and so on in
 set order. A single-document run keeps `$RUN/{lens}.json`.
@@ -80,7 +76,8 @@ validation.) Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`.
 A `lenses:<list>` token wins over the toggles and these rules. Pass repo
 `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
 `conventions.notes` to every selected lens. Keep `conventions.sources` and
-`conventions.auto` with the convention lens only. Announce the team.
+`conventions.auto` with the convention lens only. Announce the team outside `mode:agent`
+(lens-catalog.md).
 
 ## Stage 3 — Dispatch
 
@@ -90,7 +87,8 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE` | raw plan path, or empty. For several, `"$(slug_of <first path>)-set"`: slug the first path first (this strips its extension), then append `-set`, so `docs/plans/a-plan.md` gives `a-plan-set` |
+| `SCOPE` | raw plan path, or empty. For several, the first path; the canonical block slugs it |
+| `SCOPE_SUFFIX` | `-set` for several documents, else empty. The block appends it after slugging, so `docs/plans/a-plan.md` plus others gives `<stamp>-validate-plan-a-plan-set.md` |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 

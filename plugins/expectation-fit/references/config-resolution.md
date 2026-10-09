@@ -47,9 +47,9 @@ Relative globs in `conventions.sources` resolve from **one** project base:
 
 | How config was found | Project base for relative globs |
 |----------------------|----------------------------------|
-| Walk-up / path ends in `.expectation-fit` | Parent of that `.expectation-fit/` directory |
-| `config:` / `EXPECTATION_FIT_CONFIG_DIR` is a dir that **is** `.expectation-fit` | Parent of that dir |
-| `config:` / `EXPECTATION_FIT_CONFIG_DIR` is a dir that **contains** the three yaml files directly | That directory itself |
+| Walk-up / path ends in `.expectation-fit` or legacy `.intense` | Parent of that config directory |
+| `config:` / `EXPECTATION_FIT_CONFIG_DIR` / `INTENSE_CONFIG_DIR` is a dir that **is** `.expectation-fit` or `.intense` | Parent of that dir |
+| `config:` / `EXPECTATION_FIT_CONFIG_DIR` / `INTENSE_CONFIG_DIR` is a dir that **contains** the three yaml files directly | That directory itself |
 | Defaults only (no project config) | `$PWD` |
 
 Absolute paths in `sources` are used as-is (no rebasing).
@@ -225,6 +225,13 @@ resolve_explicit_config() {
   case "$arg" in
     */.expectation-fit|.expectation-fit|*/.intense|.intense)
       if [ -d "$arg" ] && has_config_yaml "$arg"; then echo "$arg"; return 0; fi
+      # Legacy path whose folder was moved by /fit-setup upgrade: use the sibling.
+      case "$arg" in */.intense|.intense)
+        moved="$(dirname "$arg")/.expectation-fit"
+        if [ ! -e "$arg" ] && [ -d "$moved" ] && has_config_yaml "$moved"; then
+          echo "$moved"; return 0
+        fi ;;
+      esac
       return 1 ;;
   esac
   for name in .expectation-fit .intense; do
@@ -265,6 +272,9 @@ EXPLICIT="${CONFIG_ARG:-${EXPECTATION_FIT_CONFIG_DIR:-${INTENSE_CONFIG_DIR:-}}}"
 if [ -n "$EXPLICIT" ]; then
   if PROJECT_CONFIG=$(resolve_explicit_config "$EXPLICIT"); then
     CONFIG_SOURCE="project:$PROJECT_CONFIG"
+    case "$EXPLICIT" in */.intense|.intense)
+      [ -e "$EXPLICIT" ] || CONFIG_SOURCE="$CONFIG_SOURCE (legacy INTENSE_CONFIG_DIR points at a moved folder; using sibling .expectation-fit/; update the env var)" ;;
+    esac
   else
     # Invalid explicit path: defaults only; never claim project:
     CONFIG_SOURCE="defaults (invalid config path: $EXPLICIT)"
@@ -406,7 +416,7 @@ caller passes `out:`. Without `out:`, `REPORT_PATH` stays empty and `artifact_pa
 
 **Run id + published filename** — this block is the **canonical** orchestrator procedure.
 `fit-review`, `fit-audit`, and `fit-validate-plan` **must not re-author it**; they only bind
-slots (`SKILL_SLUG`, `SCOPE`, `OUT_ARG`, `EXT`) and follow this block. `SCOPE` is the
+slots (`SKILL_SLUG`, `SCOPE`, optional `SCOPE_SUFFIX`, `OUT_ARG`, `EXT`) and follow this block. `SCOPE` is the
 raw branch, PR, plan path or target; the block normalizes it into `SCOPE_SLUG`, so
 parallel runs name reports the same way.
 
@@ -426,7 +436,14 @@ slug_of() {
   s=$(basename -- "$1"); [ -f "$1" ] && s="${s%.*}"
   printf '%s' "$s" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//'
 }
+# Path slug: the repo-relative path without its extension, slugged the same way, so
+# docs/plans/search.md -> docs-plans-search and docs/brainstorms/search.md -> docs-brainstorms-search
+path_slug_of() {
+  printf '%s' "${1%.*}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//'
+}
+# SCOPE_SUFFIX: optional, appended after slugging (fit-validate-plan binds -set for a set)
 SCOPE_SLUG=$(slug_of "$SCOPE")
+[ -n "$SCOPE_SLUG" ] && SCOPE_SLUG="${SCOPE_SLUG}${SCOPE_SUFFIX:-}"
 # RUN_DIR / REPORT_DIR / CLEANUP already resolved from artifacts.* (above)
 # PROJECT_BASE = project base (see "Base directory for conventions.sources globs")
 abs() { case "$1" in /*) echo "$1" ;; *) echo "${PROJECT_BASE}/$1" ;; esac; }

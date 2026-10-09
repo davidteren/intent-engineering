@@ -1,6 +1,7 @@
 # expectation-fit
 
-> Formerly intent-engineering (0.8.x). The `/ie-*` skills are now `/fit-*`. See
+> Formerly intent-engineering (0.8.x). The `/ie-*` skills are now `/fit-*`. There is no `/ie-*` shim: after updating, the `/ie-*` commands are gone. Use the `/fit-*` names.
+> See
 > [Upgrading from intent-engineering](plugins/expectation-fit/README.md#upgrading-from-intent-engineering).
 
 [![contracts](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml/badge.svg)](https://github.com/davidteren/intent-engineering/actions/workflows/contracts.yml)

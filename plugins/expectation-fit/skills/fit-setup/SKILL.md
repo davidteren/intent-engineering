@@ -47,7 +47,10 @@ fails), fall back to a numbered list and wait for the user's reply — never sil
    detect pass (0b–0c still run so the report names stacks/roots).
 3. Else if `$ARGUMENTS` has `fresh` or a file token (`all` / `ways` / `patterns` /
    `thresholds`) **or** `multi-repo` / `roots:…` → **fresh** with that selection
-   (multi-repo/roots imply fresh + profile multi-repo; still run 0b–0d).
+   (multi-repo/roots imply fresh + profile multi-repo; still run 0b–0d). First check the
+   target write root: when it holds a legacy `.intense/` with yaml, say so and switch
+   to **upgrade** (the Legacy folder migration in Step 1) instead of scaffolding
+   defaults over it.
 4. Else (blank): discover nearest usable `.expectation-fit/` via walk-up
    (`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`).
    - Found → recommend **upgrade**; still offer fresh re-scaffold (overwrite only with
@@ -141,17 +144,17 @@ and never move or remove without a yes.
   `.expectation-fit/` and ignores the legacy one. Offer to merge the keys that are
   missing from `.expectation-fit/` out of the legacy files, then to remove `.intense/`.
   Remove it only on a yes.
-- **`.expectation-fit/` does not exist:** rename the whole folder:
-  `git -C "$LEGACY_PARENT" mv .intense .expectation-fit` when it is tracked, else
-  `mv "$LEGACY_PARENT/.intense" "$LEGACY_PARENT/.expectation-fit"`.
-- **`.expectation-fit/` exists (any contents) without yaml:** move each `.intense/*.yaml`
-  file one by one (`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>`
+- **`.expectation-fit/` does not exist, or exists (any contents) without yaml:** create
+  `.expectation-fit/` when missing, then move each `.intense/*.yaml` file one by one (`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>`
   for a tracked file, else `mv` with both paths under `$LEGACY_PARENT`). Do not migrate
-  `.intense/runs/` or `.intense/reports/`; name them in the summary.
+  `.intense/runs/` or `.intense/reports/`: leave them behind, name them in the summary,
+  and tell the user they can delete them. When `.intense/` is then empty, remove it.
 
-Never move the whole `.intense/` into an existing `.expectation-fit/`, because that nests
-it as `.expectation-fit/.intense/`. After a move, print the git state of the new folder
-so the user can commit it.
+Never move the whole `.intense/`, because that carries old run and report folders (and
+nests it as `.expectation-fit/.intense/` when the target exists). After a move, print
+the git state of the new folder so the user can commit it. When `INTENSE_CONFIG_DIR` is
+set, warn that it still points at the old folder and tell the user to set
+`EXPECTATION_FIT_CONFIG_DIR` instead, or unset it.
 
 ---
 
@@ -372,7 +375,8 @@ Goal: add **missing capabilities** from current plugin defaults without wiping h
 
 #### U1. Load
 
-1. Resolve `PROJECT_CONFIG` (walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`).
+1. Resolve `PROJECT_CONFIG` (walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR` / legacy
+   `INTENSE_CONFIG_DIR`).
 2. If none: say so and offer **fresh** instead.
 3. Load project yaml + defaults from `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
 4. Re-run light detect (0b–0d) for roots/stacks recommendations.
@@ -416,8 +420,9 @@ existing non-empty lists or notes.
   (it is already an alias at runtime). Remove the legacy key only on confirm. Run
   scratch then uses `artifacts.run_dir` (document this in the summary).
   Name the legacy folder in the summary. Say that its old run folders stay. The user can
-  delete them by hand, after keeping any report.md or report.json. This skill deletes
-  nothing outside `.expectation-fit/`.
+  delete them by hand, after keeping any report.md or report.json. This skill writes and
+  deletes only under `.expectation-fit/`, except the confirmed legacy migration (Step 1),
+  which moves yaml files out of `.intense/` and removes `.intense/` only on a yes.
 - **Old default values** (before 0.9.0): `artifacts.report_dir: docs/intent-engineering`,
   `artifacts.run_dir: .intense/runs`, or a top-level `report_dir`. Name each one and
   offer the new defaults: reports go to `.expectation-fit/reports/` and runs to
@@ -471,6 +476,9 @@ ignore should be where that path is tracked.
 List what was created, updated, skipped, or proposed. Then tell the user:
 
 - **Profile + placement:** monolith/multi-repo; absolute path of `.expectation-fit/`; roots if any.
+- **Legacy config folder** (when one was found): the absolute `.intense/` path, which
+  yaml files moved, which folders stayed (`runs/`, `reports/`, safe to delete), and the
+  `INTENSE_CONFIG_DIR` warning when that variable is set.
 - **Capabilities enabled:** auto mode, severity_align, preferred patterns, stacks.
 - The files are **meant to be committed** (project config, not artifacts) — do **not**
   add `.expectation-fit/` to `.gitignore` (only `.expectation-fit/runs/` if they accepted Step 4).
@@ -491,8 +499,10 @@ List what was created, updated, skipped, or proposed. Then tell the user:
   config files in their own commit, not inside feature work." Outside a git repo, skip the
   status line.
 
-This skill only writes under `.expectation-fit/` (and optionally one `.gitignore` append the
-user accepted). It never commits or pushes.
+This skill writes and deletes only under `.expectation-fit/` (and optionally one
+`.gitignore` append the user accepted), except the confirmed legacy migration (Step 1),
+which moves yaml files out of `.intense/` and removes `.intense/` only on a yes. It
+never commits or pushes.
 
 ---
 

@@ -68,7 +68,8 @@ defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
 Honor config `lenses:` toggles over these defaults; a `lenses:<list>` token wins over both.
 Pass repo `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
 `conventions.notes` to every selected lens. Keep `conventions.sources` and
-`conventions.auto` with the convention lens only. Announce the team.
+`conventions.auto` with the convention lens only. Announce the team outside `mode:agent`
+(lens-catalog.md).
 
 ## Stage 3 — Dispatch
 

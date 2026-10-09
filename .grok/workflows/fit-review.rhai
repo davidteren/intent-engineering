@@ -393,7 +393,8 @@ if changed_files != "" {
 }
 cfg_prompt += "Return plugin_root: the ABSOLUTE path of the plugin folder above (the folder that holds references/config-resolution.md). Return an empty string when no plugin is there.\n";
 // The config agent cannot know the head SHA, so the script supplies the commit slot.
-let base_label = if base_ref == () { "none" } else { "" + base_ref };
+// Only a validated commit SHA reaches the prompt; any other base text stays out.
+let base_label = if base_ref != () && is_commit_sha("" + base_ref) { "" + base_ref } else { "none" };
 cfg_prompt += "Return provenance: the Provenance line from references/report-template.md (Provenance line section), with $HOME shown as ~, WITHOUT the trailing run part. Do not look up any commit SHA. In the <sha> slot write exactly: base ";
 cfg_prompt += base_label;
 cfg_prompt += ", head: working tree (not resolved in Grok)\n";
@@ -610,6 +611,20 @@ for lens in catalog {
     }
 }
 
+// Severity overrides apply to every copy before dedup picks the kept copy, so an
+// override never discards a higher-confidence duplicate (report-template Merge and gate).
+let fi = 0;
+for f in findings {
+    for ov in overrides {
+        if ov != () && ov.file_substr != () && ov.severity != () {
+            if findings[fi].file_key.index_of(norm(ov.file_substr)) >= 0 {
+                findings[fi].severity = ov.severity;
+            }
+        }
+    }
+    fi += 1;
+}
+
 let unique = [];
 for f in findings {
     let seen_at = -1;
@@ -620,14 +635,11 @@ for f in findings {
             delta = u.line - f.line;
             if delta < 0 { delta = 0 - delta; }
         }
-        // Grok merges duplicates only on an identical normalized title or the same smell id.
-        // This is deliberate: it is safer than guessing. Differently titled copies of one
-        // defect stay separate and are verified separately. A finding with no line (line 0)
-        // merges only on an identical normalized title.
+        // Grok merges duplicates only on an identical normalized title (same file, within
+        // 3 lines). This is deliberate: it is safer than guessing. A shared smell id alone
+        // never merges, so differently titled copies stay separate and are verified separately.
         let same_title = match_key(u.title) == match_key(f.title);
-        let same_defect = same_title;
-        if u.line != 0 && f.line != 0 && u.smell != "" && u.smell == f.smell { same_defect = true; }
-        if seen_at < 0 && u.file_key == f.file_key && delta <= 3 && same_defect {
+        if seen_at < 0 && u.file_key == f.file_key && delta <= 3 && same_title {
             seen_at = ui;
         }
         ui += 1;
@@ -635,7 +647,7 @@ for f in findings {
     if seen_at < 0 {
         unique.push(f);
     } else {
-        // One defect within 3 lines (titles differ only on a smell match). Each copy keeps its own severity and
+        // One defect within 3 lines. Each copy keeps its own severity (overrides already applied) and
         // confidence. Keep the highest-severity copy that passes the gate; if none passes,
         // keep the highest-severity copy. Agreement never raises confidence.
         let kept = unique[seen_at];
@@ -656,18 +668,6 @@ for f in findings {
         }
         if !already { unique[seen_at].lenses.push(f.lens); }
     }
-}
-
-let ui2 = 0;
-for u in unique {
-    for ov in overrides {
-        if ov != () && ov.file_substr != () && ov.severity != () {
-            if unique[ui2].file_key.index_of(norm(ov.file_substr)) >= 0 {
-                unique[ui2].severity = ov.severity;
-            }
-        }
-    }
-    ui2 += 1;
 }
 
 let ranked = [];

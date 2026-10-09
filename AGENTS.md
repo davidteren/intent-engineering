@@ -136,9 +136,10 @@ script-owned verdict, report in run scratch. It must not move into
 the apply stage), `out:<path>` (override the report path; pass a folder),
 `lenses:<list>` (run only the listed lenses; overrides auto-selection and config
 toggles; Coverage marks the others `not_selected`), and `prior:<report-path>` (an
-earlier report of the same target; its `fixed` and `declined` rows reach every lens
-through the `<prior>` slot in `references/subagent-template.md`, and it never changes
-the diff range). Path resolution:
+earlier report of the same target; which rows reach every lens through the `<prior>`
+slot is defined once in `references/config-resolution.md` → Shared tokens: fixed and
+declined rows for fit-review and fit-audit, all rows for fit-validate-plan; it never
+changes the diff range). Path resolution:
 `references/config-resolution.md` → Artifact paths. Defaults: run
 `.expectation-fit/runs/<run-id>/`, report `.expectation-fit/reports/<stamp>-<skill>[-scope].md`.
 Run-id format is identical across the three: `$(date +%Y%m%d-%H%M%S)-<4-byte hex>` —
@@ -159,8 +160,9 @@ keep them in sync if you change one.
 **Agent contract (every lens):**
 - Frontmatter: `name` (= filename stem **and** the `lens` enum in `findings-schema.json`
   **and** the `lens-catalog.md` row), `description`, `model`, `tools`, `color`.
-- `tools` is uniformly `Read, Grep, Glob, Bash, Write`. `Write` exists **only** to emit
-  `{run_artifact_dir}/{lens}.json`. `Bash` is for measurement (architecture metrics;
+- `tools` is uniformly `Read, Grep, Glob, Bash, Write`. `Write` exists **only** to write the artifact path
+  the prompt binds: `{run_artifact_dir}/{lens}.json`, or `{lens}-{doc_slug}.json` in a
+  plan set. `Bash` is for measurement (architecture metrics;
   optional read-only `reek`/`flog` probes). Adding `Edit`/`MultiEdit` breaks
   the read-only contract.
 - `model: inherit` for the two always-on lenses (session model for high-stakes

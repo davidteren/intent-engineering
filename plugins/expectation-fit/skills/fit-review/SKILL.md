@@ -93,7 +93,8 @@ working tree in `local-aligned`/standalone scope, `$REVIEWED_SHA` in `pr-remote`
 `branch-remote`), `FILES` (`git diff --name-only $BASE -- "${EXCLUDES[@]}"`, or
 `git diff --name-only $BASE $REVIEWED_SHA -- "${EXCLUDES[@]}"` in remote scopes, so the
 working tree never leaks into scope), `DIFF` (the same range with `-U10`), and
-`UNTRACKED` (`git ls-files --others --exclude-standard`). Untracked files are out of
+`UNTRACKED` (`git ls-files --others --exclude-standard -- "${EXCLUDES[@]}"`, the same
+pathspecs as `FILES`, so report and run folders never count). Untracked files are out of
 scope; list them in Coverage. If no base resolves, stop — don't fall back to
 `git diff HEAD` (it would miss committed work).
 
@@ -103,10 +104,11 @@ paths). Write the normal Stage 6 report (JSON in `mode:agent`)
 with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
 Findings line:
 `Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
-When `UNTRACKED` is also empty, there is nothing to review. The markdown verdict is
-Ready. In `mode:agent`, reply with `status` `skipped`, `reason` "No tracked changes and
-no untracked files", and `verdict` `null`. When `UNTRACKED` is not empty, give no Ready
-verdict: use Not ready. In `mode:agent`, reply with `status` `failed` and `reason`
+When `UNTRACKED` is also empty, there is nothing to review: the markdown Verdict says
+"Nothing to review" (no verdict word), and in `mode:agent` reply with `status`
+`skipped`, `reason` "No tracked changes and no untracked files", and `verdict` `null`.
+When `UNTRACKED` is not empty, never claim Ready: the verdict is Not ready, and in
+`mode:agent` reply with `status` `skipped`, `verdict` "Not ready" and `reason`
 "No tracked changes; <N> untracked files not reviewed". Then stop. This stop comes before lens selection, so a lens set
 to `on` does not run.
 
@@ -115,8 +117,9 @@ spec or requirements doc. Such a doc has implementation units (U1, U2), R/A/F id
 actors and flows (see fit-validate-plan Stage 1). Files that steer agents count as code
 here: SKILL.md, agent, command and rule files, AGENTS.md and CLAUDE.md. When unsure,
 take the normal path. Hand off only in `local-aligned` and standalone scopes, where the
-working tree is the reviewed tree. To hand off, say: "No code in this diff; running
-fit-validate-plan instead." Run `fit-validate-plan` once on all changed docs, with the
+working tree is the reviewed tree. To hand off outside `mode:agent`, say: "No code in
+this diff; running fit-validate-plan instead." (In `mode:agent`, print nothing; the
+reply's `handoff` field carries it.) Run `fit-validate-plan` once on all changed docs, with the
 same `mode:agent`, `out:`, `config:` and `lenses:` tokens. Its report and verdict are the
 result of this run. Write no review report. In `mode:agent`, the reply keeps the plan
 verdict words (Ready to implement / Revise first) and sets `handoff` to
@@ -180,9 +183,11 @@ ancestor of a changed file. Pass them in `<standards-paths>`, with the resolved
 `conventions.auto` with the convention lens only, because auto discovery can expand to
 many files.
 
-Before dispatching, announce every catalog lens with its selection and a one-line
-reason, for example `experience: not_selected, no user-facing paths in scope`. This is
-progress reporting, not a confirmation prompt.
+Outside `mode:agent`, before dispatching, announce every catalog lens with its
+selection and a one-line reason, for example
+`experience: not_selected, no user-facing paths in scope`. This is progress reporting,
+not a confirmation prompt. In `mode:agent`, print nothing; the reasons go in
+`coverage.lens_reasons`.
 
 ## Stage 4 — Dispatch
 
@@ -242,8 +247,9 @@ hit, keep the finding and list its line as unverified in Coverage. Then:
    claim is wrong. `unverifiable`: you could not open or check the cited code, or the
    evidence is thin." Apply only confirmed findings. A `not_real` finding goes to
    Rejected with why `not_real`. An `unverifiable` finding goes to Rejected with why
-   `unverifiable` and blocks Ready. If the verifier itself fails, the finding goes to
-   Rejected with why `verifier_failed` and also blocks Ready. In the Fallback, the
+   `unverifiable`. If the verifier itself fails, the finding goes to Rejected with why
+   `verifier_failed`. The report-template Review verdict rule sets the verdict for both
+   (Not ready). In the Fallback, the
    orchestrator re-reads the lines itself and Coverage says so.
 
    **Check for copies:** before a fix that replaces text, search the repo for a key
@@ -257,7 +263,8 @@ hit, keep the finding and list its line as unverified in Coverage. Then:
    instead. If **`TREE_CLEAN` was true in Stage 1**, commit applied fixes as one
    `fix(fit-review): <summary>` commit and record its real SHA
    (`git rev-parse --short HEAD`) for Applied; if it was false, apply but leave
-   uncommitted. Set each finding's Status at run time: `fixed <sha>` for applied ones,
+   uncommitted. Set each finding's Status at run time: `fixed <sha>` for applied ones
+   (`fixed (uncommitted)` on a dirty tree), kept in the severity tables,
    `declined: <reason>` only for an explicit owner or caller decision, else `open`. A
    skipped taste call or conflicting suggestion stays `open`, and its Issue ends with
    "(not applied: taste call)". A finding the run believes is wrong goes to Rejected

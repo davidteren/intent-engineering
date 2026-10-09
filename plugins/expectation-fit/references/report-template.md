@@ -62,7 +62,8 @@ goes in the keyed detail line, not the cell.
   the write to an explicit `refresh_total_cache!`.
 ```
 
-Seven columns. `Status` is `open`, `fixed <sha>` or `declined: <reason or link>`; it is
+Seven columns. `Status` is `open`, `fixed <sha>`, `fixed (uncommitted)` (applied on a
+dirty tree, so no commit) or `declined: <reason or link>`; it is
 the per-finding decision record that a later run reads through `prior:<report-path>`.
 Keyed `- **#N** --` detail line for findings whose one-liner isn't
 self-sufficient (usually P0/P1). Same table shape for every severity — never render
@@ -74,15 +75,17 @@ monotonic across the whole report.
 1. **Header** — scope or target, intent, context (review/audit/plan), the
    **Provenance line** (above), `completed_at`, `Execution: subagents | single-agent`,
    and the lens team: every catalog lens with its selection and a one-line reason, for
-   example `experience: not_selected, no user-facing paths in scope`. Audit adds the
+   example `experience: not_selected, no user-facing paths in scope`. In `mode:agent`
+   the reasons go in `coverage.lens_reasons` instead. Audit adds the
    stack and the sampling note. Plan adds the document path and type, `plan_sha256`
    (hash of the plan file at run time), and on a re-check `supersedes: <prior report>`
    and the round number. Skills point here; they do not list Header fields of their own.
 2. **Applied** *(fit-review interactive only, when fixes were applied)* — `# | File |
    Fix | Lens`, then validation outcome + commit status. Name the fix commit by its real
    SHA from `git rev-parse --short HEAD` after the commit, never a placeholder. Applied
-   findings appear here, not in the severity tables. Only fixes that passed the
-   fit-review Stage 5 step 7 gate appear here.
+   findings also stay in the severity tables, with Status `fixed <sha>` (or
+   `fixed (uncommitted)` on a dirty tree). Only fixes that passed the fit-review Stage 5
+   step 7 gate appear here.
 3. **Findings** — pipe tables grouped P0..P3, terse `Issue` cell, keyed detail lines.
    Omit empty severities. **The all-clear line is allowed only when every selected lens
    is `clean` and read all of its scope** (see Lens status below). If severities are
@@ -146,8 +149,10 @@ monotonic across the whole report.
    read blocks it (see Lens status).
    **Review verdict rule:** Not ready while a P0 or P1 finding is open. Ready with fixes
    while a P2 finding is open. Otherwise Ready. Open means a Findings row with Status
-   `open`; `fixed` and `declined` rows count as closed. A lens status or a partial read
-   that blocks Ready (see Lens status) still blocks it.
+   `open`; `fixed` and `declined` rows count as closed. A Rejected row with why
+   `unverifiable` or `verifier_failed` forces Not ready. A lens status or a partial read
+   that blocks Ready (see Lens status) still blocks it. Skills point here; they do not
+   restate this rule.
 
 No time estimates. Measured times in the Cost line are measurements, not estimates. No
 praise. Every finding actionable.
@@ -176,7 +181,8 @@ this order. Each step runs in every context unless its mark says otherwise. Read
    Re-grades with its reason. Never change them silently.
 2. **Dedup.** Merge findings in the same file within 3 lines that describe the same
    defect, even when their titles differ. Keep each copy's severity and confidence
-   together. Keep the highest-severity copy whose confidence passes the gate. If no copy
+   together. Apply step 4 (config policy) to every copy first, then choose: keep the
+   highest-severity copy whose confidence passes the gate. If no copy
    passes, keep the highest-severity copy with its own confidence. Log the choice under
    Re-grades. Show each lens with its own severity and title. Keep `gated_auto` only
    when every copy has it; otherwise use the strictest class of the copies.
@@ -184,7 +190,9 @@ this order. Each step runs in every context unless its mark says otherwise. Read
    confidence: one agent can play several lenses, so two lenses on one defect at 50
    stay at 50.
 4. **Apply config policy before the confidence gate** *(review and audit; plan skips
-   this step)*. Order matters (see `config-resolution.md`):
+   this step)*. It runs on every copy of a step 2 group before the kept copy is chosen,
+   so a policy change never discards a higher-confidence duplicate. Order matters (see
+   `config-resolution.md`):
    1. **`severity_align`** (`mode: curated_gates`): using the workflow list from
       `conventions.auto` discovery, promote findings that match a gate theme under the
       **smell-first** rules (e.g. `callback-hell` + `callback-check.yml` -> at least
@@ -220,7 +228,8 @@ only when the caller passes `out:` (then `$REPORT_PATH` is that path, and
 `artifact_path` to `null`. Never write the mode:agent report into the run-scratch dir
 (`$RUN`); that dir is deleted when `cleanup_runs` is true. A `mode:agent` run leaves
 `git status --porcelain` unchanged (run scratch ignores itself). Each item in
-`findings` carries `status` (`open`, `fixed <sha>` or `declined: <reason or link>`);
+`findings` carries `status` (`open`, `fixed <sha>`, `fixed (uncommitted)` or
+`declined: <reason or link>`);
 `mode:agent` callers write their triage into that field. Plan reports add
 `plan_sha256`.
 
@@ -301,6 +310,13 @@ Complete example (a review run without `out:`):
   "coverage": {
     "config": ".expectation-fit/ (walk-up from repo root)",
     "execution": "subagents",
+    "lens_reasons": {
+      "predictability": "always on",
+      "simplicity": "always on",
+      "convention": "repo standards apply",
+      "experience": "no user-facing paths in scope",
+      "architecture": "no supported stack detected"
+    },
     "lens_status": {
       "predictability": "ok",
       "simplicity": "clean",
@@ -326,7 +342,7 @@ Complete example (a review run without `out:`):
 **mode:agent fields:** `status`, `reason`, `handoff`, `context`, `verdict`, `completed_at`, `run_id`,
 `scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
 `lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
-`posture`, `observations`, `coverage.config`, `coverage.execution`, `coverage.lens_status`,
+`posture`, `observations`, `coverage.config`, `coverage.execution`, `coverage.lens_reasons`, `coverage.lens_status`,
 `coverage.files_reviewed`, `coverage.untracked`, `coverage.regrades`,
 `artifact_path`, `plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`,
 `tree_clean`, `base_sha`, and `status` on each finding. The example above shows each one.
@@ -341,7 +357,9 @@ Field rules:
 - `status` is `complete`, `failed` or `skipped`. `skipped` means the run reviewed
   nothing by design. When it is `failed` or `skipped`, `reason` says why in one
   sentence. Otherwise `reason` is `null`.
-- `verdict` uses the verdict words below. It is `null` when `status` is `skipped`.
+- `verdict` uses the verdict words below. It is `null` when `status` is `skipped`, with
+  one exception: a review with no tracked changes but untracked files is `skipped` with
+  verdict `Not ready`, and `reason` names the untracked count (fit-review Empty diff).
 - `posture` holds the 0-10 dimension scores in `fit-audit` and `fit-validate-plan`, as
   one object keyed by dimension. It is `null` in review.
 - `handoff` is `"fit-validate-plan"` when a review run hands the work to that skill.
@@ -352,8 +370,8 @@ Field rules:
   `branch`, `reviewed_sha` and `tree_clean` in every context; `base_sha` in review
   only. Plan adds `plan_sha256`. Show `$HOME` as `~` in both paths.
 - `artifact_path` is the absolute path of the `out:` file, or `null` without `out:`.
-- Each item in `findings` carries `status`: `open`, `fixed <sha>` or
-  `declined: <reason or link>`.
+- Each item in `findings` carries `status`: `open`, `fixed <sha>`,
+  `fixed (uncommitted)` or `declined: <reason or link>`.
 - `scope` by context. Review: `mode`, `base`, `branch`, `head_sha`, and `pr` (number or
   `null`). Plan: `document` (the path, or a list of paths for a
   set). Audit: `target` (the path, glob or subsystem).
@@ -370,6 +388,8 @@ Field rules:
   `line`, `lens`, `severity`, `confidence` and `why` (see Rejected under Coverage).
 - `coverage.config` is the Config line: the config source that the run used.
 - `coverage.execution` is `subagents` or `single-agent`.
+- `coverage.lens_reasons` has one key per catalog lens: the one-line selection reason
+  that the markdown Header shows as the lens team.
 - `coverage.lens_status` has one key per catalog lens, with the words from the Lens
   status table.
 - `coverage.regrades` lists every re-grade from any merge step (repairs in Merge and

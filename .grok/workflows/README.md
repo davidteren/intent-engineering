@@ -37,7 +37,7 @@ Useful args:
 | `plugin_root` | Plugin dir. Default: `plugins/expectation-fit`. From another repo, pass the absolute path. |
 | `out` | Ignored for tree writes. The report is always run scratch. |
 | `stamp` | Optional label recorded in Coverage. Does not name a repo file. |
-| `base` | A commit SHA, such as the output of `git merge-base origin/main HEAD`. Required when the target is not a path. A ref name such as `origin/main`, or a missing base, pauses the run before any agent starts with "Pass base as a commit SHA." The script builds the diff (`git_diff_since`) and sets the scope mode itself. No agent prompt contains the base. A file, `./` / `../` path, or a last-segment alphabetic extension (`docs/index.html`, `README.md`) is a path target and gets no diff. Directory paths should end with `/`. |
+| `base` | A commit SHA, such as the output of `git merge-base origin/main HEAD`. Required when the target is not a path. A ref name such as `origin/main`, or a missing base, pauses the run before any agent starts with "Pass base as a commit SHA." The script builds the diff (`git_diff_since`) and sets the scope mode itself. No agent prompt contains the base, except a base that passed the commit SHA check, which the Provenance slot quotes; any other base shows as `none`. A file, `./` / `../` path, or a last-segment alphabetic extension (`docs/index.html`, `README.md`) is a path target and gets no diff. Directory paths should end with `/`. |
 | `config` | Optional `.expectation-fit` directory. Same idea as the skill `config:` token. |
 
 The confidence gate runs before verify. A below-gate finding gets no skeptic, and
@@ -67,8 +67,9 @@ This is a Grok runtime, not a second copy of the Claude skill.
   policy notes in Coverage. It does **not** apply smell-first
   `severity_align`, principle overrides, pattern policy, or architecture
   thresholds the way `/fit-review` does. Treat this as a subset.
-- Grok merges duplicates only on identical title or smell; differently titled
-  copies are verified separately.
+- Grok merges duplicates only on an identical normalized title (same file, within
+  3 lines). A shared smell id alone does not merge; differently titled copies are
+  verified separately.
 - The lens list in the script is a snapshot of `lens-catalog.md`.
 - The JSON schema in the script is a snapshot of `findings-schema.json`.
 - The report lives in run scratch. There is no `docs/` write and no

@@ -34,7 +34,7 @@
     {
       "id": 7,
       "prompt": "fit-setup upgrade in a repo that has only .intense/ways-of-working.yaml (no .expectation-fit/ folder)",
-      "expected_output": "Config is read from the legacy .intense/ folder, and Coverage names that folder as the config source. Upgrade offers to move .intense/ to .expectation-fit/ (git mv when tracked, else mv), shows the command, and does not move anything without a yes."
+      "expected_output": "Config is read from the legacy .intense/ folder. Upgrade offers to create .expectation-fit/ and move only the yaml config files into it (git mv when tracked, else mv), shows each command, and does not move anything without a yes. It never moves .intense/runs/ or .intense/reports/. The Report section names the legacy config folder, the files that moved, the folders that stayed (safe to delete), and warns when INTENSE_CONFIG_DIR is set."
     },
     {
       "id": 8,

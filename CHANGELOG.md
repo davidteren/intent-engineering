@@ -10,8 +10,8 @@ for the design see **PLAN.md**.
 ## [0.9.0] - 2026-10-09
 
 ### Breaking
-The plugin is renamed from intent-engineering to expectation-fit (#41). Old names map to
-new names as follows:
+The plugin is renamed from intent-engineering to expectation-fit (#41). There is no `/ie-*` shim: after updating, the `/ie-*` commands are gone. Use the `/fit-*` names
+from this table:
 
 | Before (intent-engineering 0.8.x) | Now (expectation-fit 0.9.0) |
 |---|---|
@@ -30,7 +30,10 @@ new names as follows:
 ### Fixed
 - **`fit-review` defines empty, plan-only and docs-only diffs (#59).** An empty diff
   dispatches no lens (even one set to `on`) and still writes the normal report with a
-  "Nothing to review" line and the verdict Ready. `FILES` now comes from the head the
+  "Nothing to review" line. Ready is never claimed while untracked files exist: the
+  verdict is Not ready, and `mode:agent` replies `skipped` with the untracked count. With
+  no untracked files either, the report says "Nothing to review" and `mode:agent` replies
+  `skipped` with verdict `null`. `FILES` now comes from the head the
   lenses read, so remote scopes see the right change. A plan-only diff hands off to one
   `fit-validate-plan` run over all changed docs, which now accepts several paths as one
   set with one report and one flow per document. A docs-only diff keeps the same lens team and adds a claim-check
