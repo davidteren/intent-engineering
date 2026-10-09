@@ -9,7 +9,7 @@
   function apply(theme) {
     root.setAttribute("data-theme", theme);
     root.style.colorScheme = theme;
-    try { localStorage.setItem("ie-theme", theme); } catch (e) {}
+    try { localStorage.setItem("fit-theme", theme); } catch (e) {}
     if (btn) {
       var next = theme === "dark" ? "light" : "dark";
       btn.setAttribute("aria-label", "Switch to " + next + " theme");

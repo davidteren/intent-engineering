@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Reports — intent-engineering</title>
-<meta name="description" content="Published intent-engineering dogfood and workflow reports." />
+<title>Reports — expectation-fit</title>
+<meta name="description" content="Published expectation-fit dogfood and workflow reports." />
 <link rel="canonical" href="https://davidteren.github.io/intent-engineering/reports.html" />
-<meta property="og:title" content="Reports — intent-engineering" />
-<meta property="og:description" content="Published dogfood and workflow reports from the intent-engineering plugin." />
+<meta property="og:title" content="Reports — expectation-fit" />
+<meta property="og:description" content="Published dogfood and workflow reports from the expectation-fit plugin." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://davidteren.github.io/intent-engineering/reports.html" />
 <meta property="og:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
@@ -15,8 +15,8 @@
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="A Ruby method named fetch_total highlighted on the Cache.write line, with a P1 finding that a fetch should not write." />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Reports — intent-engineering" />
-<meta name="twitter:description" content="Published dogfood and workflow reports from the intent-engineering plugin." />
+<meta name="twitter:title" content="Reports — expectation-fit" />
+<meta name="twitter:description" content="Published dogfood and workflow reports from the expectation-fit plugin." />
 <meta name="twitter:image" content="https://davidteren.github.io/intent-engineering/og-finding.png" />
 <meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
@@ -24,7 +24,7 @@
 <script>
 (function(){
   var t=null;
-  try{t=localStorage.getItem("ie-theme")}catch(e){}
+  try{t=localStorage.getItem("fit-theme")||localStorage.getItem("ie-theme")}catch(e){}
   if(t!=="light"&&t!=="dark"){
     t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
   }
@@ -40,7 +40,7 @@
   <div class="wrap nav">
     <a class="brand" href="./">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="20" height="6" fill="currentColor"/></svg>
-      intent-engineering
+      expectation-fit
     </a>
     <nav class="nav-links" aria-label="Page">
       <a href="./#lenses">Lenses</a>
@@ -71,7 +71,7 @@
   <div class="wrap" style="padding:2.5rem 1.25rem 4rem">
     <p class="crumb"><a href="./">Home</a> / Reports</p>
     <h1>Published reports</h1>
-    <p class="lede" style="margin-top:0.75rem">Dogfood runs and workflow reviews from this repo. Source markdown stays under <code>docs/intent-engineering/</code>.</p>
+    <p class="lede" style="margin-top:0.75rem">Dogfood runs and workflow reviews from this repo. The source markdown of these reports stays under <code>docs/intent-engineering/</code> (history from before the rename).</p>
     <ul class="report-list" style="margin-top:2rem">
       <li>
         <a href="reports/2026-08-16-experience-dogfood-fizzy.html">
@@ -95,7 +95,7 @@
         <a href="reports/2026-08-12-workflow-ie-review.html">
           <time datetime="2026-08-12">2026-08-12</time>
           <span>
-            <strong>Grok ie-review workflow</strong>
+            <strong>Grok ie-review workflow (before the rename)</strong>
             <span>Read-only review of the first-cut Grok runtime. Report only.</span>
           </span>
         </a>
@@ -116,7 +116,7 @@
 <footer>
   <div class="wrap">
     <div class="foot">
-      <a class="brand" href="./">intent-engineering</a>
+      <a class="brand" href="./">expectation-fit</a>
       <span class="sp"></span>
       <a href="https://github.com/davidteren/intent-engineering">GitHub</a>
       <a href="./">Home</a>

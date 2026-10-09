@@ -1,0 +1,65 @@
+{
+  "skill_name": "fit-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "fit-review (clean tree, interactive)",
+      "expected_output": "Reviews the branch diff, may apply gated_auto fixes and commit fix(fit-review): on a clean tree. Never pushes, never opens a PR, never files tickets."
+    },
+    {
+      "id": 2,
+      "prompt": "fit-review mode:agent",
+      "expected_output": "Report-only JSON reply; no apply, no commit, no push. Findings may include suggested_fix but the skill does not mutate the tree. Without out:, writes no report file and sets artifact_path to null. git status --porcelain is the same before and after the run (run scratch ignores itself and is deleted when cleanup_runs is true)."
+    },
+    {
+      "id": 3,
+      "prompt": "fit-review and push the fixes / open a PR for me",
+      "expected_output": "Applies (if interactive and gated) at most; REFUSES push and PR create. States that this skill never pushes."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-review (dirty tree with uncommitted user work)",
+      "expected_output": "If applying, leaves fixes uncommitted (TREE_CLEAN false). Does not mix a review commit with the user's in-flight work."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-review (project .expectation-fit/ways-of-working.yaml sets severity_overrides: { silent-failure: P1 })",
+      "expected_output": "silent-failure is not a principle id or a canonical smell id, so no finding changes severity. Coverage lists: ignored severity_overrides key: silent-failure."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-review plan:docs/plans/my-plan.md (the diff follows KTD-2 of the plan; one lens thinks KTD-2 itself causes a P2 defect)",
+      "expected_output": "Every lens gets KTD-2 verbatim in known-context. No finding asks to undo KTD-2. The P2 finding quotes KTD-2 in evidence and names it in tension. It stays in Findings, appears in Tensions and is not auto-applied. Coverage names the plan."
+    },
+    {
+      "id": 7,
+      "prompt": "fit-review (interactive, published gem; the simplicity lens files a gated_auto P3 at confidence 75 that removes a default value from a public, documented class)",
+      "expected_output": "Reclassifies the finding to manual, because outside callers can see a public default. Never applies it and lists it under Findings. Commits nothing for it."
+    },
+    {
+      "id": 8,
+      "prompt": "fit-review mode:agent where predictability returns two findings above the gate and simplicity returns none",
+      "expected_output": "coverage.lens_status shows predictability as ok and simplicity as clean. It never shows clean next to a lens that has findings in the report, and it never uses skipped for a lens that auto-selection did not pick (that is not_selected)."
+    },
+    {
+      "id": 9,
+      "prompt": "fit-review (clean tree, interactive) where a P2 gated_auto finding at confidence 100 passes the apply gate, but the verify re-read shows the cited code already handles the case",
+      "expected_output": "Does not apply the refuted finding. Lists it under Rejected with why not_real. The fix(fit-review) commit holds only confirmed fixes, and no commit is made when none remain."
+    },
+    {
+      "id": 10,
+      "prompt": "fit-review (clean tree, interactive) where one lens returns an observation that ends 'cosmetic, confirm visually' and another returns a manual P1 with a concrete suggested_fix",
+      "expected_output": "Applies neither. The observation stays under Observations, and the P1 stays in the Findings tables. Applied and the fix(fit-review) commit hold only gated_auto fixes at confidence 75 or more, P2 or P3, and with no tension."
+    },
+    {
+      "id": 11,
+      "prompt": "fit-review (the branch also adds an earlier report under docs/expectation-fit/, and the project sets artifacts.report_dir: docs/expectation-fit)",
+      "expected_output": "Loads config before it builds FILES and DIFF. The earlier report is excluded by pathspec, so it is not in the review scope or in any finding. The Coverage file count leaves it out."
+    },
+    {
+      "id": 12,
+      "prompt": "fit-review base:<head_sha of last report> prior:.expectation-fit/reports/<last>-review.md (the last report declined #3 and fixed #1)",
+      "expected_output": "Reviews only the commits since base (base is an ancestor of HEAD); prior: does not change the diff range. Every lens gets the fixed and declined rows in the <prior> slot. A lens does not raise #1 or #3 again without new evidence, and if it does it cites the evidence and names the prior #N. The finding that matches declined #3 is never auto-applied. Each finding has a Status (open, fixed <sha>, or declined: <reason>). Verdict follows the severity rule."
+    }
+  ]
+}

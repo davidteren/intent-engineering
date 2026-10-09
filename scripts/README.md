@@ -1,7 +1,7 @@
 # scripts/
 
 Repository tooling. **Not shipped inside the plugin** — the installable plugin lives under
-`plugins/intent-engineering/`, and per the self-containment rule (see `AGENTS.md`) only what
+`plugins/expectation-fit/`, and per the self-containment rule (see `AGENTS.md`) only what
 a user installs belongs there. These scripts are for contributors and CI.
 
 ## `check-contracts.rb`
@@ -14,22 +14,25 @@ ruby scripts/check-contracts.rb
 ```
 
 Exit `0` = all good; exit `1` = at least one failure. Output is one line per check
-(`ok` / `FAIL` / `warn`) under nine sections, then a summary
-(`PASS — 67 checks, 0 failures`). Run it before committing; CI runs it on every PR.
+(`ok` / `FAIL` / `warn`) under the twelve section headers below, then a summary line
+with the check count. Run it to see the current count. Run it before committing; CI runs it on every PR.
 
 ### What it checks
 
 | # | Section | Asserts |
 |---|---------|---------|
-| 1 | Parse | every shipped `*.json` and `*.yaml` parses |
-| 2 | Lens identity (4-way) | the 5 lens ids agree across `findings-schema.json` enum, `agents/ie-*-reviewer.md` basenames, `lens-catalog.md` rows, and `scoring-rubric.md` rows |
+| 1 | Parse | every shipped `*.json` and `*.yaml` parses; the default lens toggles load as the strings `on`, `off` or `auto` |
+| 2 | Lens identity (4-way) | the 5 lens ids agree across `findings-schema.json` enum, `agents/fit-*-reviewer.md` basenames, `lens-catalog.md` rows, and `scoring-rubric.md` rows |
 | 3 | Agent frontmatter | each agent's `name` == filename stem, is in the lens enum, and has `tools` + `model` |
-| 4 | Path resolution | every `${CLAUDE_PLUGIN_ROOT}/…` path (and backticked index/catalog paths) resolves on disk; placeholders skipped |
+| 4 | Path resolution | every `${CLAUDE_PLUGIN_ROOT}/…` path (and backticked index/catalog paths) resolves on disk; placeholders skipped. Every backticked `.md`/`.yaml` name in the `lens-catalog.md` "Resource docs it reads" column must exist at `resources/<name>` (today: 18 docs in 5 rows, 3 placeholders skipped); the check fails when no rows or names parse |
 | 5 | Pattern catalog schema | each catalog entry has `id/name/intent/recognition/good_use/misuse`; ids unique + snake_case |
 | 6 | Principle ids | every `principle:` value the lenses declare they emit is in the schema enum |
-| 7 | Gitignore trap | exactly **5** lens agents are git-tracked (`git ls-files plugins/intent-engineering/agents/`) |
+| 7 | Gitignore trap | exactly **5** lens agents are git-tracked (`git ls-files plugins/expectation-fit/agents/`) |
 | 8 | Cross-references | every threshold metric cited in `rails-architecture.md` is defined in `thresholds.yaml`; every pattern id in policy/README exists in the catalog; unreferenced metrics → **warning** |
 | 9 | Resource-doc structure | each principle/framework/agnostic doc has a detection ("smells") section + a `## Sources` section with ≥2 links; every resource doc is cited in `principle-index.md`/`lens-catalog.md` (no orphans) |
+| 10 | Stack catalog (registry) | every architecture-supported row in `stack-catalog.md` has its two files and a threshold namespace; nothing exists out of band |
+| 11 | Skill / agent prose vs catalog | skills read the stack catalog for architecture; the `report-template.md` mode:agent example parses, has every listed field, lists every example key, and has the right verdict; shared merge rules are not cited by fit-review Stage; Grok status words and verdict code match the template |
+| 12 | Skill evals | each `skills/fit-*/evals.json` parses, names its skill, and has well-formed eval cases (missing file is a warning) |
 
 **Severity model:** a hard `FAIL` makes the script exit non-zero (and fails CI). A `warn`
 (currently: a threshold defined but never referenced) is surfaced but does **not** fail the
@@ -68,5 +71,5 @@ YAML-structural checks to brittle grep — so this stays Ruby on purpose.
 
 Append a new `section("N. …")` block and call `ok(msg)` / `bad(msg)` (hard) or `note(msg)`
 (warning). Keep checks **deterministic and structural** — no flaky heuristics; a check that
-can false-positive is worse than no check. Natural future additions are noted in
-`wip/improvements.md`.
+can false-positive is worse than no check. File ideas for new checks as issues in this
+repo.

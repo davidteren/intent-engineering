@@ -1,0 +1,157 @@
+---
+name: fit-audit
+description: "Audit a whole codebase, subsystem, or feature against the expectation-fit lenses (predictability, convention, simplicity, experience, and architecture on supported frameworks) and produce a posture report — per-dimension 0-10 scores plus the top surprise/convention/complexity/UX/structural gaps. Use to assess an existing codebase or area, not a specific diff. Sampling-aware for large targets."
+argument-hint: "[mode:agent] [out:<path>] [lenses:<list>] [prior:<report-path>] [<path/glob/subsystem to audit, default: whole repo>]"
+---
+
+# Expectation Fit — Codebase Audit
+
+Assesses the expectation-fit posture of existing code (no diff). Where
+`fit-review` judges a change, `fit-audit` judges a body of code: how predictable,
+conventional, simple, and usable it is today, scored per dimension with the worst gaps
+surfaced first. This is a read-only assessment — it never edits code.
+
+## Argument parsing
+
+`out:`, `prior:` and `lenses:` are shared tokens, defined once in
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (Shared tokens). Their rows below
+list only this skill's difference.
+
+| Token | Effect |
+|-------|--------|
+| `mode:agent` | Emit JSON instead of markdown. Writes a report file only with `out:`. |
+| `out:<path>` | Shared token. |
+| `prior:<report-path>` | Shared token. Never changes the audit target. |
+| `config:<path>` | Override project config directory (walk-up / `EXPECTATION_FIT_CONFIG_DIR` otherwise). |
+| `lenses:<list>` | Shared token. |
+| remainder | Path, glob, or named subsystem/feature to audit. Default: the repo (excluding deps, build output, generated, and vendored dirs). |
+
+## Stage 1 — Scope the target
+
+First **load resolved config** per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`, then merge over `config/defaults/`).
+The resolved artifact folders feed the exclusions below.
+
+Resolve the audit set. Be explicit and bounded:
+
+1. Determine the file set: the given path/glob, or the repo's source dirs. Exclude
+   `node_modules`, `vendor`, `dist`/`build`, generated files, lockfiles, and the
+   artifact folders: build `EXCLUDES` per config-resolution (Scope exclusions) and
+   pass them to every `git ls-files` / `git diff` call that lists the set.
+2. Detect the stack(s) via `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`
+   (Detection signals); load matching `frameworks/<stack>.md` docs. Do not hardcode a
+   closed stack list.
+3. **Sampling rule (large targets).** If the set exceeds what lenses can read closely
+   (rough guide: > ~40 files or very large files), select a representative sample:
+   the highest-churn / largest / most-depended-on files plus the public entry points
+   and a cross-section of each layer. **State the sampling explicitly** — what was and
+   wasn't covered goes in Coverage. Never silently truncate and imply full coverage.
+
+## Stage 2 — Select lenses
+
+Use the config resolved in Stage 1; the
+`lenses:` toggles are authoritative, and `thresholds` + pattern policy feed the
+architecture lens. **Always** state the Config source in Coverage (never silent
+defaults). Then read `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md` and
+`${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`.
+
+- Predictability + simplicity always on.
+- Convention on when stack/repo standards exist (catalog Convention doc and/or
+  `CLAUDE.md`/`AGENTS.md`).
+- Experience on when the scope touches a surface in the `lens-catalog.md` list.
+- **Architecture on when a detected stack has Arch pack ✅** in the stack catalog
+  (and the audit target includes structural code). This is usually the highest-value
+  pass in a codebase audit. Pass the resolved `thresholds` + pattern policy + the
+  `tools.architecture` preference (`enrich`/`prefer`/`report`/`off`). Never gate
+  architecture on a closed two-stack list.
+
+Honor config `lenses:` toggles over these defaults; a `lenses:<list>` token wins over both.
+Pass repo `CLAUDE.md`/`AGENTS.md` paths (`<standards-paths>`) and the resolved
+`conventions.notes` to every selected lens. Keep `conventions.sources` and
+`conventions.auto` with the convention lens only. Announce the team outside `mode:agent`
+(lens-catalog.md).
+
+## Stage 3 — Dispatch
+
+Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`
+(Artifact paths). Bind skill slots only:
+
+| Slot | Value |
+|------|--------|
+| `SKILL_SLUG` | `audit` |
+| `SCOPE` | raw target (the canonical block makes the slug), or empty |
+| `OUT_ARG` | `out:` value or empty |
+| `EXT` | `md` normally; `json` when `mode:agent` |
+
+Run the **canonical** stamp / `RUN_ID` / `REPORT_PATH` procedure from that doc. Bind
+`run_artifact_dir = $RUN` (Layer A only), `repo_root` to `git rev-parse --show-toplevel`,
+and `plugin_root = $PLUGIN_ROOT`.
+
+Spawn lenses in parallel with `Context: audit` (subagent template). **Model policy:**
+pass `model: sonnet` to convention, experience, and architecture; let predictability
+and simplicity inherit the session model — don't spawn the always-on lenses as `sonnet`.
+Pass the file set (or sample) and the stack docs to read. **Audit mode requires
+`scores`** — each lens returns 0-10 per dimension it owns (scoring rubric) plus findings
+citing `file:line`. Missing required `scores` → lens **failed**. Concurrency cap: use the
+queue/backfill rule in the subagent template. Lenses write `$RUN/{lens}.json` (via the Write tool).
+
+For very large audits, a lens may itself fan out across file groups; the orchestrator
+just needs the merged per-lens return.
+
+## Stage 4 — Merge & score
+
+1. Run **Merge and gate** in `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+   with Context: audit. No apply, because audit is read-only.
+2. Assemble the **posture table** from the `scores` of each lens with status `clean`
+   or `ok` (read
+   `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md`): `Lens | Dimension | Score |
+   Gap`, lowest scores first. Do not average into one number — the gaps are the
+   product. Omit or mark failed lenses rather than inventing scores.
+3. Collect tensions and observations.
+4. **CI / conventions delta.** In Observations or Coverage, list:
+   - auto-discovered gates/sources (`conventions.auto`) and any promotions from
+     `severity_align`;
+   - explicit notes/overrides that mention rules with **no** matching CI/source file;
+   - high-signal CI files not covered by auto include/exclude (drift either way).
+
+## Stage 5 — Report
+
+Write the report to `$REPORT_PATH` (markdown; in `mode:agent`, the JSON reply, written to a file only with `out:`) per
+`${CLAUDE_PLUGIN_ROOT}/references/report-template.md`. Sections: Header (per
+report-template, with the Provenance line; append `; <N> commits ahead of <default>`
+from `git rev-list --count <default>..HEAD`, where `<default>` is the remote default
+branch, the same base `fit-review` detects), Posture table (worst first), Findings (P0..P3, grouped, with
+`Principle` + `Lens`), Tensions, Observations (incl. CI/conventions delta), Coverage (sampling bounds, suppressions,
+each lens status per the report-template Lens status table, Config line), Verdict = the **top 3 posture gaps to fix first** with
+why (`mode:agent` verdict word: `Gaps to fix first`, or `Healthy` when no gap remains). Do **not** claim a healthy all-clear when a lens status or a partial read blocks it. No apply,
+no push, no time estimates.
+
+Then: if `CLEANUP` is true, run the **guarded** cleanup from
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` (only `rm -rf` when
+`$RUN` equals `$RUN_DIR/$RUN_ID`). Outside `mode:agent`, print the `Report:` line from that doc (absolute path).
+In `mode:agent`, the path is the `artifact_path` field only.
+
+## Fallback
+
+No sub-agents: follow "When you cannot spawn agents" in
+`${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`. Concurrency cap: use its queue/
+backfill rule. Everything else unchanged.
+
+---
+
+## Reference files (read at runtime)
+
+Depends on `${CLAUDE_PLUGIN_ROOT}` resolving (standard in Claude Code). Read before
+Stage 1 — shared contract for every `fit-*` skill:
+
+- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — load/merge .expectation-fit config + artifact paths
+- `${CLAUDE_PLUGIN_ROOT}/references/lens-catalog.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` — stack detection + Arch pack ✅
+- `${CLAUDE_PLUGIN_ROOT}/references/subagent-template.md`
+- `${CLAUDE_PLUGIN_ROOT}/references/scoring-rubric.md` — audit scoring
+- `${CLAUDE_PLUGIN_ROOT}/references/findings-schema.json`
+- `${CLAUDE_PLUGIN_ROOT}/references/report-template.md`
+
+**Plugin root.** `PLUGIN_ROOT` is the absolute path two folders above this file's
+folder. Bind it as `{plugin_root}` in every lens prompt (subagent-template, Slot
+bindings), so no lens prompt carries a literal plugin-root variable.

@@ -14,7 +14,7 @@ reviews:
   auto_approve: disabled
   ultrareview: manual
   custom_instructions: |
-    This repo publishes intent-engineering skills / agent guidance for AI coding agents.
+    This repo publishes expectation-fit skills / agent guidance for AI coding agents.
     Prioritize: skill clarity, safe defaults (no secret leakage, no destructive defaults),
     accurate tool/CLI instructions, and avoiding drift between README, skill.md, and
     machine-readable indexes (llms.txt, catalogs). Prefer concrete, testable guidance

@@ -1,0 +1,535 @@
+---
+name: fit-setup
+description: "Setup and upgrade Expectation Fit project config in .expectation-fit/ — full wizard for greenfield monoliths and multi-repo workspaces (placement, conventions.auto roots, severity_align, pattern preference), plus upgrade that merges missing capabilities without clobbering notes. Optional calibrate measures repo distributions and proposes thresholds. Stack-aware; idempotent. Use to set up, extend, or upgrade a project's .expectation-fit/ config."
+argument-hint: "[all | ways | patterns | thresholds | fresh | upgrade | multi-repo | roots:a,b | calibrate [p90|p75|…]] (blank = wizard)"
+---
+
+# Expectation Fit — Init / setup / upgrade
+
+Scaffolds and upgrades project config under `.expectation-fit/` so a team can declare ways of
+working (lens toggles, conventions, auto sources, severity align), design-pattern
+policy (preferred / allow / block / approved), and architecture thresholds — then
+commit them. Once present, `.expectation-fit/` supersedes the plugin defaults
+(`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`) for every `fit-*` run in that
+tree (via walk-up).
+
+**Modes** (auto-detected when `$ARGUMENTS` is blank; overridable by token):
+
+| Mode | When | What it does |
+|------|------|--------------|
+| **fresh** | no project `.expectation-fit/` yet (or user said `fresh` / `all` / file tokens) | Full setup wizard → write files |
+| **upgrade** | `.expectation-fit/` exists (or user said `upgrade`) | Diff capabilities vs defaults; merge only missing keys with confirm |
+| **calibrate** | user said `calibrate` [percentile] | Measure distributions; propose thresholds with evidence |
+
+Also supports legacy file tokens: `all`, `ways`, `patterns`, `thresholds` (skip profile
+questions when non-interactive; still run stack-aware copy rules).
+
+## Interactive tool
+
+If presenting menus interactively in Claude Code, **pre-load `AskUserQuestion`**
+(deferred tool): call `ToolSearch` with `select:AskUserQuestion` once before the first
+menu. If the harness has no blocking-question tool (ToolSearch returns nothing / call
+fails), fall back to a numbered list and wait for the user's reply — never silently pick.
+
+---
+
+## Procedure
+
+### 0. Resolve mode + detect layout (always)
+
+#### 0a. Mode
+
+1. If `$ARGUMENTS` starts with token `calibrate` → **calibrate** (optional `p90` /
+   `p75` / `p95`; default **p90**). Jump to Step 2c.
+2. Else if `$ARGUMENTS` has a **whole-token** `upgrade` (space-separated; not a
+   substring of another word) → **upgrade**. If `ways` / `patterns` / `thresholds` also
+   appear, limit upgrade merges to those files only. Jump to Step U after a light
+   detect pass (0b–0c still run so the report names stacks/roots).
+3. Else if `$ARGUMENTS` has `fresh` or a file token (`all` / `ways` / `patterns` /
+   `thresholds`) **or** `multi-repo` / `roots:…` → **fresh** with that selection
+   (multi-repo/roots imply fresh + profile multi-repo; still run 0b–0d). First check the
+   target write root: when it holds a legacy `.intense/` with yaml, say so and switch
+   to **upgrade** (the Legacy folder migration in Step 1) instead of scaffolding
+   defaults over it.
+4. Else (blank): discover nearest usable `.expectation-fit/` via walk-up
+   (`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`).
+   - Found → recommend **upgrade**; still offer fresh re-scaffold (overwrite only with
+     confirm). Present: `1) upgrade  2) fresh (re-scaffold)  3) calibrate`.
+   - Not found → **fresh**.
+
+#### 0b. Profile: monolith vs multi-repo
+
+From the **intended project base** (cwd's git root, or a parent workspace if cwd is a
+child app):
+
+**Multi-repo signals** (any two → default profile **multi-repo**):
+
+- Two or more immediate child dirs each with their own `.git`, or with `AGENTS.md` /
+  `CLAUDE.md` / `Gemfile` / `package.json` / `pyproject.toml`.
+- Child names look like product halves (`*_be`, `*_fe`, `backend`, `frontend`, `api`,
+  `web`, `mobile`, `e2e`).
+- Cwd is inside a child app but the parent has multiple app-like siblings.
+
+Otherwise default **monolith**.
+
+Always **confirm** with the user (AskUserQuestion): monolith vs multi-repo stack.
+Recommend the detected default.
+
+#### 0c. Stack detection
+
+- **Read `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md`** — the registry is the
+  source of truth for detection and which pack a stack carries. Match the tree against
+  `Detection signals`. Do not hardcode detection here.
+- For multi-repo: detect **per root** under the project base (and under each
+  `conventions.auto.roots` candidate). Collect the set of stacks (e.g. rails + react).
+- Note each stack's **Arch pack** status and **Threshold ns** from the catalog **column
+  only** (never a hardcoded "today" list):
+  - **Arch pack ✅** — scaffold that stack's threshold namespace + pattern ids.
+  - **Arch pack ⬜** — convention-only; no threshold/pattern pack yet.
+  - **Unknown / no match** — ways-of-working only for that root.
+
+#### 0d. Surface inventory (informational; feeds later questions)
+
+Under the project base and each multi-repo root, note presence of:
+
+- `AGENTS.md` / `CLAUDE.md`
+- `.github/copilot-instructions.md` or `**/copilot-instructions.md`
+- `.github/instructions/**`
+- `.github/workflows/*` that look like PR gates (name/body signals in
+  `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` → Convention auto-sources)
+
+Report a one-line inventory in the wizard summary (e.g. "agents=2, copilot=1,
+instructions packs=3, gate-like workflows≈8").
+
+---
+
+### 1. Placement (fresh + multi-repo; skip for pure calibrate)
+
+**Write root** for config files is `{project_base}/.expectation-fit/` unless per-repo is chosen.
+
+| Profile | Default project base | Confirm |
+|---------|----------------------|---------|
+| **monolith** | git root of cwd | Usually no question; write `.expectation-fit/` there |
+| **multi-repo** | **workspace root** that contains the sibling apps (parent of BE/FE/…), **not** deep inside one app | Ask: shared workspace `.expectation-fit/` (Recommended) vs per-repo `.expectation-fit/` only |
+
+**Shared workspace config (recommended for multi-repo):**
+
+- One `.expectation-fit/` at the workspace root (`project_base` = workspace).
+- Child apps inherit via **walk-up** when agents run from `backend/` etc.
+- Set `conventions.auto.roots` to the sibling dir names (relative to project base).
+
+**Per-repo only:** when the user insists stacks diverge sharply:
+
+1. List each sibling app root that will get its own `.expectation-fit/`.
+2. Confirm the list; write **once per app** under `{app_root}/.expectation-fit/` (not only
+   workspace).
+3. Do **not** set shared `auto.roots` across apps unless the user also wants a parent
+   config; warn that notes/severity will not share unless duplicated.
+
+If cwd is already inside a child app and **shared** multi-repo is chosen, **change writes**
+to the workspace root after confirmation — never use a relative `mkdir .expectation-fit` in the
+child without an absolute `project_base`.
+
+For **upgrade**, resolve existing `PROJECT_CONFIG` via walk-up; do not move it unless
+the user explicitly asks to migrate placement.
+
+**Legacy folder (`.intense/`, before 0.9.0).** In upgrade, always check for a legacy
+`.intense/`: either `PROJECT_CONFIG` ends in `/.intense`, or a sibling `.intense/` sits
+next to the resolved `.expectation-fit/`. Set `LEGACY_PARENT` to the absolute folder that
+holds `.intense/` (not cwd). "Yaml" below means one of the three files
+(`ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml`). Ask once, show each command,
+and never move or remove without a yes.
+
+- **Both folders hold yaml:** stop and list both. Config resolution uses
+  `.expectation-fit/` and ignores the legacy one. Offer to merge the keys that are
+  missing from `.expectation-fit/` out of the legacy files, then to remove `.intense/`.
+  Remove it only on a yes.
+- **`.expectation-fit/` does not exist, or exists (any contents) without yaml:** create
+  `.expectation-fit/` when missing, then move each `.intense/*.yaml` file one by one (`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>`
+  for a tracked file, else `mv` with both paths under `$LEGACY_PARENT`). Do not migrate
+  `.intense/runs/` or `.intense/reports/`: leave them behind, name them in the summary,
+  and tell the user they can delete them. When `.intense/` is then empty, remove it.
+
+Never move the whole `.intense/`, because that carries old run and report folders (and
+nests it as `.expectation-fit/.intense/` when the target exists). After a move, print
+the git state of the new folder so the user can commit it. When `INTENSE_CONFIG_DIR` is
+set, warn that it still points at the old folder and tell the user to set
+`EXPECTATION_FIT_CONFIG_DIR` instead, or unset it.
+
+---
+
+### 2. Choose what to scaffold (fresh) / menu
+
+Parse `$ARGUMENTS`:
+
+| Token | Effect |
+|-------|--------|
+| `all` | ways + patterns + thresholds (full set; not calibrate) |
+| `ways` / `patterns` / `thresholds` | that file only |
+| `fresh` | full wizard; default file set = all |
+| `upgrade` | Step U |
+| `calibrate` [p…] | Step 2c |
+| blank | mode from 0a; then menu if still needed |
+
+**Fresh interactive menu** (multi-select) when selection is still open:
+
+| Option | File | What it controls |
+|--------|------|------------------|
+| Ways of working | `.expectation-fit/ways-of-working.yaml` | lenses, tools, severity, conventions (incl. auto), severity_align, confidence, artifacts |
+| Pattern policy | `.expectation-fit/patterns.yaml` | preferred / allowed / blocked / approved |
+| Thresholds | `.expectation-fit/thresholds.yaml` | architecture metric limits (Arch pack ✅ stacks only) |
+| **Calibrate** | updates thresholds | measure + propose (after files exist) |
+| All | all three | full config set (not calibrate) |
+
+Recommend **All** for first run. Recommend **Calibrate** after All when any Arch pack ✅
+is present.
+
+Non-interactive / `$ARGUMENTS`-driven runs: skip menus; scaffold documented defaults
+(and any values already known from arguments). File comments explain later edits.
+
+---
+
+### 2b. Capability questions (fresh interactive; also offered in upgrade)
+
+When scaffolding or upgrading **ways-of-working** and/or **patterns** interactively,
+ask short questions and write answers into the files. Defaults differ by profile:
+
+| Question | Monolith default | Multi-repo default |
+|----------|------------------|--------------------|
+| Which files? | All | All |
+| Lens toggles | predict/convention/simplicity **on**; experience/architecture **auto** | same |
+| `tools.architecture` | `enrich` | same |
+| `conventions.auto.mode` | `curated` | `curated` + **roots** filled from detected siblings |
+| `severity_align.mode` | `curated_gates` | `curated_gates` |
+| Prefer interactor over service_object? | **ask** (Rails Arch pack only) | **ask** (if any rails root) |
+| Grandfather `app/services/**`? | only if blocking services | same |
+| Artifact paths | defaults from config-resolution | same |
+| Calibrate now? | offer after write | offer per Arch pack stack |
+
+#### Questions (use AskUserQuestion; skip if non-interactive)
+
+1. **Which lenses run?** Default as table. User may turn any **off**. Write `lenses.*`.
+
+2. **External-tool preference** (if architecture not off): enrich / prefer / report / off.
+   Write `tools.architecture`.
+
+3. **Convention auto-sources** — "Discover Copilot packs, path-scoped instructions, and
+   PR-gate workflows?" → `curated` (Recommended) / `all` / `off`. Write
+   `conventions.auto.mode`.  
+   - Multi-repo: confirm **roots** list (detected siblings; user can edit). Write
+     `conventions.auto.roots: [be, fe, …]`. Empty roots = project base only.  
+   - Keep default `include` and `exclude` from the template unless the user trims packs.
+
+4. **Severity align with CI gates** — "Promote finding severity when a discovered PR
+   workflow matches the theme (e.g. callback check)?" → `curated_gates` (Recommended) /
+   `off`. Write `severity_align.mode` (and keep `min_severity: P1` unless changed).
+
+5. **Pattern stance** (when scaffolding patterns **and** a stack catalog has
+   `interactor` + `service_object`, typically Rails):  
+   - Prefer interactors for new multi-step domain work? → if yes, set **only**  
+     `preferred: [{ id: interactor, instead_of: [service_object], when: "…", note: "…" }]`.  
+     Do **not** also add `service_object` to `blocked` for the same stance (preferred
+     already P1s new instead_of use; double-listing creates duplicate findings).  
+   - Grandfather legacy services? → if yes,  
+     `approved: [{ path: app/services/**, reason: "legacy; no NEW services" }]`.  
+   - Optional advanced: block without preferred only when the team wants a ban with no
+     replacement id.  
+   - If no Rails (or user declines), leave preferred/blocked empty (or stack seed only).
+
+6. **Where do reports go?** Confirm `artifacts.*` defaults from
+   `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`. Say that reports stay local
+   by default (`.expectation-fit/reports/`, which ignores itself). Name
+   `artifacts.report_dir` as the setting that commits them (for example
+   `docs/expectation-fit`). Warn: reports name unfixed defects, and reports committed
+   under a published `docs/` site are public. Write overrides only if the user changes
+   them. Always restate resolved paths in the final summary.
+
+7. **Seed `conventions.sources`?** If AGENTS/CLAUDE (or triage docs) exist under roots,
+   offer to add those **paths** to `sources` (not paste file bodies). Preview list;
+   user accepts / edits. Explicit sources always win over exclude.
+
+Non-interactive: scaffold defaults with the Step 3 header (auto mode `curated`, severity_align on,
+preferred empty). Set `conventions.auto.roots` when `$ARGUMENTS` includes
+`multi-repo` and/or `roots:a,b,c` (comma-separated sibling dirs). If multi-repo
+**signals** are strong but neither token is present, **do not write** `.expectation-fit/` only
+inside a child app: refuse with the required tokens, or write at the detected workspace
+root and print a hard warning in the report. Without tokens and without multi-repo
+signals, place at the current git root (monolith).
+
+---
+
+### 2c. Calibrate thresholds (`calibrate` / menu)
+
+When the user asks to calibrate (or `$ARGUMENTS` starts with `calibrate`):
+
+1. Detect stack(s) via stack-catalog; require at least one **Arch pack ✅**. If none, stop
+   and explain.
+2. Load metric keys from each stack's namespace in
+   `${CLAUDE_PLUGIN_ROOT}/config/defaults/thresholds.yaml` and path globs from the stack
+   architecture doc / pattern catalog (same units the architecture lens measures:
+   LOC, public methods, associations, callbacks, method length, etc.).
+3. Measure distributions over the relevant tree (exclude `vendor`/`node_modules`/build):
+   for each metric compute **n, median, p75, p90, p95, max** (simple sort + index is fine;
+   Bash or a short Ruby/Python one-liner is OK). Multi-repo: measure under each root that
+   matches that stack.
+4. Target percentile = argument (`p90` default) or user choice. Propose
+   `threshold = ceil(percentile)` (or just above p90 so the fat tail flags, not the bulk).
+5. **Present** a table: metric | median | p75 | p90 | max | default | proposed. Flag any
+   metric where the shipped default is far outside the distribution (either direction).
+6. On confirmation, write/update `.expectation-fit/thresholds.yaml` for those stack namespaces.
+   **Never clobber without confirmation.** Put **evidence in comments**:
+
+   ```yaml
+   max_callbacks: 2   # median 0, p75 0, p90 2, max 29 (measured 2026-07-29, n=515, target p90)
+   ```
+
+7. If the user declines write, print the proposed YAML block for copy-paste.
+
+If full measurement is too heavy for the session, fall back to the smaller form: run
+the same measurement summary into the next `/fit-audit` Observations section and leave
+thresholds unchanged until the human pastes numbers.
+
+---
+
+### 3. Copy / write templates (fresh; idempotent, stack-aware)
+
+Source templates are `${CLAUDE_PLUGIN_ROOT}/config/defaults/<file>`. Write to
+`{project_base}/.expectation-fit/<file>`. **Never overwrite an existing `.expectation-fit/<file>`**
+without explicit confirmation — a surprising clobber of committed team config is the
+failure mode to avoid (least astonishment / no data loss). If a target exists, report
+it and ask whether to overwrite, diff, or skip; default to **skip**.
+
+**Project header.** Every file this skill writes starts with the header below. It
+replaces the template title line `(GLOBAL DEFAULTS)` and, in `ways-of-working.yaml`, the
+template's copy instructions. Put no absolute path in the header: a path shows a home
+folder and goes stale. No written file says `(GLOBAL DEFAULTS)`.
+
+```yaml
+# Expectation Fit: project config for <repo>.
+# Values here override the plugin defaults. Omitted keys keep the default value.
+# Written by /fit-setup <version> on <date>.
+```
+
+Before write on interactive fresh: show a **short preview** of the values that differ
+from raw defaults (roots, auto mode, severity_align, preferred patterns, lens offs).
+Confirm once, then write.
+
+#### `ways-of-working.yaml`
+
+Start from the default template, then apply capability answers:
+
+- `lenses.*`, `tools.architecture`, `artifacts.*` from questions 1–2 and 6.
+- `conventions.auto.mode`, `conventions.auto.roots`, optional `include`/`exclude` tweaks.
+- `conventions.sources` from question 7 (paths that exist).
+- `severity_align.mode` (+ keep `min_severity` / `themes` structure from template).
+- Do **not** invent long `notes` at init; leave `notes: []` (use `/fit-from-pr-learnings`
+  later for PR-mined notes).
+
+```bash
+# PROJECT_BASE is the resolved placement root (workspace or monolith git root), absolute.
+mkdir -p "$PROJECT_BASE/.expectation-fit"
+SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/ways-of-working.yaml"
+DST="$PROJECT_BASE/.expectation-fit/ways-of-working.yaml"
+# Prefer: copy then edit keys, or emit merged YAML with comments preserved where practical.
+if [ -e "$DST" ]; then echo "EXISTS: $DST"; else …; fi
+```
+
+#### `thresholds.yaml`
+
+**Scaffold only the detected stack namespace(s)** (union for multi-repo), not every stack
+in the global defaults file. Config-resolution deep-merges a partial file over defaults.
+
+Emit the file header comment + each `<stack>:` block for detected Arch pack ✅ stacks:
+
+```bash
+SRC="${CLAUDE_PLUGIN_ROOT}/config/defaults/thresholds.yaml"
+DST=".expectation-fit/thresholds.yaml"
+# For each STACK in detected Arch-pack stacks, extract that top-level block with awk
+# (same pattern as single-stack extract; append blocks for multi-stack).
+```
+
+For **Arch pack ⬜** / unknown only: skip `thresholds.yaml` and say no architecture pack
+exists yet.
+
+#### `patterns.yaml`
+
+Copy default policy shape, then:
+
+1. Seed `allowed:` with pattern ids from **each** detected stack's catalog
+   (`${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml`) when that helps the team —
+   or leave empty with a top comment naming the stacks (empty allowed = no explicit
+   allow-list; lens still classifies). Prefer **commented** examples over a huge
+   allow-list unless the user asked for full seed.
+2. Apply **preferred / blocked / approved** from capability question 5 when yes.
+3. Note stacks in the file's top comment.
+4. Pattern ids must exist in a catalog; never invent ids.
+
+The written files keep explanatory comments so the team can edit in place.
+
+---
+
+### U. Upgrade mode (`upgrade`)
+
+Goal: add **missing capabilities** from current plugin defaults without wiping hand-tuned
+`notes`, `sources`, `severity_overrides`, roots, or pattern lists.
+
+#### U1. Load
+
+1. Resolve `PROJECT_CONFIG` (walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR` / legacy
+   `INTENSE_CONFIG_DIR`).
+2. If none: say so and offer **fresh** instead.
+3. Load project yaml + defaults from `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
+4. Re-run light detect (0b–0d) for roots/stacks recommendations.
+
+#### U2. Capability table
+
+Build and **show** a table (do not write yet):
+
+| Capability | In project? | Plugin default / recommendation | Proposed action |
+|------------|-------------|----------------------------------|-----------------|
+| `conventions.auto` block | present / missing / partial | mode curated; roots for multi-repo | add missing keys only |
+| `conventions.auto.roots` | empty / set | detected siblings | set if empty and multi-repo |
+| `severity_align` | present / missing | curated_gates | add if missing |
+| `artifacts.*` | present / legacy `report_dir` only / old default values | two-layer defaults | carry legacy `report_dir` over as `artifacts.report_dir`; offer the new defaults for old values (U4) |
+| `patterns.preferred` | empty / set | optional interactor preference | ask if rails + empty |
+| `patterns.blocked` / approved | … | … | ask if preferred chosen |
+| Missing config **files** | ways / patterns / thresholds | stack-aware scaffold | create missing files only |
+| Thresholds never calibrated | n/a | offer calibrate | handoff Step 2c |
+
+**Deep-merge reminder:** maps merge key-by-key. If the project has `conventions.notes`
+but omits `conventions.auto`, defaults already supply `auto` at runtime. Upgrade still
+**materializes** important blocks into the project file when the user wants them
+visible/editable (least surprise for humans reading git).
+
+#### U3. User picks
+
+Interactive multi-select: enable missing / leave alone / customize. Default: enable
+safe missing blocks (`auto`, `severity_align`, missing files) **without** overwriting
+existing non-empty lists or notes.
+
+#### U4. Apply rules (strict)
+
+- **Never** delete or replace existing `conventions.notes` lines.
+- **Never** clear non-empty `sources`, `preferred`, `blocked`, `approved`, or
+  `severity_overrides` without explicit overwrite confirm.
+- **Add** missing top-level or nested keys from defaults (e.g. insert `severity_align:`
+  block; insert `conventions.auto:` if absent; fill `roots` only when empty and user
+  accepted).
+- **Create** missing of the three files with stack-aware scaffolding (same as Step 3).
+- **Legacy** top-level `report_dir`: carry its value over as `artifacts.report_dir`
+  (it is already an alias at runtime). Remove the legacy key only on confirm. Run
+  scratch then uses `artifacts.run_dir` (document this in the summary).
+  Name the legacy folder in the summary. Say that its old run folders stay. The user can
+  delete them by hand, after keeping any report.md or report.json. This skill writes and
+  deletes only under `.expectation-fit/`, except the confirmed legacy migration (Step 1),
+  which moves yaml files out of `.intense/` and removes `.intense/` only on a yes.
+- **Old default values** (before 0.9.0): `artifacts.report_dir: docs/intent-engineering`,
+  `artifacts.run_dir: .intense/runs`, or a top-level `report_dir`. Name each one and
+  offer the new defaults: reports go to `.expectation-fit/reports/` and runs to
+  `.expectation-fit/runs/`, both git-ignored. Keep the old value when the user wants
+  committed reports. Change nothing without a yes.
+- **Copied title:** when a file still starts with the template title `(GLOBAL DEFAULTS)`,
+  offer to replace that title with the Step 3 project header.
+- Show a **diff-style** summary before write; confirm once.
+
+#### U5. Optional handoffs
+
+After upgrade: offer `/fit-setup calibrate` and `/fit-from-pr-learnings` (do not run them
+unless the user asks).
+
+---
+
+### 4. Gitignore for run scratch (optional; re-offered until the path is ignored)
+
+Resolve the **active** run-scratch path first (same rules as
+`${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`):
+
+- If project `.expectation-fit/ways-of-working.yaml` has `artifacts.run_dir` → use that.
+- Else, only when the resolved config folder IS the legacy `.intense/` (not yet moved),
+  and its `ways-of-working.yaml` has `artifacts.run_dir` → use that.
+- Else → default `.expectation-fit/runs/`.
+
+New run folders ignore themselves (config-resolution writes a `*` `.gitignore` into
+each one). This offer covers folders left by older runs. After scaffolding or upgrading ways-of-working (or on any init that mentions artifacts),
+if the project `.gitignore` does **not** already ignore the resolved scratch root,
+**offer** to append it (example for the default):
+
+```
+# Expectation Fit: ephemeral lens run scratch (from older runs; new ones ignore themselves)
+.expectation-fit/runs/
+```
+
+This is **not** remembered across declines — if the line is still missing, the offer
+reappears on the next `/fit-setup`. That is intentional (least surprise: no hidden
+"don't ask again" flag). Never force; never add `.expectation-fit/` itself (config YAML must
+stay committable). Do not invent a `wip/` ignore for the plugin default — `wip/` is no
+longer the plugin report home.
+
+For multi-repo **shared** config: prefer the workspace root `.gitignore`. If only a
+child has a gitignore, note that runs may live at workspace `.expectation-fit/runs/` and the
+ignore should be where that path is tracked.
+
+---
+
+### 5. Report
+
+List what was created, updated, skipped, or proposed. Then tell the user:
+
+- **Profile + placement:** monolith/multi-repo; absolute path of `.expectation-fit/`; roots if any.
+- **Legacy config folder** (when one was found): the absolute `.intense/` path, which
+  yaml files moved, which folders stayed (`runs/`, `reports/`, safe to delete), and the
+  `INTENSE_CONFIG_DIR` warning when that variable is set.
+- **Capabilities enabled:** auto mode, severity_align, preferred patterns, stacks.
+- The files are **meant to be committed** (project config, not artifacts) — do **not**
+  add `.expectation-fit/` to `.gitignore` (only `.expectation-fit/runs/` if they accepted Step 4).
+- Reports land under `.expectation-fit/reports/` by default and stay out of git (the
+  folder ignores itself). Set `artifacts.report_dir` to commit them. Run scratch is
+  cleaned up after each report step when `cleanup_runs: true`.
+- Edit config to taste; every `fit-*` run merges project over plugin defaults (project
+  wins). Nested maps merge recursively at every depth. Only lists replace, unless the block sets `extends: true`.
+- **Natural next steps:**
+  - `/fit-audit` for posture under the new config
+  - `/fit-setup calibrate p90` if Arch pack ✅ and thresholds still generic
+  - `/fit-from-pr-learnings` when PR triage exists (smarter notes over time; not required
+    at first install)
+  - For multi-repo: run agents from a child cwd and confirm Coverage shows
+    `Config: project:…` via walk-up
+- **Git state:** after a write, end with the output of
+  `git -C "<resolved .expectation-fit dir>" status -sb .` and this line: "Commit these
+  config files in their own commit, not inside feature work." Outside a git repo, skip the
+  status line.
+
+This skill writes and deletes only under `.expectation-fit/` (and optionally one
+`.gitignore` append the user accepted), except the confirmed legacy migration (Step 1),
+which moves yaml files out of `.intense/` and removes `.intense/` only on a yes. It
+never commits or pushes.
+
+---
+
+## Argument quick reference
+
+| Invocation | Mode |
+|------------|------|
+| `/fit-setup` | Wizard: detect fresh vs upgrade; profile; capabilities |
+| `/fit-setup all` | Fresh full file set (still capability questions if interactive) |
+| `/fit-setup ways` | Ways only |
+| `/fit-setup patterns` | Patterns only |
+| `/fit-setup thresholds` | Thresholds only (stack namespaces) |
+| `/fit-setup fresh` | Force fresh wizard |
+| `/fit-setup upgrade` | Capability diff + merge missing |
+| `/fit-setup calibrate` | Threshold measurement (default p90) |
+| `/fit-setup calibrate p75` | Calibrate at p75 |
+| `/fit-setup multi-repo` | Fresh with multi-repo profile default |
+| `/fit-setup roots:backend,frontend` | Seed `conventions.auto.roots` (with or without multi-repo) |
+
+---
+
+## Reference files (read at runtime)
+
+- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — walk-up, merge, auto sources,
+  severity_align, artifacts
+- `${CLAUDE_PLUGIN_ROOT}/references/stack-catalog.md` — stack detection + Arch pack
+- `${CLAUDE_PLUGIN_ROOT}/config/defaults/` — source templates
+- `${CLAUDE_PLUGIN_ROOT}/resources/patterns/<stack>.yaml` — valid pattern ids
+- `${CLAUDE_PLUGIN_ROOT}/skills/fit-from-pr-learnings/SKILL.md` — post-init learnings loop
+  (not part of first install)

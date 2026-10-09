@@ -18,11 +18,11 @@
 ## Checklist
 
 - [ ] `ruby scripts/check-contracts.rb` passes locally (also runs in CI on this PR).
-- [ ] If I touched `agents/`: `git ls-files plugins/intent-engineering/agents/` still lists **5** (the gitignore trap).
+- [ ] If I touched `agents/`: `git ls-files plugins/expectation-fit/agents/` still lists **5** (the gitignore trap).
 - [ ] If I added/renamed a **lens**: wired into `findings-schema.json` enum, `lens-catalog.md`, `scoring-rubric.md`, and the README.
 - [ ] If I added a **resource doc** (principle/framework/agnostic): it has a detection ("smells") section + a `## Sources` section (≥2 links), and is cited in `principle-index.md`/`lens-catalog.md`.
 - [ ] If I added a **pattern** or **threshold**: ids match across the catalog, `thresholds.yaml`, and `rails-architecture.md`.
 - [ ] `CHANGELOG.md` updated if the change is user-facing.
-- [ ] No secrets; run reports / scratch stay under `wip/` (gitignored).
+- [ ] No secrets. Lens run scratch stays under `.expectation-fit/runs/` (gitignored).
 
 <!-- See AGENTS.md for the full contributor guide and the load-bearing rules. -->

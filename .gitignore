@@ -1,4 +1,5 @@
-# Intent Engineering — ephemeral lens run scratch (published reports: docs/intent-engineering/)
+# Expectation Fit: lens run scratch from older runs (new run and report folders ignore themselves)
+.expectation-fit/runs/
 .intense/runs/
 
 # Optional personal scratch (not the plugin default). Legacy .wip/ — do not reintroduce as default.
@@ -6,11 +7,11 @@ wip/
 .wip/
 
 # Some environments globally ignore `agents/` (several AI coding tools add this to a
-# global gitignore). This plugin SHIPS its lens agents in plugins/intent-engineering/agents/,
+# global gitignore). This plugin SHIPS its lens agents in plugins/expectation-fit/agents/,
 # so re-include them — otherwise a clone on such a machine has zero agents and the plugin
 # is broken. Defensive; keep this negation on any clone/fork.
-!plugins/intent-engineering/agents/
-!plugins/intent-engineering/agents/**
+!plugins/expectation-fit/agents/
+!plugins/expectation-fit/agents/**
 
 # OS / editor
 .DS_Store

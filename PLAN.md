@@ -1,6 +1,6 @@
-# intent-engineering — Plan
+# expectation-fit — Plan
 
-A Claude Code plugin that enforces **intent engineering**: software that behaves
+A Claude Code plugin that enforces **expectation fit**: software that behaves
 the way a reasonable developer or user already expects. It applies a set of
 well-established design principles as review/audit/planning *lenses*, fanning out
 parallel agents that produce structured findings and reports.
@@ -19,9 +19,9 @@ parallel agents that produce structured findings and reports.
 >
 > **How:** A small set of "lenses" (each grounded in a researched principle) run as
 > parallel agents. They return scored, deduplicated findings with concrete fixes,
-> written to a report under `docs/intent-engineering/`. The same lenses work in four contexts: planning,
+> written to a local report under `.expectation-fit/reports/` (git-ignored). The same lenses work in four contexts: planning,
 > plan validation, code review, and codebase audit. Claude Code is the installable
-> plugin. An optional Grok runtime lives at `.grok/workflows/` (subset of `/ie-review`).
+> plugin. An optional Grok runtime lives at `.grok/workflows/` (subset of `/fit-review`).
 
 ---
 
@@ -71,10 +71,10 @@ adapts to requirements-vs-plan.
 
 | Agent | Principles | Hunts for |
 |-------|-----------|-----------|
-| `ie-predictability-reviewer` | POLA, DWIM, WYSIWYG | Name/behavior mismatch, hidden side effects, surprising return types/values, inconsistent branch returns, silent failures, controls that don't do what their label implies |
-| `ie-convention-reviewer` | Convention over Configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure |
-| `ie-simplicity-reviewer` | Occam, KISS, YAGNI | Needless abstraction, premature generality, speculative config, layers that don't earn their keep, simpler equivalent exists |
-| `ie-experience-reviewer` | HIG, Look & Feel, UX | Missing interaction states, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture |
+| `fit-predictability-reviewer` | POLA, DWIM, WYSIWYG | Name/behavior mismatch, hidden side effects, surprising return types/values, inconsistent branch returns, silent failures, controls that don't do what their label implies |
+| `fit-convention-reviewer` | Convention over Configuration, framework idiom | Reinvented conventions, config where convention exists, one-off patterns that fight the repo/framework, non-idiomatic structure |
+| `fit-simplicity-reviewer` | Occam, KISS, YAGNI | Needless abstraction, premature generality, speculative config, layers that don't earn their keep, simpler equivalent exists |
+| `fit-experience-reviewer` | HIG, Look & Feel, UX | Missing interaction states, inconsistent look/feel, broken keyboard/focus/back-button, accessibility gaps, weak information architecture |
 
 Shared agent contract: anchored confidence (0/25/50/75/100), severity P0–P3, a
 `principle` field on every finding, concrete `suggested_fix`, structured JSON
@@ -86,20 +86,21 @@ matching the findings schema.
 
 | Skill | Context | Mirrors | Behavior |
 |-------|---------|---------|----------|
-| `ie-review` | code review: PR / local / branch | `ce-code-review` | Scope detect → fan out lenses → merge/dedup/confidence-gate → report. `mode:agent` returns JSON. |
-| `ie-audit` | whole codebase / feature / path | (new) | Sampling-aware broad sweep; per-principle posture scores + top findings. |
-| `ie-validate-plan` | an existing plan / spec / requirements doc | `ce-doc-review` | Classify doc → lenses in plan mode + dimensional 0–10 rating → findings + gaps. |
-| `ie-plan-assist` | during planning | (light) | Advisory: surface the principle considerations relevant to the work being planned; emit a checklist, no blocking. |
+| `fit-review` | code review: PR / local / branch | `ce-code-review` | Scope detect → fan out lenses → merge/dedup/confidence-gate → report. `mode:agent` returns JSON. |
+| `fit-audit` | whole codebase / feature / path | (new) | Sampling-aware broad sweep; per-principle posture scores + top findings. |
+| `fit-validate-plan` | an existing plan / spec / requirements doc | `ce-doc-review` | Classify doc → lenses in plan mode + dimensional 0–10 rating → findings + gaps. |
+| `fit-plan-assist` | during planning | (light) | Advisory: surface the principle considerations relevant to the work being planned; emit a checklist, no blocking. |
 
 All skills:
-- **Two-layer artifacts:** run scratch `.intense/runs/<run-id>/` (per-lens JSON;
-  cleaned up after publish) and published report
-  `docs/intent-engineering/<stamp>-<skill>[-scope].md`. Override publish path via
+- **Two-layer artifacts:** run scratch `.expectation-fit/runs/<run-id>/` (per-lens JSON;
+  cleaned up after the report step) and report
+  `.expectation-fit/reports/<stamp>-<skill>[-scope].md`; both ignore themselves.
+  Override the report path via
   `out:<path>`; permanent defaults via `artifacts.*` in ways-of-working. Outside-repo
   only when explicitly requested.
-- Never push / open PRs / file tickets. Read-only lenses; `ie-review` (interactive only)
-  applies safe verified fixes and commits on a clean tree — never pushes. `ie-audit` and
-  `ie-validate-plan` are report-only.
+- Never push / open PRs / file tickets. Read-only lenses; `fit-review` (interactive only)
+  applies safe verified fixes and commits on a clean tree — never pushes. `fit-audit` and
+  `fit-validate-plan` are report-only.
 - Bounded parallel dispatch; degrade to sequential where the harness can't fan out.
 
 **Shared references** (per skill `references/`, sourced from `resources/`):
@@ -111,19 +112,19 @@ All skills:
 ## Repo layout
 
 ```
-intent-engineering/                      (repo / dev + marketplace)
+expectation-fit/                      (repo / dev + marketplace)
   PLAN.md  STATUS.md  CHANGELOG.md  README.md
   .claude-plugin/marketplace.json
-  plugins/intent-engineering/            (the installable plugin — self-contained)
+  plugins/expectation-fit/            (the installable plugin — self-contained)
     .claude-plugin/plugin.json
-    agents/   ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
-    skills/   ie-{init,plan-assist,validate-plan,review,audit}/SKILL.md
+    agents/   fit-{predictability,convention,simplicity,experience,architecture}-reviewer.md
+    skills/   fit-{setup,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
     references/  findings-schema.json, subagent-template, lens-catalog, report-template,
                  scoring-rubric, principle-index, config-resolution
     config/defaults/  ways-of-working.yaml, patterns.yaml, thresholds.yaml
     resources/   principles/  frameworks/  agnostic/  patterns/
-  docs/intent-engineering/   published ie-* reports
-  .intense/runs/             ephemeral lens scratch (gitignored; cleaned up after publish)
+  docs/intent-engineering/   this repo's committed dogfood reports (runs pass out:)
+  .expectation-fit/runs/ + reports/  self-ignoring lens scratch and local reports
 ```
 
 (Resources live inside the plugin for install self-containment — see the root README.)
@@ -142,9 +143,9 @@ intent-engineering/                      (repo / dev + marketplace)
 - **Phase 5 — Dogfood:** run in this repo + real-world repos; iterate from real
   findings. Capture learnings back into the principle/convention docs.
 - **Phase 6 — Architecture, patterns & config:** framework-aware architectural audit
-  (Rails first), design-pattern catalog + recognition, `.intense/` ways-of-working
-  config (project supersedes global), `/ie-init` scaffolder, new
-  `ie-architecture-reviewer` lens. See the Phase 6 design below.
+  (Rails first), design-pattern catalog + recognition, `.expectation-fit/` ways-of-working
+  config (project supersedes global), `/fit-setup` scaffolder, new
+  `fit-architecture-reviewer` lens. See the Phase 6 design below.
 
 Each phase's task list and progress live in `STATUS.md`; the dated change log lives in `CHANGELOG.md`.
 
@@ -154,7 +155,7 @@ Each phase's task list and progress live in `STATUS.md`; the dated change log li
 
 1. **Lens grouping:** 4 consolidated lenses. ✅
 2. **Framework seed set:** Rails/Ruby, React/TS, Python, Swift/iOS. ✅
-3. **Fix application:** `ie-review` applies safe verified fixes (never pushes). ✅
+3. **Fix application:** `fit-review` applies safe verified fixes (never pushes). ✅
 4. **Research fan-out:** parallel research agents, one per doc. ✅
 
 ---
@@ -166,7 +167,7 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 
 ### Decisions (resolved for this phase)
 
-1. **New lens, not an extension.** `ie-architecture-reviewer` is a distinct 5th lens —
+1. **New lens, not an extension.** `fit-architecture-reviewer` is a distinct 5th lens —
    architectural detection needs structural metrics + a pattern catalog, which is a
    different job from the prose-level convention lens.
 2. **Heuristic-first, tool-enriched.** The lens computes its own heuristics (LOC,
@@ -177,11 +178,11 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
 3. **Pattern recognition = heuristics v1.** Identify patterns by naming suffix, directory,
    base class/module, and gem usage (e.g. the `interactor` gem). AST-based recognition
    is a future enhancement, noted not built.
-4. **Config merge = project overrides global; lists replace.** Project `.intense/*.yaml`
+4. **Config merge = project overrides global; lists replace.** Project `.expectation-fit/*.yaml`
    supersedes the plugin's `config/defaults/`. Scalar/map keys: project overrides global.
    Lists: project replaces global unless the file sets `extends: true` (then append).
 5. **Config locations.** Global defaults ship in `${CLAUDE_PLUGIN_ROOT}/config/defaults/`.
-   Project config lives in `.intense/` at the repo root (read from cwd at runtime).
+   Project config lives in `.expectation-fit/` at the repo root (read from cwd at runtime).
 
 ### Components
 
@@ -200,19 +201,19 @@ Adds a fifth lens and a project-level config system so teams can encode their ow
   fat-router, god-module, god-object, misused-service, business-logic-in-schema,
   fat-dependency, layer-leak, law-of-demeter + a 13-pattern catalog. Proves the per-stack
   rule-pack design: a stack ships when both files + a `<stack>.*` threshold namespace exist.
-- **`agents/ie-architecture-reviewer.md`** — the lens. Detects anti-patterns, classifies
+- **`agents/fit-architecture-reviewer.md`** — the lens. Detects anti-patterns, classifies
   pattern instances, raises unknown patterns, honors allow/block/approved from config.
 - **Schema/catalog updates** — `architecture` added to the principle enum + optional
   `pattern` field; lens-catalog gains the 5th lens + selection rule (on when a supported
   framework is detected); scoring-rubric gains architecture dimensions.
-- **Skill wiring** — `ie-audit` runs an architecture pass on supported frameworks;
-  `ie-review` selects it when the diff touches models/controllers/services.
-- **`skills/ie-init/SKILL.md`** — scaffolds `.intense/` templates into a project
+- **Skill wiring** — `fit-audit` runs an architecture pass on supported frameworks;
+  `fit-review` selects it when the diff touches models/controllers/services.
+- **`skills/fit-setup/SKILL.md`** — scaffolds `.expectation-fit/` templates into a project
   (menu, stack-aware, idempotent).
 
 ### Dogfood
 
 The plugin repo isn't Rails, so the architecture lens is dogfooded against a small
 synthetic Rails fixture under optional personal `wip/fixtures/` (gitignored dev scratch —
-not the plugin report home; reports use `docs/intent-engineering/`) with deliberate smells +
+not the plugin report home; reports use `.expectation-fit/reports/`) with deliberate smells +
 recognizable + unknown patterns. Real-repo runs are left for the user to trigger.

@@ -1,0 +1,35 @@
+{
+  "skill_name": "fit-validate-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "fit-validate-plan docs/plans/my-plan.md",
+      "expected_output": "Reads the doc, classifies requirements vs plan, loads config via walk-up, runs always-on lenses plus any conditional ones, writes a published report under the report dir (and run scratch under the run dir), returns dimensional ratings and a Ready/Revise verdict. Coverage includes an explicit Config source line. Does not modify the plan document."
+    },
+    {
+      "id": 2,
+      "prompt": "fit-validate-plan docs/plans/my-plan.md and just fix the problems you find while you are in there",
+      "expected_output": "STOPS at the fixing request: states that this skill reports and never edits the document, and points at the planning workflow to apply changes. Still produces the report with a Config source line in Coverage. No file outside the report/run dirs is written."
+    },
+    {
+      "id": 3,
+      "prompt": "fit-validate-plan mode:agent out:/tmp/fit-validate.json docs/plans/my-plan.md",
+      "expected_output": "Emits the JSON reply and writes it at the out path (or under it). Still does not edit the plan. Architecture lens is not selected (plan context). Report/Coverage still records Config source. git status --porcelain is the same before and after the run."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-validate-plan docs/plans/my-plan.md (after the confidence gate, two P2 findings remain, the lowest dimension score is 6/10, and every selected lens is ok)",
+      "expected_output": "Verdict is Ready to implement, because no P0 or P1 survives the gate. Both P2 findings are listed as gaps that do not block. The verdict shows the lens coverage, and the reply ends with: Verdict: Ready to implement (<n> of <n> lenses). Lowest score: 6/10. Blocking: 0. Failed lenses: none. Report: <path>. Does not modify the plan."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-validate-plan prior:.expectation-fit/reports/<last>-validate-plan-my-plan.md docs/plans/my-plan.md (the plan was edited after round 1)",
+      "expected_output": "Re-check run. Header shows plan_sha256, supersedes: <prior report> and round 2. Each prior gap is marked closed or still open with its plan line. The rating table has a Prior column, and a score drops only when a lens names the new gap. Decisions the plan marks as settled stay closed unless a lens cites new evidence. The verdict line shows how many applicable lenses ran."
+    },
+    {
+      "id": 6,
+      "prompt": "fit-validate-plan docs/plans/a-plan.md docs/plans/b-plan.md",
+      "expected_output": "One run with one run id and one report, with one report section per document. Each lens dispatch covers one document and writes its own file under the run folder: {lens}-docs-plans-a-plan.json and {lens}-docs-plans-b-plan.json, never one shared {lens}.json. A missing per-document file marks that lens failed."
+    }
+  ]
+}

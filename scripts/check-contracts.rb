@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 #
-# Contract-integrity check for the intent-engineering plugin.
+# Contract-integrity check for the expectation-fit plugin.
 #
 # Asserts the cross-file invariants that keep the plugin installable and internally
 # consistent — the things a single edit can silently break. Deterministic and
@@ -15,12 +15,16 @@
 #
 # Run from anywhere:  ruby scripts/check-contracts.rb
 # Checks:
-#   1. All shipped JSON parses; all shipped YAML parses.
+#   1. All shipped JSON parses; all shipped YAML parses; default lens toggles load as strings;
+#      the release version agrees in plugin.json, marketplace.json, CHANGELOG.md and the
+#      report-template example.
 #   2. Lens identity agrees 4 ways: findings-schema `lens` enum == agents/ basenames
-#      == lens-catalog rows == scoring-rubric rows.
+#      == lens-catalog rows == scoring-rubric rows; the template's agent prefix == the
+#      plugin.json name.
 #   3. Agent frontmatter: name == filename stem, name in the lens enum, tools + model present.
 #   4. Every ${CLAUDE_PLUGIN_ROOT}/... path (and backticked references/resources/config
-#      paths in the index/catalog) resolves on disk; placeholders skipped.
+#      paths in the index/catalog) resolves on disk; placeholders skipped. Every doc in the
+#      lens-catalog "Resource docs it reads" column exists at resources/<name>.
 #   5. Pattern catalog: each entry has id/name/intent/recognition/good_use/misuse; ids
 #      unique snake_case.
 #   6. principle: values the lenses declare they emit are all in the schema principle enum.
@@ -31,14 +35,16 @@
 #   9. Resource docs: each principle/framework/agnostic doc has a detection (smells) section
 #      and a Sources section with >=2 links; every resource doc is cited (no orphans) in
 #      principle-index.md or lens-catalog.md.
-#  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift).
+#  10–11. Stack registry + skill/agent prose vs catalog (behavioral drift); allowed finding
+#      values in the template + agents; the mode:agent example has every listed field;
+#      no skill cites fit-review Stage for a shared merge rule.
 #  12. Skill evals.json (optional; present files must parse; refusal cases preferred).
 
 require "json"
 require "yaml"
 require "shellwords"
 
-PLUGIN = File.expand_path("../plugins/intent-engineering", __dir__)
+PLUGIN = File.expand_path("../plugins/expectation-fit", __dir__)
 LENSES = %w[predictability convention simplicity experience architecture].freeze
 
 $failures = 0
@@ -106,6 +112,26 @@ rescue StandardError => e
   bad "marketplace.json does not parse: #{e.message}"
 end
 
+# One release version everywhere: plugin.json, marketplace metadata, the top versioned
+# CHANGELOG heading, and the report-template plugin_version example.
+begin
+  versions = {
+    "plugin.json version" => JSON.parse(read(".claude-plugin/plugin.json"))["version"],
+    "marketplace.json metadata.version" =>
+      JSON.parse(File.read(File.expand_path("../.claude-plugin/marketplace.json", __dir__))).dig("metadata", "version"),
+    "CHANGELOG.md top version" =>
+      File.read(File.expand_path("../CHANGELOG.md", __dir__))[/^## \[(\d+\.\d+\.\d+)\]/, 1],
+    "report-template plugin_version" => read("references/report-template.md")[/"plugin_version":\s*"([^"]+)"/, 1]
+  }
+  if versions.values.uniq.size == 1 && versions.values.first
+    ok "release version #{versions.values.first} agrees across #{versions.keys.join(', ')}"
+  else
+    bad "release version mismatch: #{versions.map { |k, v| "#{k}=#{v.inspect}" }.join(', ')}"
+  end
+rescue StandardError => e
+  bad "release version check failed: #{e.message}"
+end
+
 yaml_files = Dir[File.join(PLUGIN, "config/defaults/*.yaml")] +
              Dir[File.join(PLUGIN, "resources/patterns/*.yaml")]
 yaml_files.each do |abs|
@@ -113,6 +139,17 @@ yaml_files.each do |abs|
   ok "#{abs.sub(PLUGIN + '/', '')} parses"
 rescue StandardError => e
   bad "#{abs.sub(PLUGIN + '/', '')} does not parse: #{e.message}"
+end
+
+# Lens toggles must load as strings. A bare `on`/`off` is a YAML 1.1 boolean.
+toggles = (YAML.safe_load(read("config/defaults/ways-of-working.yaml")) || {})["lenses"] || {}
+bad_toggles = toggles.reject { |_, v| %w[on off auto].include?(v) }
+if toggles.empty?
+  bad "ways-of-working.yaml: no lens toggles parsed"
+elsif bad_toggles.empty?
+  ok "ways-of-working.yaml: #{toggles.size} lens toggles load as \"on\"/\"off\"/\"auto\" strings"
+else
+  bad_toggles.each { |k, v| bad "ways-of-working.yaml: lenses.#{k} loads as #{v.inspect}; quote it (\"on\"/\"off\"/\"auto\")" }
 end
 
 # ---------------------------------------------------------------------------
@@ -126,8 +163,8 @@ else
   bad "findings-schema lens enum #{schema_lenses.inspect} != #{LENSES.inspect}"
 end
 
-agent_files = Dir[File.join(PLUGIN, "agents/ie-*-reviewer.md")]
-agent_basenames = agent_files.map { |f| File.basename(f, ".md").sub(/^ie-/, "").sub(/-reviewer$/, "") }
+agent_files = Dir[File.join(PLUGIN, "agents/fit-*-reviewer.md")]
+agent_basenames = agent_files.map { |f| File.basename(f, ".md").sub(/^fit-/, "").sub(/-reviewer$/, "") }
 if agent_basenames.sort == schema_lenses.sort
   ok "agents/ basenames == lens enum"
 else
@@ -135,7 +172,7 @@ else
 end
 
 catalog = read("references/lens-catalog.md")
-catalog_lenses = catalog.scan(/`ie-([a-z-]+)-reviewer`/).flatten.uniq
+catalog_lenses = catalog.scan(/`fit-([a-z-]+)-reviewer`/).flatten.uniq
 if (schema_lenses - catalog_lenses).empty? && (catalog_lenses - schema_lenses).empty?
   ok "lens-catalog rows == lens enum"
 else
@@ -151,6 +188,18 @@ else
   bad "scoring-rubric lenses #{rubric_lenses.sort.inspect} != lens enum #{schema_lenses.sort.inspect}"
 end
 
+# The dispatch text names the registered agent as <plugin>:fit-<lens>-reviewer (issue #43);
+# the prefix must follow the plugin name, or dispatch targets an agent that does not exist.
+plugin_name = JSON.parse(read(".claude-plugin/plugin.json"))["name"]
+tpl_prefixes = read("references/subagent-template.md").scan(/`([a-z0-9-]+):fit-<lens>-reviewer`/).flatten.uniq
+if tpl_prefixes.empty?
+  bad "subagent-template.md: must name the registered agent as `<plugin>:fit-<lens>-reviewer`"
+elsif tpl_prefixes == [plugin_name]
+  ok "subagent-template.md agent prefix == plugin.json name (#{plugin_name})"
+else
+  bad "subagent-template.md agent prefix #{tpl_prefixes.inspect} != plugin.json name #{plugin_name.inspect}"
+end
+
 # ---------------------------------------------------------------------------
 section "3. Agent frontmatter"
 
@@ -164,7 +213,7 @@ agent_files.each do |abs|
     bad "#{rel}: name #{fm['name'].inspect} != filename stem #{stem.inspect}"
   end
 
-  lens_id = stem.sub(/^ie-/, "").sub(/-reviewer$/, "")
+  lens_id = stem.sub(/^fit-/, "").sub(/-reviewer$/, "")
   bad "#{rel}: lens id #{lens_id.inspect} not in enum" unless schema_lenses.include?(lens_id)
 
   %w[tools model].each do |field|
@@ -187,7 +236,7 @@ cited = {} # path => first source file
  Dir[File.join(PLUGIN, "skills/*/SKILL.md")] +
  Dir[File.join(PLUGIN, "references/*.md")]).each do |abs|
   rel = abs.sub(PLUGIN + "/", "")
-  File.read(abs).scan(%r{\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_/.\-]+)}) do |m|
+  File.read(abs).scan(%r{\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_/.\-<>{}*]+)}) do |m|
     path = strip_trailing(m[0])
     next if path.empty? || path =~ PLACEHOLDER
 
@@ -210,6 +259,26 @@ if missing.empty?
   ok "all #{cited.size} cited plugin paths resolve"
 else
   missing.each { |path, src| bad "cited path missing: #{path} (in #{src})" }
+end
+
+# lens-catalog "Resource docs it reads" column: every backticked doc name is a full path
+# under resources/. Lens prompts are built from this column, so a bare name is a miss.
+catalog_rows = catalog.lines.select { |l| l.start_with?("| `fit-") }
+doc_names = catalog_rows.flat_map do |row|
+  cell = row.split("|")[3].to_s
+  cell.scan(/`([^`]+)`/).flatten.select { |n| n.end_with?(".md", ".yaml") }
+end
+placeholder_docs, real_docs = doc_names.partition { |n| n =~ PLACEHOLDER }
+if catalog_rows.empty? || real_docs.empty?
+  bad "lens-catalog: no resource-doc rows or names parsed"
+else
+  bare = real_docs.reject { |n| File.exist?(File.join(PLUGIN, "resources", n)) }
+  if bare.empty?
+    ok "lens-catalog: all #{real_docs.size} resource docs in #{catalog_rows.size} rows resolve under resources/ " \
+       "(#{placeholder_docs.size} placeholders skipped)"
+  else
+    bare.each { |n| bad "lens-catalog: resource doc `#{n}` does not exist at resources/#{n}" }
+  end
 end
 
 # ---------------------------------------------------------------------------
@@ -317,7 +386,7 @@ end
 # cites must be defined, and every defined metric should be referenced somewhere. This
 # generalizes over rails, python, and any future stack — add the threshold namespace +
 # `<stack>-architecture.md` and the check covers it automatically.
-agent_text = read("agents/ie-architecture-reviewer.md")
+agent_text = read("agents/fit-architecture-reviewer.md")
 config_res = read("references/config-resolution.md")
 
 metrics_by_stack.each do |stack, defined_metrics|
@@ -477,8 +546,8 @@ section "11. Skill / agent prose vs catalog (behavioral drift)"
 # Skills that select or scaffold architecture must read the stack catalog and must not
 # hardcode a closed Arch-pack subset (the P1 that left 4 of 6 packs unwired).
 orchestrator_skills = %w[
-  skills/ie-review/SKILL.md
-  skills/ie-audit/SKILL.md
+  skills/fit-review/SKILL.md
+  skills/fit-audit/SKILL.md
 ]
 orchestrator_skills.each do |rel|
   text = read(rel)
@@ -493,17 +562,32 @@ orchestrator_skills.each do |rel|
   end
 end
 
-init_skill = read("skills/ie-init/SKILL.md")
-bad "skills/ie-init/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
+# Experience selection lives only in lens-catalog.md (#57). Restated skip rules drift; the
+# old wording wraps across line breaks, so match with \s+ rather than a substring.
+experience_drift = (Dir[File.join(PLUGIN, "skills/**/*.md")] +
+                    Dir[File.join(PLUGIN, "agents/*.md")] +
+                    Dir[File.join(PLUGIN, "references/*.md")]).select do |abs|
+  File.read(abs) =~ /pure\s+backend|template\/UI\s+path/
+end
+if experience_drift.empty?
+  ok "no restated experience skip rule (pure backend / template/UI path)"
+else
+  experience_drift.each do |abs|
+    bad "#{abs.sub(PLUGIN + '/', '')}: restates the experience skip rule; point to lens-catalog.md"
+  end
+end
+
+init_skill = read("skills/fit-setup/SKILL.md")
+bad "skills/fit-setup/SKILL.md: must reference stack-catalog.md" unless init_skill.include?("stack-catalog.md")
 if init_skill =~ /Arch pack ✅\s*\(today:/ ||
    init_skill =~ /convention-only:.*`react`/
-  bad "skills/ie-init/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
+  bad "skills/fit-setup/SKILL.md: hardcodes Arch pack today-list or mislabels react as convention-only"
 else
-  ok "skills/ie-init/SKILL.md: no stale Arch pack today-list"
+  ok "skills/fit-setup/SKILL.md: no stale Arch pack today-list"
 end
 
 # Orchestrators must not re-author the canonical path bash; they bind slots only.
-%w[skills/ie-review/SKILL.md skills/ie-audit/SKILL.md skills/ie-validate-plan/SKILL.md].each do |rel|
+%w[skills/fit-review/SKILL.md skills/fit-audit/SKILL.md skills/fit-validate-plan/SKILL.md].each do |rel|
   text = read(rel)
   if text.include?("RUN_ID=\"${STAMP}-$(head -c4 /dev/urandom")
     bad "#{rel}: re-authors RUN_ID bash; bind slots and use config-resolution canonical block"
@@ -536,14 +620,135 @@ score_keys = {
   "architecture" => %w[responsibility_placement pattern_health pattern_legibility coupling_restraint]
 }
 score_keys.each do |lens, keys|
-  agent = read("agents/ie-#{lens}-reviewer.md")
+  agent = read("agents/fit-#{lens}-reviewer.md")
   missing = keys.reject { |k| agent.include?(k) }
   if missing.empty?
-    ok "agents/ie-#{lens}-reviewer.md cites all score keys"
+    ok "agents/fit-#{lens}-reviewer.md cites all score keys"
   else
-    bad "agents/ie-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
+    bad "agents/fit-#{lens}-reviewer.md missing score key(s): #{missing.join(', ')}"
   end
-  bad "agents/ie-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+  bad "agents/fit-#{lens}-reviewer.md: Output must mention fix_class" unless agent.include?("fix_class")
+end
+
+# Allowed finding values (issue #53): the template and every agent Output list the closed
+# sets, built from findings-schema.json so a schema change forces the prose to follow.
+def join_or(items)
+  items = items.map(&:to_s)
+  items.size < 2 ? items.join : "#{items[0..-2].join(', ')} or #{items[-1]}"
+end
+finding_props = schema.dig("properties", "findings", "items", "properties")
+allowed_clauses = %w[severity confidence fix_class].map do |field|
+  "#{field}: #{join_or(finding_props.dig(field, 'enum'))} only"
+end
+(["references/subagent-template.md"] + LENSES.map { |l| "agents/fit-#{l}-reviewer.md" }).each do |rel|
+  flat = read(rel).gsub(/\s+/, " ")
+  missing = allowed_clauses.reject { |c| flat.include?(c) }
+  if missing.empty?
+    ok "#{rel}: lists the allowed severity / confidence / fix_class values"
+  else
+    bad "#{rel}: missing allowed-values clause(s): #{missing.join(' | ')}"
+  end
+end
+
+# mode:agent example (issue #53): parse it, and require every field the report-template
+# mode:agent field list names (the single source; fit-review Stage 6 points at it).
+report_tpl = read("references/report-template.md")
+agent_section = report_tpl[/## mode:agent \(JSON\)(.*)/m, 1].to_s
+example_src = agent_section[/```json\n(.*?)```/m, 1]
+example = nil
+if example_src.nil?
+  bad "report-template.md: mode:agent section has no ```json example"
+else
+  begin
+    example = JSON.parse(example_src)
+  rescue JSON::ParserError => e
+    bad "report-template.md: mode:agent example is not valid JSON (#{e.message})"
+  end
+  unless example.nil? || example.is_a?(Hash)
+    bad "report-template.md: mode:agent example must be a JSON object, got #{example.class}"
+    example = nil
+  end
+end
+stage6_fields = agent_section[/\*\*mode:agent fields:\*\*(.*?)\n\n/m, 1].to_s.scan(/`([a-z_.]+)`/).flatten
+if stage6_fields.empty?
+  bad "report-template.md: the mode:agent section must list its fields (**mode:agent fields:** line)"
+elsif example
+  missing = stage6_fields.reject do |path|
+    keys = path.split(".")
+    parent = keys.size > 1 ? example.dig(*keys[0..-2]) : example
+    parent.is_a?(Hash) && parent.key?(keys[-1])
+  end
+  if missing.empty?
+    ok "report-template.md: mode:agent example has all #{stage6_fields.size} listed fields"
+  else
+    bad "report-template.md: mode:agent example missing listed field(s): #{missing.join(', ')}"
+  end
+  # The reverse: every top-level and coverage key the example shows is in the list.
+  shown = example.keys + (example["coverage"].is_a?(Hash) ? example["coverage"].keys.map { |k| "coverage.#{k}" } : [])
+  shown -= ["coverage"] if stage6_fields.any? { |f| f.start_with?("coverage.") }
+  shown -= ["scope"] if stage6_fields.any? { |f| f.start_with?("scope.") }
+  unlisted = shown - stage6_fields
+  if unlisted.empty?
+    ok "report-template.md: every mode:agent example key is in the field list"
+  else
+    bad "report-template.md: mode:agent field list misses example key(s): #{unlisted.join(', ')}"
+  end
+end
+
+# The example verdict follows the Review verdict rule: open P0/P1 => Not ready,
+# open P2 => Ready with fixes, else Ready.
+if example
+  open_sev = Array(example["findings"]).select { |f| f["status"] == "open" }.map { |f| f["severity"] }
+  want = if (open_sev & %w[P0 P1]).any? then "Not ready"
+         elsif open_sev.include?("P2") then "Ready with fixes"
+         else "Ready"
+         end
+  if example["verdict"] == want
+    ok "report-template.md: mode:agent example verdict \"#{want}\" matches its open findings"
+  else
+    bad "report-template.md: mode:agent example verdict #{example['verdict'].inspect} must be \"#{want}\" per the Review verdict rule"
+  end
+end
+
+# Shared merge rules live in report-template "Merge and gate", not in fit-review (issue #53).
+bad "report-template.md: missing \"## Merge and gate\" section" unless report_tpl.include?("## Merge and gate")
+Dir[File.join(PLUGIN, "skills", "fit-*", "SKILL.md")].sort.each do |abs|
+  rel = abs.sub(PLUGIN + "/", "")
+  if File.read(abs) =~ /`?fit-review`?\s+Stage\s+\d/
+    bad "#{rel}: cites a fit-review Stage for a shared rule; point at report-template Merge and gate"
+  else
+    ok "#{rel}: no fit-review Stage citation"
+  end
+end
+
+# Lens status words (issue #46): every word the Grok runtime sets has a row in the
+# report-template Lens status table, so both runtimes speak the same five words.
+status_rows = report_tpl.scan(/^\s*\|\s*`([a-z_]+)`\s*\|/).flatten
+grok_path = File.expand_path("../.grok/workflows/fit-review.rhai", __dir__)
+if File.file?(grok_path)
+  grok_src = File.read(grok_path)
+  grok_words = grok_src.scan(/(?:status:\s*|status\s*=\s*|lens_status\s*=\s*)"([a-z_]+)"/).flatten.uniq
+  missing = grok_words - status_rows
+  if grok_words.empty?
+    bad "fit-review.rhai: no lens status words found (the extraction pattern no longer matches)"
+  elsif missing.empty?
+    ok "Grok status words #{grok_words.sort.inspect} all have a Lens status row"
+  else
+    bad "report-template.md Lens status table missing Grok status word(s): #{missing.join(', ')}"
+  end
+  # Review verdict rule: a confirmed P0 or P1 sets Not ready in the Grok runtime too.
+  # Match code lines only (comments stripped): the assignment that sets "Not ready"
+  # must be guarded by the rank of P1 or better (P0 = 0, P1 = 1).
+  verdict_code = grok_src[/Review verdict rule.*?\nif any_failed/m].to_s
+                 .lines.reject { |l| l.strip.start_with?("//") }.join
+  ranks_ok = grok_src =~ /s == "P0" \{ 0 \} else if s == "P1" \{ 1 \}/
+  if ranks_ok && verdict_code =~ /if\s+worst\s*<=\s*1\s*\{\s*verdict\s*=\s*"Not ready"/
+    ok "fit-review.rhai: verdict code maps P0 and P1 to Not ready"
+  else
+    bad "fit-review.rhai: verdict code must map a confirmed P0 or P1 to Not ready"
+  end
+else
+  bad "fit-review.rhai not found"
 end
 
 # ---------------------------------------------------------------------------
@@ -551,7 +756,7 @@ section "12. Skill evals (behavioral contracts, incl. refusal cases)"
 
 # Optional per-skill evals.json pin happy-path + refusal behaviour. Missing files are
 # warnings (adoption can grow gradually); present files must parse and match the skill.
-skill_dirs = Dir[File.join(PLUGIN, "skills", "ie-*")].select { |p| File.directory?(p) }.sort
+skill_dirs = Dir[File.join(PLUGIN, "skills", "fit-*")].select { |p| File.directory?(p) }.sort
 skill_dirs.each do |dir|
   slug = File.basename(dir)
   eval_path = File.join(dir, "evals.json")
@@ -606,15 +811,21 @@ end
 
 # Config walk-up procedure must remain documented (issue #25)
 config_res = read("references/config-resolution.md")
-if config_res.include?("walk-up") || config_res.include?("Walk-up") || config_res.include?("resolve_intense_dir")
-  ok "config-resolution.md documents walk-up / resolve_intense_dir"
+if config_res.include?("walk-up") || config_res.include?("Walk-up") || config_res.include?("resolve_walk_up")
+  ok "config-resolution.md documents walk-up / resolve_walk_up"
 else
   bad "config-resolution.md: missing walk-up discovery procedure"
 end
-if config_res.include?("INTENSE_CONFIG_DIR") && config_res.include?("config:")
-  ok "config-resolution.md documents INTENSE_CONFIG_DIR and config: override"
+if config_res.include?("EXPECTATION_FIT_CONFIG_DIR") && config_res.include?("config:")
+  ok "config-resolution.md documents EXPECTATION_FIT_CONFIG_DIR and config: override"
 else
-  bad "config-resolution.md: missing INTENSE_CONFIG_DIR or config: escape hatch"
+  bad "config-resolution.md: missing EXPECTATION_FIT_CONFIG_DIR or config: escape hatch"
+end
+# Legacy fallback (0.9.0 rename): .intense/ and INTENSE_CONFIG_DIR must stay documented.
+if config_res.include?(".intense") && config_res.include?("INTENSE_CONFIG_DIR")
+  ok "config-resolution.md documents the legacy .intense/ and INTENSE_CONFIG_DIR fallback"
+else
+  bad "config-resolution.md: missing the legacy .intense/ or INTENSE_CONFIG_DIR fallback"
 end
 if config_res.include?("conventions.sources")
   ok "config-resolution.md documents conventions.sources"

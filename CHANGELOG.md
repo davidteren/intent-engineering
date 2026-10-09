@@ -1,11 +1,244 @@
 # Changelog
 
-All notable changes to **intent-engineering**. Format follows
+All notable changes to **expectation-fit** (formerly intent-engineering). Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is
 [SemVer](https://semver.org/). For the current project state see **[STATUS.md](STATUS.md)**;
 for the design see **PLAN.md**.
 
 ## [Unreleased]
+
+## [0.9.0] - 2026-10-09
+
+### Breaking
+The plugin is renamed from intent-engineering to expectation-fit (#41). There is no `/ie-*` shim: after updating, the `/ie-*` commands are gone. Use the `/fit-*` names
+from this table:
+
+| Before (intent-engineering 0.8.x) | Now (expectation-fit 0.9.0) |
+|---|---|
+| `/ie-review` | `/fit-review` |
+| `/ie-audit` | `/fit-audit` |
+| `/ie-validate-plan` | `/fit-validate-plan` |
+| `/ie-plan-assist` | `/fit-plan-assist` |
+| `/ie-from-pr-learnings` | `/fit-from-pr-learnings` |
+| `/ie-init` | `/fit-setup` |
+| `ie-<lens>-reviewer` agents | `fit-<lens>-reviewer` agents |
+| `intent-engineering@intent-engineering-marketplace` | `expectation-fit@expectation-fit-marketplace` |
+| `.intense/` config folder | `.expectation-fit/` (legacy `.intense/` still read through 0.9.x; removal planned for 1.0) |
+| `INTENSE_CONFIG_DIR` | `EXPECTATION_FIT_CONFIG_DIR` (legacy variable still read through 0.9.x; removal planned for 1.0) |
+| Reports in a tracked folder by default | Reports default to `.expectation-fit/reports/` (git-ignored) |
+
+### Fixed
+- **`fit-review` defines empty, plan-only and docs-only diffs (#59).** An empty diff
+  dispatches no lens (even one set to `on`) and still writes the normal report with a
+  "Nothing to review" line. Ready is never claimed while untracked files exist: the
+  verdict is Not ready, and `mode:agent` replies `skipped` with the untracked count. With
+  no untracked files either, the report says "Nothing to review" and `mode:agent` replies
+  `skipped` with verdict `null`. `FILES` now comes from the head the
+  lenses read, so remote scopes see the right change. A plan-only diff hands off to one
+  `fit-validate-plan` run over all changed docs, which now accepts several paths as one
+  set with one report and one flow per document. A docs-only diff keeps the same lens team and adds a claim-check
+  line to the intent.
+- **The `fit-review` fix step applies only gated fixes and checks for copies (#60).**
+  Stage 5 step 7 and the subagent-template apply rules say that observations are never
+  applied. The `fix(fit-review)` commit and the Applied section hold only fixes that
+  passed the step 7 gate; callers commit other fixes separately. Before a fix that
+  replaces text, the step searches for other copies and reclassifies the fix to manual
+  when it cannot fix them all in the touched file. The shared rules tell lenses that a
+  fix which prints or runs untrusted text must say how it makes that text safe. New
+  refusal case in `evals.json`.
+- **The merge stage lists every dropped finding and verifies before apply (#47).** Coverage
+  has a Rejected list (title, file:line, lens, severity, confidence, `why`) in place of
+  counts by anchor, and a Re-grades log for every orchestrator change to severity or
+  confidence. Caller constraints limit what `fit-review` fixes, never what it reports
+  (`accepted_by_caller`). Agreement between lenses no longer raises confidence, in the
+  skill and the Grok workflow. Dedup merges findings on one defect within 3 lines even
+  when titles differ, and keeps `gated_auto` only when every copy has it. Interactive
+  `fit-review` re-reads each finding with a read-only sub-agent before it applies, and
+  `evals.json` gains the refusal case.
+- **Reports no longer look cleaner or more complete than the run was (#46).** The Lens
+  status table in `references/report-template.md` gives each word one meaning and adds
+  `ok` (ran, findings shown) next to `clean` (ran, no finding shown); `skipped` now means
+  only "selected but could not analyze", and `not_selected` covers the rest. Both
+  runtimes set `clean` or `ok` after the confidence gate. The all-clear line reads "No
+  findings surfaced in this pass", the Header names every catalog lens with a reason,
+  Coverage prints a READ line per lens and an optional Cost line, and a partial read
+  blocks the all-clear line and Ready. `fit-review` hands the diff to lenses as
+  `$RUN/diff.patch`. `check-contracts.rb` checks that every Grok status word has a row.
+- **Lens runs without subagents or file writes have rules, and reports show how lenses ran (#43).**
+  `references/subagent-template.md` now names the agent to dispatch per lens
+  (`expectation-fit:fit-<lens>-reviewer`, or a general agent that reads the agent file),
+  forbids one agent for two lenses, defines a compact reply, covers hosts that forbid
+  file writes, and adds a single-agent fallback section that all three orchestrators use.
+  Convention and architecture lenses open observations with `Config: <source>`. The
+  report Header carries `Execution: subagents | single-agent`, and a lens whose returned
+  `lens` differs from the dispatched one fails. New `lenses:<list>` token on `fit-review`,
+  `fit-validate-plan` and `fit-audit`. `check-contracts.rb` ties the template's agent
+  prefix to the plugin name in `plugin.json`.
+- **Off-schema findings are repaired, not dropped, and mode:agent has a full example (#53).**
+  The shared merge steps moved from `fit-review` Stage 5 into a new "Merge and gate"
+  section of `references/report-template.md`, and all three orchestrators point there.
+  Step 1 now repairs word severities, off-anchor confidences, unknown `fix_class` values
+  and `file:line` values, and Coverage lists each repair and drop. The template and every
+  lens agent list the allowed values. The `mode:agent` section has a complete example,
+  field rules, and verdict words per context, and the reply stays raw JSON. `base:` now
+  works with a PR target. The config docs state that nested maps merge at every depth.
+  `check-contracts.rb` checks the allowed values, the example fields that `fit-review`
+  Stage 6 names, and that no skill cites a `fit-review` Stage for a shared rule.
+
+### Changed
+- **Renamed to Expectation Fit (#41).** The plugin is now `expectation-fit` (marketplace
+  `expectation-fit-marketplace`). Skills and agents use the `fit-` prefix: `fit-review`,
+  `fit-audit`, `fit-validate-plan`, `fit-plan-assist`, `fit-from-pr-learnings`, and
+  `fit-setup` (was `ie-init`). Project config moves to `.expectation-fit/`, and the env var to
+  `EXPECTATION_FIT_CONFIG_DIR`. The old `.intense/` folder and `INTENSE_CONFIG_DIR` still
+  work for at least one release; Coverage names the legacy folder and `/fit-setup upgrade`
+  offers the move. The Grok runtime is now `.grok/workflows/fit-review.rhai`. Published
+  reports from before the rename stay in `docs/intent-engineering/` as history.
+- **Run scratch and reports stay out of git by default (#42).** The default report folder
+  is now `.expectation-fit/reports/` (was `docs/expectation-fit/`). Each run folder and
+  the default report folder get a one-line `*` `.gitignore`, so a run adds nothing to
+  `git status`. To keep committing reports, set `artifacts.report_dir: docs/expectation-fit`.
+  This repo's dogfood runs can pass `out:docs/intent-engineering/`. Other contract
+  changes in `config-resolution.md`: relative `run_dir`, `report_dir` and `out:` resolve
+  from the project base, and the `Report:` line prints an absolute path. `fit-review`
+  and `fit-audit` load config before they build their file lists and exclude the run,
+  report and `out:` folders by pathspec. `mode:agent` writes a report file only with
+  `out:` (else `artifact_path` is `null`), and cleanup runs after the report step. The
+  legacy single-bucket mode is gone: a top-level `report_dir` is now an alias for
+  `artifacts.report_dir`, and `/fit-setup upgrade` carries it over. `/fit-setup`
+  question 6 warns that reports under a published `docs/` site are public.
+- **Reports name the plugin copy and the reviewed commit (#45).** Version is now 0.9.0 in
+  `plugin.json` and `marketplace.json`, so installs leave the stale 0.8.0 cache; the
+  plugin README has an Upgrade section. `report-template.md` defines one `Provenance:`
+  line (plugin version and root, repo, branch, commit, dirty flag, run id) that every
+  review, audit and plan report carries, plus matching `mode:agent` JSON keys. A
+  published report is a point-in-time record: later status goes in a dated addendum,
+  and Applied names the real fix SHA. `completed_at` carries a UTC offset. Lens prompts
+  get the absolute plugin root through a `{plugin_root}` slot instead of a literal
+  variable. Lenses take `line` from `grep -n` or a Read, and orchestrators check each
+  line against its evidence quote before dedup (unverified lines go to Coverage).
+  `fit-review` pins `REVIEWED_SHA` and `BASE_SHA` in Stage 1, diffs remote scopes
+  against the pinned commit, treats the current branch as `local-aligned` when
+  `origin/<branch>` is an ancestor of HEAD, and skips apply when HEAD moved.
+  `fit-audit` shows commits ahead of the default branch; `fit-validate-plan` warns when
+  the checkout is behind its upstream. The Grok workflow resolves one absolute plugin
+  root (or pauses), and its report carries the Provenance and `Runtime:` lines.
+- **Re-runs build on the last report (#52).** New shared token `prior:<report-path>`
+  (review, audit, validate-plan): the prior report's `fixed` and `declined` rows reach
+  every lens through one `<prior>` slot, and a Shared rule forbids re-raising them
+  without new evidence. Findings tables gain a `Status` column (`open`, `fixed <sha>`,
+  `declined: <reason or link>`), also as a JSON `status` field; interactive
+  `fit-review` sets it at run time and never auto-applies a prior declined item. The
+  review verdict now follows severity (Not ready with an open P0/P1, Ready with fixes
+  with an open P2, else Ready; a failed lens still blocks Ready), and `fit-review` stops
+  re-running at Ready. `base:<head_sha of the last report>` is documented as the delta
+  re-review; a SHA that is not an ancestor of HEAD falls back to a full-branch review.
+  The canonical path block takes the raw scope and applies one slug rule, and each
+  `out:` row says to pass a folder. `fit-validate-plan` stamps `plan_sha256`, shows lens
+  coverage in the verdict, and with `prior:` marks each prior gap closed or open, adds a
+  Prior column and a `supersedes` line with the round. A Shared rule keeps decisions the
+  document marks as settled closed.
+
+### Fixed
+- **Config settings no longer fail silently or vary by run (#49).** The defaults drop the
+  dead `silent-failure` override example, and Coverage lists any unknown
+  `severity_overrides` key as ignored (new `fit-review` eval case 5). Lens toggles are
+  quoted, so YAML 1.1 loaders read strings, and `check-contracts.rb` fails on a bare
+  `on`. The curated workflow gate rule is mechanical (whole-file body tokens, no
+  `pull_request:` token, no "when unsure" rule). Auto discovery lists candidates with
+  `git ls-files`, so agent worktrees are not read.
+- **Every run shows config health and a next step (#54).** A defaults run ends its Config
+  line with "Next: run /fit-setup to save repo rules once." (the Grok workflow adds the
+  same observation). A legacy top-level `report_dir` names `/fit-setup upgrade`. Coverage
+  lists the three per-file source lines. Only `config:` and the config env var change
+  discovery. `/fit-setup` writes a project header instead of `(GLOBAL DEFAULTS)`, names
+  the legacy folder on upgrade, and both `/fit-setup` and `/fit-from-pr-learnings` end
+  with the git state of `.expectation-fit/`. Project notes are limits for every lens;
+  only the convention lens reports a broken note. Both READMEs recommend `/fit-setup`
+  once a repo is reviewed more than once.
+- **Settled decisions and repo rules reach every lens (#55).** `tension` can name a
+  principle against a settled decision (for example plan KTD-6). A tension finding stays in
+  Findings, is listed in Tensions, and is never auto-applied. Every lens now gets repo
+  `CLAUDE.md`/`AGENTS.md` paths and `conventions.notes`; `sources` and `auto` stay with the
+  convention lens. This changes the #26 view that only the convention lens holds local
+  authority. The lens template has an optional `<known-context>` block and a "Respect
+  known context" rule; `fit-review plan:` quotes plan decision lines verbatim to every lens,
+  and Coverage says `Plan: <path>` or `Plan: none`. New `fit-review` eval case 6.
+- **Grok `fit-review` workflow reads the right code and cannot claim a false Ready
+  (#44).** Prompts say agents have no shell and limit what they read. The script, not an
+  agent, builds the diff: `base` must be a commit SHA, and a ref name, a missing base, or
+  a non-path target with spaces pauses the run. `scope_mode` is set by the script. The
+  target is a JSON-encoded label, and the config agent sees the changed files for the
+  experience rule. The confidence gate runs before verify. Skeptics return `confirmed`,
+  `not_real` or `unverifiable`; any unverifiable or failed verify sets Not ready. Confirmed
+  findings keep the skeptic's reason and evidence, and `end_line` defaults to `line`. A
+  lens that reports `failed:` gets status failed. The convention lens docs now match the
+  lens catalog. Copy the file to `~/.grok/workflows/` after each pull.
+- **Lens catalog lists full doc paths, and the contract check catches drift (#51).** The
+  "Resource docs it reads" column names every doc as a full path under `resources/`
+  (8 bare names fixed), and `check-contracts.rb` section 4 now fails on a doc that does
+  not exist there. `AGENTS.md` forbids repo-only paths in shipped files, says a smell-card
+  guard may qualify a finding but not suppress a whole class, and replaces the old local
+  install path with a `claude -p ... --plugin-dir` dev loop. `README.md` installs from
+  GitHub.
+- **Repo upkeep: dogfood gaps become issues, and the site drops release facts (#61).**
+  "Dogfood as you go" in `AGENTS.md` adds a contributor step to file each confirmed plugin
+  gap as a public-safe issue. The PR template and `scripts/README.md` no longer send
+  follow-ups to `wip/`. `docs/index.html` links to `/releases/latest` and `/releases`
+  and names no current version or check count. The "New architecture stack" bullet names
+  every place that lists the stacks.
+- **`/fit-from-pr-learnings` reads `fit-review` declines and says when to run (#62).**
+  Run it after the PR merges (a commit on an open PR branch restarts CI and review bots);
+  one run can take several `pr:` tokens. In `pr:` mode it reads the newest `fit-review`
+  report for the PR head branch in `artifacts.report_dir`. Only a decline whose reason
+  holds beyond the PR becomes a `conventions.notes` line, citing the report path and
+  finding number, and the Step 4 confirm still gates every note. The report Header names
+  the report read. New eval case 4.
+- **Lens judgment (#48).** The `gated_auto` rubric now excludes changes that outside
+  callers can see (public classes, signatures, defaults, documented CLI flags), so
+  `/fit-review` never applies them. A new eval case pins this. Lenses get `Repo root`,
+  `Base` and `Plan` lines in scope, check the base before they blame the change, and put
+  pre-existing and no-change items in observations. A failed or empty search is unknown:
+  an unconfirmed absence claim caps at confidence 50 (template and Grok skeptic). The
+  template has one shared severity rubric, and `findings-schema.json` points to it. The
+  simplicity lens searches the requirements before a YAGNI cut.
+- **Predictability escape classes (#58).** New smells for a comment, docstring or test
+  name that claims code missing at HEAD (`least-astonishment.md`), a destructive step
+  that runs before its last check (`error-handling.md`), and a config writer that
+  coerces any input shape (`defaults-and-configuration.md`). The predictability lens now
+  reads the "Surprising defaults" section of `defaults-and-configuration.md` (agent,
+  lens catalog, Grok workflow and principle index).
+- **Experience lens covers CLI, docs and developer output (#57).** `lens-catalog.md` is
+  the one selection rule: it now lists CLI output, error and recovery messages, exit
+  codes, the stdout/stderr split and changed README or upgrade steps, and a library or
+  gem counts when it ships any of these. `fit-review`, `fit-audit`, `fit-validate-plan`,
+  the Grok config prompt and `ways-of-working.yaml` point to it, and
+  `check-contracts.rb` fails on a restated skip rule. `ux-interaction-smells.md` has a
+  new "CLI and developer output" section (clig.dev added to Sources), a traced
+  framework-default guard, and a tighter live-region shape. `accessibility.md` limits
+  `role="tab"` to in-page panels.
+- **Architecture lens policy and tool fixes (#50).** The `python` arch pack now needs a
+  web or worker framework; a plain Python CLI or library returns `SKIPPED:` unless
+  `lenses.architecture: on`. brakeman is no longer listed as an architecture tool, and
+  `fit-setup` and the README no longer suggest `tools.architecture: prefer`. All six
+  stack docs and `findings-schema.json` gain a `long-method` smell id (Rails gains a
+  "General metrics" section). Under `enrich`, the lens runs a present tool, notes once
+  per run which tools ran, and Coverage shows that note. "Pattern-bearing location" is
+  defined once in `resources/patterns/README.md`, and the lens never reports a
+  preferred or blocked rule as met (new `fit-audit` eval case 4). **Behavior change:**
+  `approved` now silences blocked, instead_of and unidentified findings on its path,
+  but smell findings still show and net-new blocked use still gets P1 (before, review
+  and audit suppressed every architecture finding on an approved path). Each
+  unidentified-pattern `suggested_fix` now holds a ready-to-paste `approved` entry.
+- **Mechanical `fit-validate-plan` verdict (#56).** The verdict is Revise first when any
+  P0 or P1 survives the gate or a selected lens failed; otherwise Ready to implement.
+  A markdown reply ends with one `Verdict: … Lowest score: … Blocking: … Failed lenses:
+  … Report: …` line (new eval case 4). Several documents run as separate flows (one
+  lens dispatch and one report section each) inside one run and one report (#59). Plan lenses search the whole document before they call a rule missing,
+  search call sites before they call code unused, and word a fix that rests on unseen
+  framework behavior as a test. Caller checks go in a `Check | Result` table in
+  Coverage. `findings-schema.json` gives plan meanings for P0 and P1. The skill
+  description and the README place it after document review and before implementation.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

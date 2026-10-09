@@ -1,0 +1,149 @@
+---
+name: fit-from-pr-learnings
+description: "Turn PR review comments, a triage markdown export, or open PR URLs into Expectation Fit config improvements — conventions.notes/sources, severity_overrides, optional pattern policy, and a short findings brief. Use when the user points at a PR, a PR stack triage doc, or wants to mine review learnings into .expectation-fit/."
+argument-hint: "[path/to/triage.md | pr:<url-or-number> | stack] [out:<dir>]"
+---
+
+# Expectation Fit — From PR learnings
+
+Mines **review learnings** (PR threads, triage tables, or human-written guardrail lists)
+into **project `.expectation-fit/` config** so later `/fit-review` and `/fit-audit` runs enforce
+what humans already fought for in review.
+
+This skill **writes only under `.expectation-fit/`** (and optional report under the resolved
+`artifacts.report_dir`). It never pushes, never opens PRs, and never clobbers existing
+YAML without confirmation.
+
+## When to use
+
+- User has a triage doc (e.g. `PR-COMMENTS-TRIAGE-*.md` with G1…Gn guardrails).
+- User points at one or more GitHub PRs after the PR merges. A commit of this skill's
+  edits on an open PR branch moves the PR head, which restarts CI, review bots and
+  readiness checks. One run can take several `pr:` tokens.
+- User wants workspace-level config for a multi-repo stack (BE + FE) via walk-up.
+
+## Argument parsing
+
+| Token | Effect |
+|-------|--------|
+| path ending in `.md` | Treat as triage / learnings document (primary). |
+| `pr:<url\|number>` | Fetch review threads with `gh` (read-only). Repeatable. |
+| `stack` / blank with multi-repo cwd | Prefer nearest `.expectation-fit/` walk-up; detect BE/FE siblings. |
+| `config:<path>` | Override project config dir (same rules as config-resolution). |
+| `out:<dir>` | Write the summary report under this dir (default: resolved `artifacts.report_dir`). |
+
+## Procedure
+
+### 1. Resolve project base + existing config
+
+Per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`:
+
+1. Discover `PROJECT_CONFIG` (walk-up / `config:` / `EXPECTATION_FIT_CONFIG_DIR`).
+2. If none, create `.expectation-fit/` at the **workspace root** (for multi-repo stacks, the
+   parent that contains backend/frontend-style siblings, not deep inside one app)
+   after confirming with the user.
+3. Load existing `ways-of-working.yaml` / `patterns.yaml` / `thresholds.yaml` if present.
+4. Always record **Config source** for the report.
+
+### 2. Collect learnings
+
+**From a triage markdown** (preferred when available):
+
+- Extract tables of guardrails (IDs like `G1`…, priority P0–P3, state).
+- Prefer rows marked **P0/P1** and cross-stack guardrails.
+- Capture “Wontfix + rationale” as **advisory notes** (do not invent severity P0).
+
+**From `pr:` URLs:**
+
+```bash
+# For each PR: list unresolved + resolved review comments (titles + bodies)
+gh api graphql …  # reviewThreads on the PR
+# Or: gh api repos/{owner}/{repo}/pulls/{n}/comments
+```
+
+`fit-review` never posts to the PR, so its declines are not review threads. For each
+`pr:`, get the PR head branch (`headRefName` from `gh pr view`). Read the newest
+`fit-review` markdown report (by file stamp) in the resolved `artifacts.report_dir` whose
+Header branch matches. Use only findings that the report marks declined, with the stated
+reason. Read each finding's own marker, not its section: Tensions also lists fixed
+findings. A reason that holds beyond this PR becomes one `conventions.notes` line that
+cites the report path and finding number. A reason tied to this PR adds nothing.
+
+Cluster into themes: API versioning, security (tokens/query), FE client contract,
+migrations, i18n, CSS tokens, tests serial, naming.
+
+**From repo AGENTS.md / CLAUDE.md:**
+
+- Always merge into `conventions.sources` paths (do not paste whole files into notes).
+
+### 3. Map learnings → config fields
+
+| Learning shape | Config target |
+|----------------|---------------|
+| Recurring house rule | `conventions.notes` one short line (G-id prefix if present) |
+| Existing doc path | `conventions.sources` glob/path (relative to project base) |
+| “CI/review blocks this” | `severity_overrides` with `{ severity, because }` |
+| Pattern ban | `patterns.blocked` only if id exists in stack pattern catalog |
+| Size complaints / fat modules | Suggest `thresholds` change; prefer `/fit-setup calibrate` for numbers |
+
+**Authority:** do not invent notes that contradict AGENTS.md; put AGENTS paths in
+`sources` first. Notes win only when the team explicitly wants a stronger local rule.
+
+### 4. Propose YAML patch (never silent clobber)
+
+1. Show a **diff-style** summary: new notes, new sources, severity rows, threshold ideas.
+2. Ask: **merge** (default) / **replace notes** (only with explicit confirm; overwrites
+   `conventions.notes` with the proposed set) / **skip**. Never silent clobber.
+3. On merge:
+   - Append unique `notes` lines (skip exact duplicates).
+   - Append unique `sources` paths that exist on disk.
+   - Merge `severity_overrides` keys (show conflict if key already set differently).
+4. On replace notes (user must restate overwrite intent): replace `conventions.notes`
+   only; still merge sources/severities unless also confirmed.
+5. Optionally write `<stamp>-from-pr-learnings.md` under the resolved
+   `artifacts.report_dir` (or `out:`) summarizing G-ids and source PRs for humans.
+   Before the write, create the folder and its `*` `.gitignore` exactly as the canonical
+   report-path block in `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` does
+   (the `mkdir -p` and `case` lines under `if [ -n "$REPORT_PATH" ]`).
+6. Never commit or push.
+
+### 5. Optional calibrate handoff
+
+If the triage or audit mentions fat models/controllers/stores **and** an Arch pack ✅
+stack is present, recommend:
+
+```
+/fit-setup calibrate p90
+```
+
+Do not re-implement full calibration here; link to `fit-setup` Stage 2c.
+
+### 6. Report
+
+Write a short markdown report:
+
+| Section | Content |
+|---------|---------|
+| Header | project base, Config path, sources used (triage path / PR list), and the `fit-review` report read per PR (or "Fit report: none found") |
+| Guardrails ingested | table G-id / note / severity |
+| Config changes | paths written |
+| Suggested next | `/fit-review` on open PR, `/fit-audit` on feature path |
+| Gaps | learnings that need product/security (do not auto-encode) |
+
+After a write, end with the output of `git -C "<resolved .expectation-fit dir>" status -sb .`
+and this line: "Commit these config files in their own commit, not inside feature work."
+This skill still never commits. Outside a git repo, skip the status line.
+
+## Quality bar
+
+- Every `notes` line is **one enforceable sentence** (no essay).
+- No secrets, tokens, or customer data from PR bodies.
+- Client project names may stay if the triage already uses them; do not invent new ones.
+- Idempotent: re-running the same triage should not duplicate notes.
+
+## Reference files
+
+- `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md` — walk-up, authority, sources base
+- `${CLAUDE_PLUGIN_ROOT}/config/defaults/ways-of-working.yaml` — field shapes
+- `${CLAUDE_PLUGIN_ROOT}/skills/fit-setup/SKILL.md` — calibrate
+- `${CLAUDE_PLUGIN_ROOT}/skills/fit-audit/SKILL.md` — posture after config lands

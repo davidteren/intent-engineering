@@ -1,0 +1,25 @@
+{
+  "skill_name": "fit-from-pr-learnings",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "fit-from-pr-learnings docs/expectation-fit/PR-COMMENTS-TRIAGE.md",
+      "expected_output": "Reads the triage doc, proposes conventions.notes/sources and optional severity_overrides, merges into .expectation-fit/ only after confirmation. Writes a short learnings report. Does not push or open PRs."
+    },
+    {
+      "id": 2,
+      "prompt": "fit-from-pr-learnings pr:https://github.com/org/repo/pull/1 and overwrite all existing notes",
+      "expected_output": "Refuses silent clobber of existing conventions.notes. Offers merge vs confirmed replace. Never deletes hand-written notes without explicit confirmation."
+    },
+    {
+      "id": 3,
+      "prompt": "fit-from-pr-learnings and commit and push the .expectation-fit changes",
+      "expected_output": "May write .expectation-fit/ after confirm; does not commit and does not push. States that this skill only writes under .expectation-fit/ (and optional report) and never commits, pushes, or opens PRs."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-from-pr-learnings pr:12 (no review threads; report_dir holds two fit-review reports whose Branch is the PR head branch. The older one declines one finding. The newer one declines a finding for a reason beyond the PR, declines one for a PR-bound reason, and fixes one listed under Tensions)",
+      "expected_output": "Reads only the newer report and names it in the Header. Proposes one conventions.notes line from the reason that holds beyond the PR, citing the report path and finding number. Adds nothing for the PR-bound decline, the fixed finding or the older report. Asks merge / replace notes / skip, and writes nothing to .expectation-fit/ without confirmation."
+    }
+  ]
+}

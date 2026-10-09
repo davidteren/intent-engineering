@@ -1,0 +1,124 @@
+# Expectation Fit — ways of working (GLOBAL DEFAULTS)
+#
+# This file ships with the plugin. To customize for a project, run `/fit-setup` to write
+# `.expectation-fit/ways-of-working.yaml` at your repo root. Project values
+# SUPERSEDE these defaults. See references/config-resolution.md for merge rules.
+version: 1
+
+# --- Lens toggles -----------------------------------------------------------------
+# on   = always run.  off = never run.  auto = run only when relevant (see notes).
+# Turn a lens (agent) off entirely here — e.g. `architecture: "off"` if your team relies
+# solely on its own static-analysis pipeline.
+# Quoted on purpose: bare `on` is YAML 1.1's boolean true under common loaders.
+lenses:
+  predictability: "on"
+  convention: "on"
+  simplicity: "on"
+  experience: "auto"    # auto = on when the scope touches a surface in the
+                        # references/lens-catalog.md list
+  architecture: "auto"  # auto = on only when a supported framework (e.g. Rails) is detected
+
+# --- External tool preference -----------------------------------------------------
+# How the architecture lens treats external static-analysis tools. Only the tools in
+# the stack doc's "Tool enrichment" section count (Ruby: reek, flog; RuboCop is not one).
+# A tool counts only when it is installed where the lens runs, not when only CI runs it.
+# If no tool is found, every mode uses heuristics only, and the report says so.
+# See references/config-resolution.md.
+tools:
+  architecture: enrich
+  # enrich = run the plugin's heuristics PLUS the tool as corroboration (default).
+  # prefer = run the tool, fold its findings (mapped to our findings schema), and SUPPRESS
+  #          the plugin's overlapping heuristic findings — no duplication.
+  # report = run the tool and report ITS findings (mapped to our schema) only; skip the
+  #          plugin's own structural heuristics entirely.
+  # off    = ignore external tools; plugin heuristics only.
+
+# --- Severity overrides -----------------------------------------------------------
+# Raise or lower the severity a lens assigns to a given principle/smell. Optional.
+# Key = principle id (findings-schema.json principle enum) or canonical smell id
+# (architecture docs). Coverage lists any other key as ignored.
+# Value is either a severity string, or a map with severity + because (for CI-backed rules).
+severity_overrides: {}
+  # fat-model: P1
+  # callback-hell:
+  #   severity: P1
+  #   because: "blocked by a required CI job"
+
+# --- Severity align with CI gates -------------------------------------------------
+# When conventions.auto discovers PR-gate workflows, promote findings whose theme
+# matches a gate (e.g. callback-hell + callback-check.yml → at least P1).
+# Explicit severity_overrides always win over auto promotion.
+# Full theme table: references/config-resolution.md → "Severity align with CI gates".
+severity_align:
+  mode: curated_gates   # off | curated_gates
+  min_severity: P1      # promote up to this floor when a gate matches (never demote)
+  # Optional extra theme rows (merged with built-in map):
+  # themes:
+  #   - match: [my-custom-gate]
+  #     smells: [fat-model]
+  #     principles: [architecture]
+  #     severity: P1
+  themes: []
+
+# --- Local conventions ------------------------------------------------------------
+# Highest-authority conventions for THIS repo. notes go to every lens, alongside
+# CLAUDE.md / AGENTS.md; sources and auto go to the convention lens only.
+# Nested maps merge recursively at every depth. Only lists replace the global list,
+# unless the block sets `extends: true`.
+# sources: explicit path globs the convention lens must read. notes win over sources.
+# auto: discover Copilot rules, path-scoped instructions, and PR-gate workflows.
+# Full discovery procedure: references/config-resolution.md → "Convention auto-sources".
+conventions:
+  extends: false
+  sources: []
+  # - .github/instructions/*.md
+  # - docs/engineering-standards.md
+  auto:
+    # off      = only explicit `sources` (+ AGENTS/CLAUDE as usual)
+    # curated  = high-signal packs only (default packs below; skip deploy/infra workflows)
+    # all      = every file matching include packs under roots (noisier for workflows)
+    mode: curated
+    # Which packs to expand (omit a pack to skip it). Order is discovery order, not authority.
+    include:
+      - agents          # **/AGENTS.md, **/CLAUDE.md (when not already loaded)
+      - copilot         # **/.github/copilot-instructions.md, **/copilot-instructions.md
+      - instructions    # **/.github/instructions/**  (path-scoped Copilot packs; applyTo frontmatter)
+      - workflows       # **/.github/workflows/* that look like PR gates (see config-resolution)
+    # Multi-repo workspace: search only these roots (relative to project base). Empty = base only.
+    roots: []
+    # - backend
+    # - frontend
+    # Globs to drop after discovery (always applied). Keep this list generic; put
+    # product-specific workflow names in project .expectation-fit/ only.
+    exclude:
+      - "**/.github/workflows/*labeler*"
+      - "**/.github/workflows/*team-label*"
+      - "**/.github/workflows/*dependabot*"
+      - "**/.github/workflows/*renovate*"
+      - "**/.github/workflows/*release*"
+      - "**/.github/workflows/*deploy*"
+      - "**/.github/workflows/*staging*"
+      - "**/.github/workflows/*terraform*"
+      - "**/.github/workflows/*container*"
+      - "**/.github/workflows/*docker*"
+  notes: []
+  # - "Use interactors, not service objects, for multi-step domain operations."
+  # - "All money is a Money value object, never a raw integer/float."
+
+# --- Confidence gate --------------------------------------------------------------
+# Findings below this anchor are suppressed (P0 survives at 50+). Lower to surface more.
+confidence_gate: 75
+
+# --- Artifacts (two layers) -------------------------------------------------------
+# Layer A — run scratch: per-lens JSON while the run is in progress.
+# Layer B, report: the human-facing markdown (mode:agent writes JSON only with out:).
+# Both default folders ignore themselves, so runs add nothing to git status.
+# After the report step, run scratch is deleted when cleanup_runs is true.
+# Override the report path per run with `out:<path>`.
+# To commit reports, set report_dir: docs/expectation-fit. Warning: a docs/ folder is
+# often published as a public site, and reports name unfixed defects.
+# Legacy: a top-level `report_dir:` is an alias for artifacts.report_dir.
+artifacts:
+  run_dir: .expectation-fit/runs
+  report_dir: .expectation-fit/reports
+  cleanup_runs: true

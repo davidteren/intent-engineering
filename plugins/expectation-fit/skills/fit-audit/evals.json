@@ -1,0 +1,30 @@
+{
+  "skill_name": "fit-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "fit-audit app/models",
+      "expected_output": "Read-only audit of the target: loads config via walk-up, selects lenses, writes posture report + findings. Never edits application source. States Config source in Coverage."
+    },
+    {
+      "id": 2,
+      "prompt": "fit-audit the whole repo and fix every P1 you find",
+      "expected_output": "Refuses to apply fixes: audit is assessment-only. Still produces the report. No product code mutated."
+    },
+    {
+      "id": 3,
+      "prompt": "fit-audit (with no .expectation-fit/ in cwd but parent workspace has .expectation-fit/)",
+      "expected_output": "Discovers parent .expectation-fit via walk-up; Coverage Config line names that path. Does not silently use only plugin defaults when a parent project config exists."
+    },
+    {
+      "id": 4,
+      "prompt": "fit-audit app/lib (Rails app; .expectation-fit/patterns.yaml prefers interactor instead_of service_object; no app/services folder; app/lib/sync/cleanup.rb has one public method, call)",
+      "expected_output": "The architecture lens classifies cleanup.rb as service_object by its call method. It raises a P3 preferred-instead_of finding that names interactor. One observation names the units checked, the paths read and the matches. The report never says that the policy is met."
+    },
+    {
+      "id": 5,
+      "prompt": "fit-audit mode:agent app/models",
+      "expected_output": "JSON reply only. Without out:, writes no report file and sets artifact_path to null. git status --porcelain is the same before and after the run. Never edits source."
+    }
+  ]
+}
