@@ -108,9 +108,9 @@ monotonic across the whole report.
    - **Rejected.** Every finding that the merge did not report: title, file:line,
      lens, severity, confidence and `why`. The `why` values are
      `below_confidence_gate`, `not_real` (a re-read refuted it), `verifier_failed` (the
-     re-read could not run), `unverifiable` (the re-read ran but could not open the
-     cited code), `malformed`, `accepted_by_caller` and
-     `over_max_findings`.
+     re-read could not run), `unverifiable` (the re-read ran but could not open or
+     check the cited code), `malformed`, `accepted_by_caller` and
+     `over_max_findings` (Grok runtime only: it caps the findings it verifies).
    - **Re-grades.** Each orchestrator change to a lens's severity or confidence, with
      its reason.
    - **Lens status** for every catalog lens, with the words in the table below.
@@ -325,7 +325,8 @@ Complete example (a review run without `out:`):
 **mode:agent fields:** `status`, `reason`, `handoff`, `context`, `verdict`, `completed_at`, `run_id`,
 `scope.mode`, `scope.base`, `scope.branch`, `scope.head_sha`, `scope.pr`, `intent`,
 `lenses`, `findings`, `finding_counts`, `actionable_findings`, `rejected`, `tensions`,
-`observations`, `coverage.execution`, `coverage.lens_status`, `coverage.regrades`,
+`posture`, `observations`, `coverage.config`, `coverage.execution`, `coverage.lens_status`,
+`coverage.files_reviewed`, `coverage.untracked`, `coverage.regrades`,
 `artifact_path`, `plugin_version`, `plugin_root`, `repo_root`, `branch`, `reviewed_sha`,
 `tree_clean`, `base_sha`, and `status` on each finding. The example above shows each one.
 
@@ -334,6 +335,9 @@ Field rules:
 - `status` is `complete`, `failed` or `skipped`. `skipped` means the run reviewed
   nothing by design. When it is `failed` or `skipped`, `reason` says why in one
   sentence. Otherwise `reason` is `null`.
+- `verdict` uses the verdict words below. It is `null` when `status` is `skipped`.
+- `posture` holds the 0-10 dimension scores in `fit-audit` and `fit-validate-plan`, as
+  one object keyed by dimension. It is `null` in review.
 - `handoff` is `"fit-validate-plan"` when a review run hands the work to that skill.
   Otherwise it is `null`.
 - `completed_at` is an ISO 8601 local time with its UTC offset
@@ -355,6 +359,7 @@ Field rules:
   plan.
 - `rejected` lists every finding that the merge did not report, with `title`, `file`,
   `line`, `lens`, `severity`, `confidence` and `why` (see Rejected under Coverage).
+- `coverage.config` is the Config line: the config source that the run used.
 - `coverage.execution` is `subagents` or `single-agent`.
 - `coverage.lens_status` has one key per catalog lens, with the words from the Lens
   status table.

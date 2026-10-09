@@ -390,7 +390,11 @@ if changed_files != "" {
     cfg_prompt += changed_files;
 }
 cfg_prompt += "Return plugin_root: the ABSOLUTE path of the plugin folder above (the folder that holds references/config-resolution.md). Return an empty string when no plugin is there.\n";
-cfg_prompt += "Return provenance: the Provenance line from references/report-template.md (Provenance line section), with $HOME shown as ~ and the target commit, WITHOUT the trailing run part.\n";
+// The config agent cannot know the head SHA, so the script supplies the commit slot.
+let base_label = if base_ref == () { "none" } else { "" + base_ref };
+cfg_prompt += "Return provenance: the Provenance line from references/report-template.md (Provenance line section), with $HOME shown as ~, WITHOUT the trailing run part. Do not look up any commit SHA. In the <sha> slot write exactly: base ";
+cfg_prompt += base_label;
+cfg_prompt += ", head: working tree (not resolved in Grok)\n";
 cfg_prompt += "Return source (project path or 'defaults'), confidence_gate (use 75 when unset), which lenses to run, standards_paths (AGENTS.md/CLAUDE.md ancestors, comma-separated, only paths that read_file or grep showed exist), a 2-3 line intent, scope_mode (local-aligned | pr-remote | branch-remote | path | doc), and policy_notes (severity_align, overrides, pattern policy, artifact dirs, and one selection reason per catalog lens — prose, not silent omit).\n";
 cfg_prompt += "Always-on unless config sets off: predictability, simplicity. Convention on unless off. Experience: apply the experience rule in lens-catalog.md to the changed files. Any template, view, partial, component, or client controller path turns it on, even in a backend-heavy diff, unless lenses.experience is off. Architecture on only when a stack-catalog Arch pack is present or lenses.architecture=on.\n";
 cfg_prompt += no_shell();

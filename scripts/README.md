@@ -14,8 +14,8 @@ ruby scripts/check-contracts.rb
 ```
 
 Exit `0` = all good; exit `1` = at least one failure. Output is one line per check
-(`ok` / `FAIL` / `warn`) under twelve sections, then a summary
-(`PASS — 143 checks, 0 failures` today). Run it before committing; CI runs it on every PR.
+(`ok` / `FAIL` / `warn`) under the twelve section headers below, then a summary line
+with the check count. Run it to see the current count. Run it before committing; CI runs it on every PR.
 
 ### What it checks
 
@@ -30,6 +30,9 @@ Exit `0` = all good; exit `1` = at least one failure. Output is one line per che
 | 7 | Gitignore trap | exactly **5** lens agents are git-tracked (`git ls-files plugins/expectation-fit/agents/`) |
 | 8 | Cross-references | every threshold metric cited in `rails-architecture.md` is defined in `thresholds.yaml`; every pattern id in policy/README exists in the catalog; unreferenced metrics → **warning** |
 | 9 | Resource-doc structure | each principle/framework/agnostic doc has a detection ("smells") section + a `## Sources` section with ≥2 links; every resource doc is cited in `principle-index.md`/`lens-catalog.md` (no orphans) |
+| 10 | Stack catalog (registry) | every architecture-supported row in `stack-catalog.md` has its two files and a threshold namespace; nothing exists out of band |
+| 11 | Skill / agent prose vs catalog | skills read the stack catalog for architecture; the `report-template.md` mode:agent example parses, has every listed field, lists every example key, and has the right verdict; shared merge rules are not cited by fit-review Stage; Grok status words and verdict code match the template |
+| 12 | Skill evals | each `skills/fit-*/evals.json` parses, names its skill, and has well-formed eval cases (missing file is a warning) |
 
 **Severity model:** a hard `FAIL` makes the script exit non-zero (and fails CI). A `warn`
 (currently: a threshold defined but never referenced) is surfaced but does **not** fail the

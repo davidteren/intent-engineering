@@ -661,6 +661,16 @@ elsif example
   else
     bad "report-template.md: mode:agent example missing listed field(s): #{missing.join(', ')}"
   end
+  # The reverse: every top-level and coverage key the example shows is in the list.
+  shown = example.keys + (example["coverage"].is_a?(Hash) ? example["coverage"].keys.map { |k| "coverage.#{k}" } : [])
+  shown -= ["coverage"] if stage6_fields.any? { |f| f.start_with?("coverage.") }
+  shown -= ["scope"] if stage6_fields.any? { |f| f.start_with?("scope.") }
+  unlisted = shown - stage6_fields
+  if unlisted.empty?
+    ok "report-template.md: every mode:agent example key is in the field list"
+  else
+    bad "report-template.md: mode:agent field list misses example key(s): #{unlisted.join(', ')}"
+  end
 end
 
 # The example verdict follows the Review verdict rule: open P0/P1 => Not ready,
@@ -705,8 +715,12 @@ if File.file?(grok_path)
     bad "report-template.md Lens status table missing Grok status word(s): #{missing.join(', ')}"
   end
   # Review verdict rule: a confirmed P0 or P1 sets Not ready in the Grok runtime too.
+  # Match code lines only (comments stripped): the assignment that sets "Not ready"
+  # must be guarded by the rank of P1 or better (P0 = 0, P1 = 1).
   verdict_code = grok_src[/Review verdict rule.*?\nif any_failed/m].to_s
-  if verdict_code.include?("P0") && verdict_code.include?("P1") && verdict_code.include?('"Not ready"')
+                 .lines.reject { |l| l.strip.start_with?("//") }.join
+  ranks_ok = grok_src =~ /s == "P0" \{ 0 \} else if s == "P1" \{ 1 \}/
+  if ranks_ok && verdict_code =~ /if\s+worst\s*<=\s*1\s*\{\s*verdict\s*=\s*"Not ready"/
     ok "fit-review.rhai: verdict code maps P0 and P1 to Not ready"
   else
     bad "fit-review.rhai: verdict code must map a confirmed P0 or P1 to Not ready"

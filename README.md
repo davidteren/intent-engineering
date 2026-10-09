@@ -186,7 +186,7 @@ The Grok workflow writes only run scratch.
    `/workflows`. Get the SHA with `git merge-base origin/main HEAD`.
 
 **With other review tools** (e.g. compound-engineering `ce-code-review`): use CE for
-correctness, tests, and merge readiness; use IE for surprise, convention, simplicity,
+correctness, tests, and merge readiness; use Expectation Fit for surprise, convention, simplicity,
 UX, and architecture packs.
 
 For plans, a document review such as `ce-doc-review` (which `ce-plan` runs on markdown
@@ -214,7 +214,7 @@ Then the `/fit-*` skills and `fit-*-reviewer` agents are available in any repo.
 plugins/expectation-fit/         the installable plugin (self-contained)
   .claude-plugin/plugin.json
   agents/      fit-*-reviewer.md      the five lenses (incl. architecture)
-  skills/      fit-*/SKILL.md         init, plan-assist, validate-plan, review, audit, from-pr-learnings
+  skills/      fit-*/SKILL.md         setup, plan-assist, validate-plan, review, audit, from-pr-learnings
   references/  *.md, *.json          shared contract (schema, templates, catalogs, config-resolution)
   config/defaults/  *.yaml           shipped config defaults
   resources/   principles/ frameworks/ agnostic/ patterns/   researched knowledge base + catalog

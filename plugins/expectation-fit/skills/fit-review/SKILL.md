@@ -102,10 +102,11 @@ report path (Stages 3 and 4). Write the normal Stage 6 report (JSON in `mode:age
 with no lenses, every catalog lens `not_selected` (reason: nothing to review), and this
 Findings line:
 `Nothing to review: no tracked changes between <base> and <head>; <N> untracked files not reviewed.`
-Set the verdict to Ready only when `UNTRACKED` is also empty. When `UNTRACKED` is not
-empty, give no Ready verdict: use Not ready. In `mode:agent`, reply with `status`
-`failed` and `reason` "No tracked changes; <N> untracked files not reviewed". Then
-stop. This stop comes before lens selection, so a lens set
+When `UNTRACKED` is also empty, there is nothing to review. The markdown verdict is
+Ready. In `mode:agent`, reply with `status` `skipped`, `reason` "No tracked changes and
+no untracked files", and `verdict` `null`. When `UNTRACKED` is not empty, give no Ready
+verdict: use Not ready. In `mode:agent`, reply with `status` `failed` and `reason`
+"No tracked changes; <N> untracked files not reviewed". Then stop. This stop comes before lens selection, so a lens set
 to `on` does not run.
 
 **Plan-only diff.** Hand off when no changed file is code and at least one is a plan,
@@ -234,11 +235,14 @@ hit, keep the finding and list its line as unverified in Coverage. Then:
 
    **Verify first:** one read-only sub-agent re-reads the cited lines of every finding
    that passes this gate, with this prompt: "Adversarially verify this finding against
-   the target the lenses used. Set real=true only with concrete evidence you inspected
-   yourself. If you cannot open the file, the claim is wrong, or the evidence is thin,
-   set real=false." Apply only confirmed findings. A refuted finding goes to Rejected
-   with why `not_real`. In the Fallback, the orchestrator re-reads the lines itself and
-   Coverage says so.
+   the target the lenses used. Return one status. `confirmed`: you read the code and
+   have concrete evidence that the claim holds. `not_real`: you read the code and the
+   claim is wrong. `unverifiable`: you could not open or check the cited code, or the
+   evidence is thin." Apply only confirmed findings. A `not_real` finding goes to
+   Rejected with why `not_real`. An `unverifiable` finding goes to Rejected with why
+   `unverifiable` and blocks Ready. If the verifier itself fails, the finding goes to
+   Rejected with why `verifier_failed` and also blocks Ready. In the Fallback, the
+   orchestrator re-reads the lines itself and Coverage says so.
 
    **Check for copies:** before a fix that replaces text, search the repo for a key
    phrase of the old text. Also check every copy that a lens named in a finding or an

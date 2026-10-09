@@ -152,7 +152,9 @@ unless `lenses.architecture: on`.
 ## What you don't flag
 
 - A class over a threshold that is genuinely cohesive (say so; don't flag the number).
-- Patterns/usages the config `allowed` or `approved` covers.
+- Patterns the config `allowed` covers, for merely existing.
+- Blocked, `instead_of` and unidentified findings on an `approved` path. Smell findings
+  on that path still show, and net-new blocked use there is still P1.
 - Choices the repo `CLAUDE.md`/`AGENTS.md` endorse when **pattern policy is silent**
   (no conflicting preferred/blocked/approved). **`.expectation-fit` pattern policy wins** over
   CLAUDE/AGENTS text when they disagree (same authority order as config-resolution).

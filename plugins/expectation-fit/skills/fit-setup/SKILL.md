@@ -131,13 +131,16 @@ For **upgrade**, resolve existing `PROJECT_CONFIG` via walk-up; do not move it u
 the user explicitly asks to migrate placement.
 
 **Legacy folder (`.intense/`, before 0.9.0).** When `PROJECT_CONFIG` ends in `/.intense`,
-offer the move first: `git mv .intense .expectation-fit` when the folder is tracked, else
-`mv`. Ask once, show the command, and never move without a yes. If both folders hold
+offer the move first. Run it from the folder that holds `.intense/`, not from cwd: set
+`LEGACY_PARENT` to the absolute parent of `PROJECT_CONFIG` (found by the walk-up), then
+`git -C "$LEGACY_PARENT" mv .intense .expectation-fit` when the folder is tracked, else
+`mv "$LEGACY_PARENT/.intense" "$LEGACY_PARENT/.expectation-fit"`. Ask once, show the command, and never move without a yes. If both folders hold
 one of the three yaml files (`ways-of-working.yaml`, `patterns.yaml`, `thresholds.yaml`),
 stop and list them; `.expectation-fit/` already wins the walk-up. When
 `.expectation-fit/` exists but holds only `runs/` or `reports/`, move each
-`.intense/*.yaml` file into it one by one (`git mv .intense/<file> .expectation-fit/<file>`
-for a tracked file, else `mv`). Never `git mv` the whole folder into an existing folder,
+`.intense/*.yaml` file into it one by one
+(`git -C "$LEGACY_PARENT" mv .intense/<file> .expectation-fit/<file>` for a tracked file,
+else `mv` with both paths under `$LEGACY_PARENT`). Never `git mv` the whole folder into an existing folder,
 because that nests it as `.expectation-fit/.intense/`. After a move, print the git state
 of the new folder so the user can commit it.
 
@@ -428,6 +431,8 @@ Resolve the **active** run-scratch path first (same rules as
 `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.md`):
 
 - If project `.expectation-fit/ways-of-working.yaml` has `artifacts.run_dir` → use that.
+- Else, if a legacy `.intense/ways-of-working.yaml` (not yet moved) has
+  `artifacts.run_dir` → use that.
 - Else → default `.expectation-fit/runs/`.
 
 New run folders ignore themselves (config-resolution writes a `*` `.gitignore` into

@@ -117,8 +117,8 @@ expectation-fit/                      (repo / dev + marketplace)
   .claude-plugin/marketplace.json
   plugins/expectation-fit/            (the installable plugin — self-contained)
     .claude-plugin/plugin.json
-    agents/   ie-{predictability,convention,simplicity,experience,architecture}-reviewer.md
-    skills/   ie-{init,plan-assist,validate-plan,review,audit}/SKILL.md
+    agents/   fit-{predictability,convention,simplicity,experience,architecture}-reviewer.md
+    skills/   fit-{setup,plan-assist,validate-plan,review,audit,from-pr-learnings}/SKILL.md
     references/  findings-schema.json, subagent-template, lens-catalog, report-template,
                  scoring-rubric, principle-index, config-resolution
     config/defaults/  ways-of-working.yaml, patterns.yaml, thresholds.yaml

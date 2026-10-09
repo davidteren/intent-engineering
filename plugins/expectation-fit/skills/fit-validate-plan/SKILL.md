@@ -90,7 +90,7 @@ Resolve artifact paths per `${CLAUDE_PLUGIN_ROOT}/references/config-resolution.m
 | Slot | Value |
 |------|--------|
 | `SKILL_SLUG` | `validate-plan` |
-| `SCOPE` | raw plan path (the first one, with `-set` appended for several; the canonical block makes the slug), or empty |
+| `SCOPE` | raw plan path, or empty. For several, `"$(slug_of <first path>)-set"`: slug the first path first (this strips its extension), then append `-set`, so `docs/plans/a-plan.md` gives `a-plan-set` |
 | `OUT_ARG` | `out:` value or empty |
 | `EXT` | `md` normally; `json` when `mode:agent` |
 
