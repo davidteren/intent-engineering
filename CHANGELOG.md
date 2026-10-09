@@ -25,6 +25,15 @@ for the design see **PLAN.md**.
   `on`. The curated workflow gate rule is mechanical (whole-file body tokens, no
   `pull_request:` token, no "when unsure" rule). Auto discovery lists candidates with
   `git ls-files`, so agent worktrees are not read.
+- **Every run shows config health and a next step (#54).** A defaults run ends its Config
+  line with "Next: run /fit-setup to save repo rules once." (the Grok workflow adds the
+  same observation). A legacy top-level `report_dir` names `/fit-setup upgrade`. Coverage
+  lists the three per-file source lines. Only `config:` and the config env var change
+  discovery. `/fit-setup` writes a project header instead of `(GLOBAL DEFAULTS)`, names
+  the legacy folder on upgrade, and both `/fit-setup` and `/fit-from-pr-learnings` end
+  with the git state of `.expectation-fit/`. Project notes are limits for every lens;
+  only the convention lens reports a broken note. Both READMEs recommend `/fit-setup`
+  once a repo is reviewed more than once.
 
 ### Added
 - **Experience lens dogfood + fold-back** (issue #23). Ran the experience lens

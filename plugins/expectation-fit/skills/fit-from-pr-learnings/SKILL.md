@@ -117,6 +117,10 @@ Write a short markdown report:
 | Suggested next | `/fit-review` on open PR, `/fit-audit` on feature path |
 | Gaps | learnings that need product/security (do not auto-encode) |
 
+After a write, end with the output of `git -C "<resolved .expectation-fit dir>" status -sb .`
+and this line: "Commit these config files in their own commit, not inside feature work."
+This skill still never commits. Outside a git repo, skip the status line.
+
 ## Quality bar
 
 - Every `notes` line is **one enforceable sentence** (no essay).

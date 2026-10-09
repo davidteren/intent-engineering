@@ -94,6 +94,8 @@ remote scopes.
 - **Set `fix_class` honestly.** Default to `manual` when the fix is non-mechanical.
 - **Respect local conventions.** Repo `CLAUDE.md`/`AGENTS.md` and existing patterns
   win over generic ideals. A consistent repo-local choice is not a violation.
+  Treat each project note (`conventions.notes`) as a limit. Do not suggest a change
+  that breaks a note. Only the convention lens reports a broken note.
 - **Flag tensions, don't dogmatize.** When two principles conflict (DWIM vs
   least-astonishment, YAGNI vs convention, fail-fast vs robustness), set the
   `tension` field and present the trade-off — do not pick a side as if it were

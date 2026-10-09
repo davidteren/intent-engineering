@@ -172,7 +172,7 @@ The Grok workflow writes only run scratch. It does not publish under
 ## First run
 
 1. Install the plugin (marketplace add + install — see below).
-2. Optional: `/fit-setup` to set up or upgrade `.expectation-fit/` (defaults work without it).
+2. Recommended once you review a repo more than once: `/fit-setup` to set up or upgrade `.expectation-fit/` (defaults work without it).
 3. Run `/fit-audit` on a path or `/fit-review` on your branch; open the report under
    `docs/expectation-fit/`.
 4. **Grok (optional):** from a Grok session in this repo, run

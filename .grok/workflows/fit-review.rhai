@@ -455,6 +455,9 @@ let statuses = [];
 let observations = [];
 let findings = [];
 observations.push("Config source: " + config_source + ". confidence_gate=" + gate.to_string() + ".");
+if type_of(config_source) == "string" && config_source.starts_with("defaults") {
+    observations.push("Next: run /fit-setup to save repo rules once.");
+}
 if args != () && args.stamp != () {
     observations.push("Run stamp: " + args.stamp);
 }

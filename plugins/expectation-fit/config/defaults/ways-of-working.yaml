@@ -1,7 +1,7 @@
 # Expectation Fit — ways of working (GLOBAL DEFAULTS)
 #
-# This file ships with the plugin. To customize for a project, run `/fit-setup` (or copy
-# this file) to `.expectation-fit/ways-of-working.yaml` at your repo root. Project values
+# This file ships with the plugin. To customize for a project, run `/fit-setup` to write
+# `.expectation-fit/ways-of-working.yaml` at your repo root. Project values
 # SUPERSEDE these defaults. See references/config-resolution.md for merge rules.
 version: 1
 

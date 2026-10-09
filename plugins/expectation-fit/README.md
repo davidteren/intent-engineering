@@ -74,7 +74,7 @@ The "Violation smells" section of each doc is the lens's detection checklist.
 
 ## Configuration (`.expectation-fit/`)
 
-Optional: run `/fit-setup` once to set up (or later `/fit-setup upgrade`) project config,
+Recommended once you review a repo more than once: run `/fit-setup` once to set up (or later `/fit-setup upgrade`) project config,
 then commit `.expectation-fit/`. Project config **supersedes** the plugin defaults
 (`config/defaults/`):
 

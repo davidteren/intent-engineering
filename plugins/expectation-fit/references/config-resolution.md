@@ -16,6 +16,9 @@ declare which design patterns are allowed / blocked / pre-approved.
 3. **Global defaults** — `${CLAUDE_PLUGIN_ROOT}/config/defaults/`. Shipped with the
    plugin. Used for any key the project file doesn't set.
 
+Only `config:<path>` and `EXPECTATION_FIT_CONFIG_DIR` (or the legacy `INTENSE_CONFIG_DIR`)
+change discovery. Caller wording such as "use plugin defaults" never skips the walk-up.
+
 A project file need not be complete — it overrides only the keys it specifies; the rest
 fall back to defaults. To **materialize** new default capabilities into an existing
 project file (visible in git, editable) without wiping notes, run `/fit-setup upgrade`
@@ -272,7 +275,7 @@ DEFAULTS="${CLAUDE_PLUGIN_ROOT}/config/defaults"
 # Always record for Coverage (required: never silent about source):
 #   Config: project:/path/to/.expectation-fit (walked up from <cwd>)
 #   Config: project:/path/to/.intense (legacy folder; run /fit-setup upgrade ...)
-#   Config: defaults (no .expectation-fit/ found, searched from <cwd> up to filesystem root)
+#   Config: defaults (no .expectation-fit/ found, searched from <cwd> up to filesystem root). Next: run /fit-setup to save repo rules once.
 #   Config: project:/path (via config: or EXPECTATION_FIT_CONFIG_DIR)
 for f in ways-of-working patterns thresholds; do
   if [ -n "$PROJECT_CONFIG" ] && [ -f "$PROJECT_CONFIG/$f.yaml" ]; then
@@ -300,6 +303,8 @@ resolved values to the lenses in their spawn prompt (e.g. resolved thresholds to
 
 When no project `.expectation-fit/` is found, use defaults — the plugin works out of the box.
 **Always** put the config source line in Coverage (including when using defaults).
+Under it, list the three per-file source lines that the block above prints, for example
+`project: ways-of-working (<path>)` next to `default: thresholds`.
 
 ## Merge rules (project over global)
 
@@ -359,6 +364,10 @@ Every `fit-review` / `fit-audit` / `fit-validate-plan` run uses **two layers**:
    `artifacts:` block, run scratch uses `report_dir/<run-id>/` and the published report
    lands at `report_dir/<stamp>-<skill>[-scope].{md,json}` (a **sibling** of the run dir,
    not nested inside it). `cleanup_runs` is forced `false` (preserves pre-0.6 configs).
+   When the project file has a top-level `report_dir` and no `artifacts` block, end the
+   Config line with: "legacy report_dir: run folders are kept (cleanup off). Run
+   /fit-setup upgrade." Do not warn when a project file only lacks some keys, because
+   the defaults fill them.
 
 **Run id + published filename** — this block is the **canonical** orchestrator procedure.
 `fit-review`, `fit-audit`, and `fit-validate-plan` **must not re-author it**; they only bind
